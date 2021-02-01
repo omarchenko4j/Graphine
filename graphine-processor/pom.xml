@@ -17,11 +17,6 @@
   <name>graphine-processor</name>
   <description>Graphine annotation processor module</description>
 
-  <properties>
-    <maven.compiler.source>11</maven.compiler.source>
-    <maven.compiler.target>11</maven.compiler.target>
-  </properties>
-
   <dependencies>
     <dependency>
       <groupId>io.graphine.core</groupId>
@@ -36,9 +31,6 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-compiler-plugin</artifactId>
         <configuration>
-          <source>${maven.compiler.source}</source>
-          <target>${maven.compiler.target}</target>
-          <encoding>UTF-8</encoding>
           <compilerArgument>-proc:none</compilerArgument>
         </configuration>
       </plugin>

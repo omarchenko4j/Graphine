@@ -18,6 +18,9 @@
   </modules>
 
   <properties>
+    <project.java.version>11</project.java.version>
+    <project.encoding>UTF-8</project.encoding>
+
     <maven-clean-plugin.version>3.1.0</maven-clean-plugin.version>
     <maven-resources-plugin.version>3.2.0</maven-resources-plugin.version>
     <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
@@ -49,6 +52,24 @@
         </plugin>
       </plugins>
     </pluginManagement>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <configuration>
+          <encoding>${project.encoding}</encoding>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <configuration>
+          <source>${project.java.version}</source>
+          <target>${project.java.version}</target>
+          <encoding>${project.encoding}</encoding>
+        </configuration>
+      </plugin>
+    </plugins>
   </build>
 
   <developers>
