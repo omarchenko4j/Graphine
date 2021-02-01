@@ -12,6 +12,10 @@
   <name>Graphine</name>
   <description>Graphine root module</description>
 
+  <modules>
+    <module>graphine-core</module>
+  </modules>
+
   <developers>
     <developer>
       <id>omarchenko</id>
