@@ -14,6 +14,7 @@
 
   <modules>
     <module>graphine-core</module>
+    <module>graphine-processor</module>
   </modules>
 
   <developers>
