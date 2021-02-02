@@ -11,6 +11,7 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
  */
 @Retention(SOURCE)
 @Target(TYPE)
-public @interface Repository {
-    Class<?> value();
+public @interface Entity {
+    String schema() default "";
+    String table() default "";
 }
