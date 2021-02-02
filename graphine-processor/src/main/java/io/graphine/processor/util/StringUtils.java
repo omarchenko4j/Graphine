@@ -16,6 +16,14 @@ public final class StringUtils {
         return !isEmpty(str);
     }
 
+    public static String capitalize(String str) {
+        return Character.toUpperCase(str.charAt(0)) + str.substring(1);
+    }
+
+    public static String uncapitalize(String str) {
+        return Character.toLowerCase(str.charAt(0)) + str.substring(1);
+    }
+
     public static String nullToEmpty(String str) {
         return str == null ? EMPTY : str;
     }
