@@ -1,4 +1,8 @@
-package io.graphine.processor.metadata;
+package io.graphine.processor.metadata.model.repository;
+
+import io.graphine.processor.metadata.model.NativeElementMetadata;
+import io.graphine.processor.metadata.model.entity.EntityMetadata;
+import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 
 import javax.lang.model.element.TypeElement;
 import java.util.List;
@@ -32,6 +36,6 @@ public class RepositoryMetadata extends NativeElementMetadata<TypeElement> {
 
     @Override
     public String toString() {
-        return qualifiedName + computeIf(entity, () -> EMPTY, entity -> " [" + entity.qualifiedName + ']');
+        return qualifiedName + computeIf(entity, () -> EMPTY, entity -> " [" + entity.getQualifiedName() + ']');
     }
 }

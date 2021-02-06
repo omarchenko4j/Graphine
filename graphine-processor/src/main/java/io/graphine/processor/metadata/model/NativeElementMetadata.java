@@ -1,4 +1,4 @@
-package io.graphine.processor.metadata;
+package io.graphine.processor.metadata.model;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;

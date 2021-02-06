@@ -1,9 +1,9 @@
 package io.graphine.processor.metadata.factory;
 
 import io.graphine.core.annotation.Entity;
-import io.graphine.processor.metadata.AttributeMetadata;
-import io.graphine.processor.metadata.EntityMetadata;
-import io.graphine.processor.metadata.IdentifierMetadata;
+import io.graphine.processor.metadata.model.entity.EntityMetadata;
+import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
+import io.graphine.processor.metadata.model.entity.attribute.IdentifierMetadata;
 
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;

@@ -1,6 +1,6 @@
 package io.graphine.processor.metadata.registry;
 
-import io.graphine.processor.metadata.EntityMetadata;
+import io.graphine.processor.metadata.model.entity.EntityMetadata;
 
 import java.util.Collection;
 import java.util.Map;

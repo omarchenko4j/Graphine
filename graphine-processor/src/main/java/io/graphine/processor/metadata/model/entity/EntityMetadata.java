@@ -1,4 +1,8 @@
-package io.graphine.processor.metadata;
+package io.graphine.processor.metadata.model.entity;
+
+import io.graphine.processor.metadata.model.NativeElementMetadata;
+import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
+import io.graphine.processor.metadata.model.entity.attribute.IdentifierMetadata;
 
 import javax.lang.model.element.TypeElement;
 import java.util.List;

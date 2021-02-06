@@ -1,8 +1,8 @@
 package io.graphine.processor.metadata.collector;
 
 import io.graphine.core.annotation.Entity;
-import io.graphine.processor.metadata.EntityMetadata;
 import io.graphine.processor.metadata.factory.EntityMetadataFactory;
+import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 
 import javax.annotation.processing.RoundEnvironment;

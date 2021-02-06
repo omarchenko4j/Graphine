@@ -1,8 +1,8 @@
 package io.graphine.processor.metadata.validator;
 
-import io.graphine.processor.metadata.AttributeMetadata;
-import io.graphine.processor.metadata.EntityMetadata;
-import io.graphine.processor.metadata.IdentifierMetadata;
+import io.graphine.processor.metadata.model.entity.EntityMetadata;
+import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
+import io.graphine.processor.metadata.model.entity.attribute.IdentifierMetadata;
 import io.graphine.processor.util.MethodUtils;
 
 import javax.lang.model.element.ExecutableElement;

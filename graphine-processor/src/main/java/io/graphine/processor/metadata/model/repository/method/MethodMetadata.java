@@ -1,4 +1,6 @@
-package io.graphine.processor.metadata;
+package io.graphine.processor.metadata.model.repository.method;
+
+import io.graphine.processor.metadata.model.NativeElementMetadata;
 
 import javax.lang.model.element.ExecutableElement;
 

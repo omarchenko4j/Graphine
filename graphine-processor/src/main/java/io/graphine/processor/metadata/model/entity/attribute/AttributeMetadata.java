@@ -1,7 +1,8 @@
-package io.graphine.processor.metadata;
+package io.graphine.processor.metadata.model.entity.attribute;
 
 import io.graphine.core.annotation.Attribute;
 import io.graphine.core.annotation.Id;
+import io.graphine.processor.metadata.model.NativeElementMetadata;
 
 import javax.lang.model.element.VariableElement;
 
