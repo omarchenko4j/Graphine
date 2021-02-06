@@ -1,78 +1,104 @@
 package io.graphine.processor.metadata.validator;
 
-import io.graphine.core.annotation.Attribute;
-import io.graphine.core.annotation.Id;
+import io.graphine.processor.metadata.AttributeMetadata;
+import io.graphine.processor.metadata.EntityMetadata;
+import io.graphine.processor.metadata.IdentifierMetadata;
 import io.graphine.processor.util.MethodUtils;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import static io.graphine.processor.support.EnvironmentContext.messager;
-import static java.util.Objects.nonNull;
+import static io.graphine.processor.support.EnvironmentContext.typeUtils;
+import static java.util.Objects.isNull;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static javax.lang.model.element.ElementKind.CLASS;
-import static javax.lang.model.element.Modifier.ABSTRACT;
-import static javax.lang.model.element.Modifier.PUBLIC;
-import static javax.lang.model.util.ElementFilter.fieldsIn;
-import static javax.lang.model.util.ElementFilter.methodsIn;
+import static javax.lang.model.element.Modifier.*;
+import static javax.lang.model.util.ElementFilter.*;
 import static javax.tools.Diagnostic.Kind;
 
 /**
  * @author Oleg Marchenko
  */
 public final class EntityMetadataValidator {
-    public boolean validate(TypeElement element) {
+    public boolean validate(Collection<EntityMetadata> entities) {
+        boolean valid = true;
+        for (EntityMetadata entity : entities) {
+            if (!validate(entity)) {
+                valid = false;
+            }
+        }
+        return valid;
+    }
+
+    public boolean validate(EntityMetadata entity) {
         boolean valid = true;
 
-        if (element.getKind() != CLASS) {
+        TypeElement entityElement = entity.getNativeElement();
+        if (entityElement.getKind() != CLASS) {
             valid = false;
-            messager.printMessage(Kind.ERROR, "Entity must be a class", element);
+            messager.printMessage(Kind.ERROR, "Entity must be a class", entityElement);
         }
 
-        Set<Modifier> modifiers = element.getModifiers();
+        Set<Modifier> modifiers = entityElement.getModifiers();
         if (!modifiers.contains(PUBLIC)) {
             valid = false;
-            messager.printMessage(Kind.ERROR, "Entity class must be public", element);
+            messager.printMessage(Kind.ERROR, "Entity class must be public", entityElement);
         }
         if (modifiers.contains(ABSTRACT)) {
             valid = false;
-            messager.printMessage(Kind.ERROR, "Entity class should not be abstract", element);
+            messager.printMessage(Kind.ERROR, "Entity class should not be abstract", entityElement);
         }
 
-        List<VariableElement> fields = fieldsIn(element.getEnclosedElements());
-
+        List<VariableElement> fields = fieldsIn(entityElement.getEnclosedElements());
         List<VariableElement> identifiers = fields
                 .stream()
-                .filter(field -> nonNull(field.getAnnotation(Id.class)))
+                .filter(IdentifierMetadata::isIdentifier)
                 .collect(toList());
         if (identifiers.isEmpty()) {
             valid = false;
-            messager.printMessage(Kind.ERROR, "Entity class must have identifier", element);
+            messager.printMessage(Kind.ERROR, "Entity class must have identifier", entityElement);
         }
         else if (identifiers.size() > 1) {
             valid = false;
-            messager.printMessage(Kind.ERROR, "Entity class must have one identifier", element);
+            messager.printMessage(Kind.ERROR, "Entity class must have one identifier", entityElement);
         }
 
-        List<ExecutableElement> methods = methodsIn(element.getEnclosedElements());
+        List<ExecutableElement> constructors = constructorsIn(entityElement.getEnclosedElements());
+        ExecutableElement basicConstructor = constructors
+                .stream()
+                .filter(constructor -> constructor.getModifiers().contains(PUBLIC))
+                .filter(constructor -> constructor.getParameters().isEmpty())
+                .findFirst()
+                .orElse(null);
+        if (isNull(basicConstructor)) {
+            valid = false;
+            messager.printMessage(Kind.ERROR, "Entity class must have a public constructor without parameters", entityElement);
+        }
+
+        List<ExecutableElement> methods = methodsIn(entityElement.getEnclosedElements());
+
         Map<String, ExecutableElement> methodNameToMethodMap = methods
                 .stream()
-                .collect(toMap(method -> method.getSimpleName().toString(), identity()));
+                .collect(toMap(method -> method.getSimpleName().toString(), identity(), (e1, e2) -> e1));
 
-        List<VariableElement> attributes = fields
-                .stream()
-                .filter(field -> nonNull(field.getAnnotation(Attribute.class)))
-                .collect(toList());
-        attributes.addAll(identifiers);
-        for (VariableElement attribute : attributes) {
-            String attributeName = attribute.getSimpleName().toString();
+        List<AttributeMetadata> attributes = entity.getAttributes();
+        for (AttributeMetadata attribute : attributes) {
+            VariableElement attributeElement = attribute.getNativeElement();
+            if (attributeElement.getModifiers().contains(FINAL)) {
+                valid = false;
+                messager.printMessage(Kind.ERROR, "Attribute must not be final", attributeElement);
+            }
+
+            String attributeName = attributeElement.getSimpleName().toString();
 
             String getterName = MethodUtils.getter(attributeName);
             String setterName = MethodUtils.setter(attributeName);
@@ -82,38 +108,41 @@ public final class EntityMetadataValidator {
 
             if (!hasGetter && !hasSetter) {
                 valid = false;
-                messager.printMessage(Kind.ERROR, "Attribute must have a getter and setter", attribute);
+                messager.printMessage(Kind.ERROR, "Attribute must have a getter and setter", attributeElement);
             }
             else if (!hasGetter) {
                 valid = false;
-                messager.printMessage(Kind.ERROR, "Attribute must have a getter", attribute);
+                messager.printMessage(Kind.ERROR, "Attribute must have a getter", attributeElement);
             }
             else if (!hasSetter) {
                 valid = false;
-                messager.printMessage(Kind.ERROR, "Attribute must have a setter", attribute);
+                messager.printMessage(Kind.ERROR, "Attribute must have a setter", attributeElement);
             }
 
-            ExecutableElement getter = methodNameToMethodMap.get(getterName);
-            ExecutableElement setter = methodNameToMethodMap.get(setterName);
-
-            if (!getter.getReturnType().equals(attribute.asType())) {
-                valid = false;
-                messager.printMessage(Kind.ERROR, "Getter must have the same return type as the attribute type", getter);
-            }
-            if (!getter.getParameters().isEmpty()) {
-                valid = false;
-                messager.printMessage(Kind.ERROR, "Getter must have no parameters", getter);
-            }
-
-            if (setter.getParameters().size() != 1) {
-                valid = false;
-                messager.printMessage(Kind.ERROR, "Setter must have one parameter", setter);
-            }
-            else {
-                VariableElement parameter = setter.getParameters().iterator().next();
-                if (!parameter.asType().equals(attribute.asType())) {
+            if (hasGetter) {
+                ExecutableElement getter = methodNameToMethodMap.get(getterName);
+                if (!typeUtils.isSameType(getter.getReturnType(), attributeElement.asType())) {
                     valid = false;
-                    messager.printMessage(Kind.ERROR, "Setter parameter type must be the same as the attribute type", setter);
+                    messager.printMessage(Kind.ERROR, "Getter must have the same return type as the attribute type", getter);
+                }
+                if (!getter.getParameters().isEmpty()) {
+                    valid = false;
+                    messager.printMessage(Kind.ERROR, "Getter must have no parameters", getter);
+                }
+            }
+
+            if (hasSetter) {
+                ExecutableElement setter = methodNameToMethodMap.get(setterName);
+                if (setter.getParameters().size() != 1) {
+                    valid = false;
+                    messager.printMessage(Kind.ERROR, "Setter must have one parameter", setter);
+                }
+                else {
+                    VariableElement parameter = setter.getParameters().iterator().next();
+                    if (!typeUtils.isSameType(parameter.asType(), attributeElement.asType())) {
+                        valid = false;
+                        messager.printMessage(Kind.ERROR, "Setter parameter type must be the same as the attribute type", setter);
+                    }
                 }
             }
         }

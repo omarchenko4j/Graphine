@@ -1,6 +1,11 @@
 package io.graphine.processor.metadata;
 
+import io.graphine.core.annotation.Attribute;
+import io.graphine.core.annotation.Id;
+
 import javax.lang.model.element.VariableElement;
+
+import static java.util.Objects.nonNull;
 
 /**
  * @author Oleg Marchenko
@@ -20,5 +25,10 @@ public class AttributeMetadata extends NativeElementMetadata<VariableElement> {
     @Override
     public String toString() {
         return name + " [" + column + ']';
+    }
+
+    public static boolean isAttribute(VariableElement fieldElement) {
+        return nonNull(fieldElement.getAnnotation(Id.class)) ||
+               nonNull(fieldElement.getAnnotation(Attribute.class));
     }
 }

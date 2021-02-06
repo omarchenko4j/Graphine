@@ -1,6 +1,10 @@
 package io.graphine.processor.metadata;
 
+import io.graphine.core.annotation.Id;
+
 import javax.lang.model.element.VariableElement;
+
+import static java.util.Objects.nonNull;
 
 /**
  * @author Oleg Marchenko
@@ -20,5 +24,9 @@ public class IdentifierMetadata extends AttributeMetadata {
     @Override
     public String toString() {
         return name + " [" + column + ", ID]";
+    }
+
+    public static boolean isIdentifier(VariableElement fieldElement) {
+        return nonNull(fieldElement.getAnnotation(Id.class));
     }
 }

@@ -1,8 +1,6 @@
 package io.graphine.processor.metadata.factory;
 
-import io.graphine.core.annotation.Attribute;
 import io.graphine.core.annotation.Entity;
-import io.graphine.core.annotation.Id;
 import io.graphine.processor.metadata.AttributeMetadata;
 import io.graphine.processor.metadata.EntityMetadata;
 import io.graphine.processor.metadata.IdentifierMetadata;
@@ -10,10 +8,9 @@ import io.graphine.processor.metadata.IdentifierMetadata;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static io.graphine.processor.util.StringUtils.*;
-import static java.util.Objects.nonNull;
+import static java.util.stream.Collectors.toList;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 
 /**
@@ -45,17 +42,16 @@ public final class EntityMetadataFactory {
 
         IdentifierMetadata identifier = fields
                 .stream()
-                .filter(field -> nonNull(field.getAnnotation(Id.class)))
+                .filter(IdentifierMetadata::isIdentifier)
                 .findFirst()
                 .map(attributeMetadataFactory::createIdentifier)
                 .orElse(null);
 
         List<AttributeMetadata> attributes = fields
                 .stream()
-                .filter(field -> nonNull(field.getAnnotation(Attribute.class)))
+                .filter(AttributeMetadata::isAttribute)
                 .map(attributeMetadataFactory::createAttribute)
-                .collect(Collectors.toList());
-        attributes.add(0, identifier);
+                .collect(toList());
 
         return new EntityMetadata(element, schema, table, identifier, attributes);
     }
