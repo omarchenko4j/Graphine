@@ -1,5 +1,10 @@
 package io.graphine.processor;
 
+import io.graphine.processor.metadata.collector.EntityMetadataCollector;
+import io.graphine.processor.metadata.factory.entity.AttributeMetadataFactory;
+import io.graphine.processor.metadata.factory.entity.EntityMetadataFactory;
+import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
+import io.graphine.processor.metadata.validator.EntityMetadataValidator;
 import io.graphine.processor.support.EnvironmentContext;
 
 import javax.annotation.processing.*;

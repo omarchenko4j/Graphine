@@ -1,4 +1,4 @@
-package io.graphine.processor.metadata.factory;
+package io.graphine.processor.metadata.factory.entity;
 
 import io.graphine.core.annotation.Attribute;
 import io.graphine.core.annotation.Id;
