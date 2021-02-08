@@ -18,41 +18,36 @@ import static javax.tools.Diagnostic.Kind;
  */
 public final class RepositoryMethodNameParser {
     public static final Pattern METHOD_NAME_PATTERN =
-            Pattern.compile("^((find|count|delete)(All)?(By)?|(save|update)(All)?)(.*)$");
+            Pattern.compile("^(?<qualifier>(find|count|save|update|delete)(All)?)(By(?<condition>.*?))?(OrderBy(?<sorting>.*?))?$");
 
     public QueryableMethodName parse(ExecutableElement methodElement) {
+        String methodName = methodElement.getSimpleName().toString();
+
         QualifierFragment qualifier = null;
         ConditionFragment condition = null;
         SortingFragment sorting = null;
 
-        String methodName = methodElement.getSimpleName().toString();
         Matcher methodNameMatcher = METHOD_NAME_PATTERN.matcher(methodName);
         if (methodNameMatcher.find()) {
-            String qualifierFragment = methodNameMatcher.group(1);
+            String qualifierFragment = methodNameMatcher.group("qualifier");
             qualifier = new QualifierFragment(qualifierFragment);
 
-            String bodyFragment = methodNameMatcher.group(7);
-            if (isNotEmpty(bodyFragment)) {
-                String[] fragments = bodyFragment.split(SortingFragment.KEYWORD);
-                if (fragments.length > 0) {
-                    String conditionFragment = fragments[0];
-                    if (isNotEmpty(conditionFragment)) {
-                        condition = new ConditionFragment(conditionFragment);
-                    }
-                }
-                if (fragments.length > 1) {
-                    String sortingFragment = fragments[1];
-                    sorting = new SortingFragment(sortingFragment);
-                }
-                if (fragments.length > 2) {
-                    messager.printMessage(Kind.ERROR, "Multiple 'OrderBy' qualifiers are not allowed", methodElement);
-                }
+            String conditionFragment = methodNameMatcher.group("condition");
+            if (isNotEmpty(conditionFragment)) {
+                condition = new ConditionFragment(conditionFragment);
+            }
+
+            String sortingFragment = methodNameMatcher.group("sorting");
+            if (isNotEmpty(sortingFragment)) {
+                sorting = new SortingFragment(sortingFragment);
             }
         }
         else {
-            messager.printMessage(Kind.ERROR, "Method name prefix could not be recognized. " +
-                                              "Use the following options: " +
-                                              "find(All)By, countAll(By), save(All), update(All), delete(All)(By)", methodElement);
+            messager.printMessage(Kind.ERROR,
+                                  "Method name could not be recognized. " +
+                                          "The following prefixes are supported: " +
+                                          "find(All)By, countAll(By), save(All), update(All), delete(All)(By)",
+                                  methodElement);
         }
         return new QueryableMethodName(qualifier, condition, sorting);
     }
