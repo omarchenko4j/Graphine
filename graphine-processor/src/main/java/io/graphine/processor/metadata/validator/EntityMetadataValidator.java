@@ -98,10 +98,8 @@ public final class EntityMetadataValidator {
                 messager.printMessage(Kind.ERROR, "Attribute must not be final", attributeElement);
             }
 
-            String attributeName = attributeElement.getSimpleName().toString();
-
-            String getterName = MethodUtils.getter(attributeName);
-            String setterName = MethodUtils.setter(attributeName);
+            String getterName = MethodUtils.getter(attributeElement);
+            String setterName = MethodUtils.setter(attributeElement);
 
             boolean hasGetter = methodNameToMethodMap.containsKey(getterName);
             boolean hasSetter = methodNameToMethodMap.containsKey(setterName);
