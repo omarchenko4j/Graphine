@@ -1,4 +1,4 @@
-package io.graphine.processor.metadata.validator;
+package io.graphine.processor.metadata.validator.entity;
 
 import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
