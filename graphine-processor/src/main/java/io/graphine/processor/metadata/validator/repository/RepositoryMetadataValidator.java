@@ -5,13 +5,17 @@ import io.graphine.processor.metadata.model.repository.RepositoryMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.model.repository.method.name.QueryableMethodName;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment;
+import io.graphine.processor.metadata.validator.repository.method.*;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.TypeElement;
 import java.util.Collection;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 
+import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.MethodType;
 import static io.graphine.processor.support.EnvironmentContext.messager;
 import static io.graphine.processor.util.RepositoryAnnotationUtils.getRepositoryAnnotation;
 import static io.graphine.processor.util.RepositoryAnnotationUtils.getRepositoryAnnotationValue;
@@ -56,6 +60,8 @@ public final class RepositoryMetadataValidator {
             return false;
         }
 
+        Map<MethodType, MethodMetadataValidator> methodValidators = new EnumMap<>(MethodType.class);
+
         List<MethodMetadata> methods = repository.getMethods();
         for (MethodMetadata method : methods) {
             QueryableMethodName queryableName = method.getQueryableName();
@@ -63,8 +69,28 @@ public final class RepositoryMetadataValidator {
             QualifierFragment qualifier = queryableName.getQualifier();
             if (isNull(qualifier)) continue; // Method validation is skipped! Error will be thrown in the parser.
 
-            // TODO: add validation of specific methods
+            methodValidators
+                    .computeIfAbsent(qualifier.getMethodType(), methodType -> createMethodValidator(methodType, entity))
+                    .validate(method);
         }
         return valid;
+    }
+
+    private MethodMetadataValidator createMethodValidator(MethodType methodType, EntityMetadata entity) {
+        switch (methodType) {
+            case FIND:
+                return new RepositoryFindMethodMetadataValidator(entity);
+            case COUNT:
+                return new RepositoryCountMethodMetadataValidator(entity);
+            case SAVE:
+                return new RepositorySaveMethodMetadataValidator(entity);
+            case UPDATE:
+                return new RepositoryUpdateMethodMetadataValidator(entity);
+            case DELETE:
+                return new RepositoryDeleteMethodMetadataValidator(entity);
+            default:
+                // Unreachable exception for the current method type.
+                throw new IllegalArgumentException("Unknown method type");
+        }
     }
 }

@@ -95,6 +95,10 @@ public final class ConditionFragment {
             this.parameterCount = parameterCount;
         }
 
+        public String getKeyword() {
+            return keyword;
+        }
+
         public int getParameterCount() {
             return parameterCount;
         }

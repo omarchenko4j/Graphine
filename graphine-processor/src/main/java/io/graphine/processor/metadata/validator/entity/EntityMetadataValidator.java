@@ -90,7 +90,7 @@ public final class EntityMetadataValidator {
                 .stream()
                 .collect(toMap(method -> method.getSimpleName().toString(), identity(), (e1, e2) -> e1));
 
-        List<AttributeMetadata> attributes = entity.getAttributes();
+        Collection<AttributeMetadata> attributes = entity.getAttributes();
         for (AttributeMetadata attribute : attributes) {
             VariableElement attributeElement = attribute.getNativeElement();
             if (attributeElement.getModifiers().contains(FINAL)) {
