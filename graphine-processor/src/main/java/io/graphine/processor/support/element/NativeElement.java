@@ -1,6 +1,7 @@
 package io.graphine.processor.support.element;
 
 import javax.lang.model.element.Element;
+import java.util.Objects;
 
 /**
  * @author Oleg Marchenko
@@ -20,6 +21,19 @@ public class NativeElement<E extends Element> {
 
     public String getName() {
         return name;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        NativeElement<?> that = (NativeElement<?>) o;
+        return nativeElement.equals(that.nativeElement);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(nativeElement);
     }
 
     @Override

@@ -19,9 +19,4 @@ public class MethodMetadata extends NativeElement<ExecutableElement> {
     public QueryableMethodName getQueryableName() {
         return queryableName;
     }
-
-    @Override
-    public String toString() {
-        return nativeElement.toString();
-    }
 }
