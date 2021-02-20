@@ -15,6 +15,7 @@ import static io.graphine.processor.util.StringUtils.nullToEmpty;
 import static java.util.Collections.unmodifiableCollection;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
+import static java.util.stream.Collectors.toUnmodifiableList;
 
 /**
  * @author Oleg Marchenko
@@ -22,6 +23,7 @@ import static java.util.stream.Collectors.toMap;
 public class EntityMetadata extends NativeTypeElement {
     private final String schema;
     private final String table;
+    private final String qualifiedTable;
     private final IdentifierMetadata identifier;
     private final Map<String, AttributeMetadata> attributes;
 
@@ -33,6 +35,7 @@ public class EntityMetadata extends NativeTypeElement {
         super(element);
         this.schema = schema;
         this.table = table;
+        this.qualifiedTable = getIfNotEmpty(nullToEmpty(schema), () -> schema + '.') + table;
         this.identifier = identifier;
         this.attributes = attributes
                 .stream()
@@ -47,6 +50,10 @@ public class EntityMetadata extends NativeTypeElement {
         return table;
     }
 
+    public String getQualifiedTable() {
+        return qualifiedTable;
+    }
+
     public IdentifierMetadata getIdentifier() {
         return identifier;
     }
@@ -59,8 +66,18 @@ public class EntityMetadata extends NativeTypeElement {
         return unmodifiableCollection(attributes.values());
     }
 
+    public Collection<AttributeMetadata> getAttributes(boolean excludeIdentifier) {
+        if (excludeIdentifier) {
+            return this.attributes.values()
+                                  .stream()
+                                  .filter(attribute -> !attribute.getName().equals(identifier.getName()))
+                                  .collect(toUnmodifiableList());
+        }
+        return getAttributes();
+    }
+
     @Override
     public String toString() {
-        return qualifiedName + " [" + getIfNotEmpty(nullToEmpty(schema), () -> schema + '.') + table + ']';
+        return qualifiedName + " [" + qualifiedTable + ']';
     }
 }
