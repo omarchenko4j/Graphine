@@ -1,8 +1,8 @@
 package io.graphine.processor.metadata.model.repository;
 
-import io.graphine.processor.metadata.model.NativeElementMetadata;
 import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
+import io.graphine.processor.support.element.NativeTypeElement;
 
 import javax.lang.model.element.TypeElement;
 import java.util.List;
@@ -14,7 +14,7 @@ import static java.util.Collections.unmodifiableList;
 /**
  * @author Oleg Marchenko
  */
-public class RepositoryMetadata extends NativeElementMetadata<TypeElement> {
+public class RepositoryMetadata extends NativeTypeElement {
     private final EntityMetadata entity;
     private final List<MethodMetadata> methods;
 

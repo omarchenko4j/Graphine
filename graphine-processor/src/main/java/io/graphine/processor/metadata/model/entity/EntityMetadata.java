@@ -1,8 +1,8 @@
 package io.graphine.processor.metadata.model.entity;
 
-import io.graphine.processor.metadata.model.NativeElementMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.IdentifierMetadata;
+import io.graphine.processor.support.element.NativeTypeElement;
 
 import javax.lang.model.element.TypeElement;
 import java.util.Collection;
@@ -19,7 +19,7 @@ import static java.util.stream.Collectors.toMap;
 /**
  * @author Oleg Marchenko
  */
-public class EntityMetadata extends NativeElementMetadata<TypeElement> {
+public class EntityMetadata extends NativeTypeElement {
     private final String schema;
     private final String table;
     private final IdentifierMetadata identifier;

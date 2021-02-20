@@ -2,7 +2,7 @@ package io.graphine.processor.metadata.model.entity.attribute;
 
 import io.graphine.core.annotation.Attribute;
 import io.graphine.core.annotation.Id;
-import io.graphine.processor.metadata.model.NativeElementMetadata;
+import io.graphine.processor.support.element.NativeElement;
 
 import javax.lang.model.element.VariableElement;
 
@@ -11,7 +11,7 @@ import static java.util.Objects.nonNull;
 /**
  * @author Oleg Marchenko
  */
-public class AttributeMetadata extends NativeElementMetadata<VariableElement> {
+public class AttributeMetadata extends NativeElement<VariableElement> {
     protected final String column;
 
     public AttributeMetadata(VariableElement element, String column) {
