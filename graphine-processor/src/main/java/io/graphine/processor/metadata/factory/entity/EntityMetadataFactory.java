@@ -40,18 +40,22 @@ public final class EntityMetadataFactory {
 
         List<VariableElement> fields = fieldsIn(element.getEnclosedElements());
 
-        IdentifierMetadata identifier = fields
-                .stream()
-                .filter(IdentifierMetadata::isIdentifier)
-                .findFirst()
-                .map(attributeMetadataFactory::createIdentifier)
-                .orElse(null);
-
         List<AttributeMetadata> attributes = fields
                 .stream()
                 .filter(AttributeMetadata::isAttribute)
-                .map(attributeMetadataFactory::createAttribute)
+                .map(field -> {
+                    if (IdentifierMetadata.isIdentifier(field)) {
+                        return attributeMetadataFactory.createIdentifier(field);
+                    }
+                    return attributeMetadataFactory.createAttribute(field);
+                })
                 .collect(toList());
+
+        IdentifierMetadata identifier = (IdentifierMetadata) attributes
+                .stream()
+                .filter(attribute -> attribute instanceof IdentifierMetadata)
+                .findFirst()
+                .orElse(null);
 
         return new EntityMetadata(element, schema, table, identifier, attributes);
     }
