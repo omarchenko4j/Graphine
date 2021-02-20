@@ -6,11 +6,14 @@ import io.graphine.processor.metadata.factory.entity.AttributeMetadataFactory;
 import io.graphine.processor.metadata.factory.entity.EntityMetadataFactory;
 import io.graphine.processor.metadata.factory.repository.MethodMetadataFactory;
 import io.graphine.processor.metadata.factory.repository.RepositoryMetadataFactory;
+import io.graphine.processor.metadata.model.repository.RepositoryMetadata;
 import io.graphine.processor.metadata.parser.RepositoryMethodNameParser;
 import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 import io.graphine.processor.metadata.registry.RepositoryMetadataRegistry;
 import io.graphine.processor.metadata.validator.entity.EntityMetadataValidator;
 import io.graphine.processor.metadata.validator.repository.RepositoryMetadataValidator;
+import io.graphine.processor.query.generator.RepositoryNativeQueryGenerator;
+import io.graphine.processor.query.registry.RepositoryNativeQueryRegistry;
 import io.graphine.processor.support.EnvironmentContext;
 
 import javax.annotation.processing.*;
@@ -37,7 +40,7 @@ public class GraphineRepositoryProcessor extends AbstractProcessor {
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         if (roundEnv.processingOver() || annotations.isEmpty()) return false;
 
-        // Step 1
+        // Step 1. Collecting and validating entity metadata
         AttributeMetadataFactory attributeMetadataFactory = new AttributeMetadataFactory();
         EntityMetadataFactory entityMetadataFactory = new EntityMetadataFactory(attributeMetadataFactory);
         EntityMetadataCollector entityMetadataCollector = new EntityMetadataCollector(entityMetadataFactory);
@@ -50,7 +53,7 @@ public class GraphineRepositoryProcessor extends AbstractProcessor {
         entityMetadataRegistry.getEntities()
                               .forEach(entity -> messager.printMessage(Kind.NOTE, "Found entity: " + entity));
 
-        // Step 2
+        // Step 2. Collecting and validating repository metadata
         RepositoryMethodNameParser repositoryMethodNameParser = new RepositoryMethodNameParser();
         MethodMetadataFactory methodMetadataFactory = new MethodMetadataFactory(repositoryMethodNameParser);
         RepositoryMetadataFactory repositoryMetadataFactory =
@@ -65,6 +68,15 @@ public class GraphineRepositoryProcessor extends AbstractProcessor {
         }
         repositoryMetadataRegistry.getRepositories()
                                   .forEach(repository -> messager.printMessage(Kind.NOTE, "Found repository: " + repository));
+
+        // Step 3. Generating native queries
+        RepositoryNativeQueryGenerator repositoryNativeQueryGenerator = new RepositoryNativeQueryGenerator();
+        for (RepositoryMetadata repository : repositoryMetadataRegistry.getRepositories()) {
+            RepositoryNativeQueryRegistry repositoryNativeQueryRegistry =
+                    repositoryNativeQueryGenerator.generate(repository);
+            repositoryNativeQueryRegistry.getQueries()
+                                         .forEach(query -> messager.printMessage(Kind.NOTE, "Generated query: " + query.getValue()));
+        }
 
         return true;
     }
