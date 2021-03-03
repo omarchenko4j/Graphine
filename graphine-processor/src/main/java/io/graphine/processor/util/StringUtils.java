@@ -36,7 +36,7 @@ public final class StringUtils {
 
     public static String repeat(String str, String delimiter, String prefix, String suffix, int count) {
         StringJoiner joiner = new StringJoiner(delimiter, prefix, suffix);
-        for (int i = 1; i < count; i++) {
+        for (int i = 1; i <= count; i++) {
             joiner.add(str);
         }
         return joiner.toString();
