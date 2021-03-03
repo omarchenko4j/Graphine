@@ -69,9 +69,12 @@ public final class RepositoryMetadataValidator {
             QualifierFragment qualifier = queryableName.getQualifier();
             if (isNull(qualifier)) continue; // Method validation is skipped! Error will be thrown in the parser.
 
-            methodValidators
-                    .computeIfAbsent(qualifier.getMethodType(), methodType -> createMethodValidator(methodType, entity))
-                    .validate(method);
+            MethodMetadataValidator methodMetadataValidator =
+                    methodValidators.computeIfAbsent(qualifier.getMethodType(),
+                                                     methodType -> createMethodValidator(methodType, entity));
+            if (!methodMetadataValidator.validate(method)) {
+                valid = false;
+            }
         }
         return valid;
     }
