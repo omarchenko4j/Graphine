@@ -77,8 +77,7 @@ public abstract class RepositoryModifyingMethodMetadataValidator extends MethodM
             messager.printMessage(Kind.ERROR, "Method must consume one parameter", methodElement);
         }
         else {
-            TypeElement entityElement = entity.getNativeElement();
-            TypeMirror entityType = entityElement.asType();
+            TypeMirror entityType = entity.getNativeType();
 
             VariableElement parameterElement = parameters.get(0);
             TypeMirror parameterType = parameterElement.asType();

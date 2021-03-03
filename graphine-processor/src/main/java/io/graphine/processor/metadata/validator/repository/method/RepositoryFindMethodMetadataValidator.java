@@ -40,7 +40,7 @@ public final class RepositoryFindMethodMetadataValidator extends MethodMetadataV
     protected boolean validateReturnType(ExecutableElement methodElement, MethodForm methodForm) {
         boolean valid = true;
 
-        TypeMirror entityType = entityElement.asType();
+        TypeMirror entityType = entity.getNativeType();
         TypeMirror returnType = methodElement.getReturnType();
 
         switch (methodForm) {

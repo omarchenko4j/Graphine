@@ -32,17 +32,13 @@ import static javax.tools.Diagnostic.Kind;
  */
 public abstract class MethodMetadataValidator {
     protected final EntityMetadata entity;
-    protected final TypeElement entityElement;
 
     protected MethodMetadataValidator(EntityMetadata entity) {
         this.entity = entity;
-        this.entityElement = entity.getNativeElement();
     }
 
     public boolean validate(MethodMetadata method) {
-        ExecutableElement methodElement = method.getNativeElement();
-        QueryableMethodName queryableName = method.getQueryableName();
-        return validate(methodElement, queryableName);
+        return validate(method.getNativeElement(), method.getQueryableName());
     }
 
     private boolean validate(ExecutableElement methodElement, QueryableMethodName queryableName) {
@@ -64,21 +60,23 @@ public abstract class MethodMetadataValidator {
         boolean valid = true;
 
         if (nonNull(condition)) {
-            List<AndPredicate> predicates = condition.getOrPredicates()
-                                                     .stream()
-                                                     .flatMap(orPredicate -> orPredicate.getAndPredicates().stream())
-                                                     .collect(toList());
+            List<AndPredicate> predicates =
+                    condition.getOrPredicates()
+                             .stream()
+                             .flatMap(orPredicate -> orPredicate.getAndPredicates().stream())
+                             .collect(toList());
 
-            int numberOfConditionParameters = predicates
-                    .stream()
-                    .map(AndPredicate::getOperator)
-                    .mapToInt(OperatorType::getParameterCount)
-                    .sum();
+            int numberOfConditionParameters =
+                    predicates
+                            .stream()
+                            .map(AndPredicate::getOperator)
+                            .mapToInt(OperatorType::getParameterCount)
+                            .sum();
 
             List<? extends VariableElement> parameters = methodElement.getParameters();
 
             int numberOfMethodParameters = parameters.size();
-            if (numberOfMethodParameters != numberOfConditionParameters) {
+            if (numberOfConditionParameters != numberOfMethodParameters) {
                 messager.printMessage(Kind.ERROR,
                                       "Number of condition parameters (" + numberOfConditionParameters +
                                               ") is not equal to the number of method parameters (" +
@@ -100,7 +98,7 @@ public abstract class MethodMetadataValidator {
                                           methodElement);
                 }
                 else {
-                    TypeMirror attributeType = attribute.getNativeElement().asType();
+                    TypeMirror attributeType = attribute.getNativeType();
 
                     int parameterCount = parameterIndex + operator.getParameterCount();
                     while (parameterIndex < parameterCount) {

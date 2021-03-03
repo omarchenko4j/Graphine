@@ -1,6 +1,7 @@
 package io.graphine.processor.support.element;
 
 import javax.lang.model.element.Element;
+import javax.lang.model.type.TypeMirror;
 import java.util.Objects;
 
 /**
@@ -17,6 +18,10 @@ public class NativeElement<E extends Element> {
 
     public E getNativeElement() {
         return nativeElement;
+    }
+
+    public TypeMirror getNativeType() {
+        return nativeElement.asType();
     }
 
     public String getName() {
