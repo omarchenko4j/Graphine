@@ -5,9 +5,15 @@ import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment;
 import io.graphine.processor.query.model.NativeQuery;
+import io.graphine.processor.query.model.parameter.Parameter;
 
+import javax.lang.model.element.VariableElement;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
+
+import static io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment.*;
+import static java.util.Collections.emptyList;
 
 /**
  * @author Oleg Marchenko
@@ -19,17 +25,31 @@ public abstract class RepositoryMethodNativeQueryGenerator {
         this.entity = entity;
     }
 
-    public abstract NativeQuery generate(MethodMetadata method);
+    public final NativeQuery generate(MethodMetadata method) {
+        return new NativeQuery(generateQuery(method),
+                               collectProducedParameters(method),
+                               collectConsumedParameters(method));
+    }
 
-    protected String generateConditionClause(ConditionFragment condition) {
+    protected abstract String generateQuery(MethodMetadata method);
+
+    protected List<Parameter> collectProducedParameters(MethodMetadata method) {
+        return emptyList();
+    }
+
+    protected List<Parameter> collectConsumedParameters(MethodMetadata method) {
+        return emptyList();
+    }
+
+    protected String generateWhereClause(ConditionFragment condition) {
         StringJoiner orPredicateJoiner = new StringJoiner(" OR ");
 
-        List<ConditionFragment.OrPredicate> orPredicates = condition.getOrPredicates();
-        for (ConditionFragment.OrPredicate orPredicate : orPredicates) {
+        List<OrPredicate> orPredicates = condition.getOrPredicates();
+        for (OrPredicate orPredicate : orPredicates) {
             StringJoiner andPredicateJoiner = new StringJoiner(" AND ");
 
-            List<ConditionFragment.AndPredicate> andPredicates = orPredicate.getAndPredicates();
-            for (ConditionFragment.AndPredicate andPredicate : andPredicates) {
+            List<AndPredicate> andPredicates = orPredicate.getAndPredicates();
+            for (AndPredicate andPredicate : andPredicates) {
                 AttributeMetadata attribute = entity.getAttribute(andPredicate.getAttributeName());
                 String column = attribute.getColumn();
                 switch (andPredicate.getOperator()) {
@@ -107,5 +127,31 @@ public abstract class RepositoryMethodNativeQueryGenerator {
         }
 
         return " WHERE " + orPredicateJoiner.toString();
+    }
+
+    protected List<Parameter> collectConditionParameters(ConditionFragment condition,
+                                                         List<? extends VariableElement> methodParameters) {
+        List<Parameter> conditionParameters = new ArrayList<>(methodParameters.size());
+
+        int parameterIndex = 0;
+
+        List<OrPredicate> orPredicates = condition.getOrPredicates();
+        for (OrPredicate orPredicate : orPredicates) {
+            List<AndPredicate> andPredicates = orPredicate.getAndPredicates();
+            for (AndPredicate andPredicate : andPredicates) {
+                OperatorType operator = andPredicate.getOperator();
+
+                int parameterCount = operator.getParameterCount();
+                for (int i = parameterIndex; i < (parameterIndex + parameterCount); i++) {
+                    VariableElement parameterElement = methodParameters.get(i);
+
+                    conditionParameters.add(Parameter.basedOn(parameterElement));
+                }
+
+                parameterIndex += parameterCount;
+            }
+        }
+
+        return conditionParameters;
     }
 }

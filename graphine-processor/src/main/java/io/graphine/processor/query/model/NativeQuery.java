@@ -4,7 +4,6 @@ import io.graphine.processor.query.model.parameter.Parameter;
 
 import java.util.List;
 
-import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 
 /**
@@ -14,10 +13,6 @@ public class NativeQuery {
     private final String value;
     private final List<Parameter> producedParameters;
     private final List<Parameter> consumedParameters;
-
-    public NativeQuery(String value) {
-        this(value, emptyList(), emptyList());
-    }
 
     public NativeQuery(String value,
                        List<Parameter> producedParameters,

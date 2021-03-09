@@ -1,5 +1,6 @@
 package io.graphine.processor.query.model.parameter;
 
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 
 /**
@@ -29,5 +30,9 @@ public class Parameter {
     @Override
     public String toString() {
         return name;
+    }
+
+    public static Parameter basedOn(VariableElement element) {
+        return new Parameter(element.getSimpleName().toString(), element.asType());
     }
 }
