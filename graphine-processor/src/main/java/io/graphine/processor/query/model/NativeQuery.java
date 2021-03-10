@@ -11,19 +11,26 @@ import static java.util.Collections.unmodifiableList;
  */
 public class NativeQuery {
     private final String value;
+    private final List<Parameter> deferredParameters;
     private final List<Parameter> producedParameters;
     private final List<Parameter> consumedParameters;
 
     public NativeQuery(String value,
+                       List<Parameter> deferredParameters,
                        List<Parameter> producedParameters,
                        List<Parameter> consumedParameters) {
         this.value = value;
+        this.deferredParameters = deferredParameters;
         this.producedParameters = producedParameters;
         this.consumedParameters = consumedParameters;
     }
 
     public String getValue() {
         return value;
+    }
+
+    public List<Parameter> getDeferredParameters() {
+        return unmodifiableList(deferredParameters);
     }
 
     public List<Parameter> getProducedParameters() {

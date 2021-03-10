@@ -16,6 +16,7 @@ import java.util.stream.Collectors;
 import static io.graphine.processor.util.StringUtils.uncapitalize;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
 /**
@@ -65,6 +66,17 @@ public final class RepositoryFindMethodNativeQueryGenerator extends RepositoryMe
                        })
                        .collect(Collectors.joining(", "));
         return " ORDER BY " + joinedOrderColumns;
+    }
+
+    @Override
+    protected List<Parameter> collectDeferredParameters(MethodMetadata method) {
+        QueryableMethodName queryableName = method.getQueryableName();
+
+        ConditionFragment condition = queryableName.getCondition();
+        if (isNull(condition)) return emptyList();
+
+        ExecutableElement methodElement = method.getNativeElement();
+        return collectDeferredParameters(condition, methodElement.getParameters());
     }
 
     @Override

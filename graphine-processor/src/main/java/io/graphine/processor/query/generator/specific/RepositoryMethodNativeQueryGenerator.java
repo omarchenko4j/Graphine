@@ -27,11 +27,16 @@ public abstract class RepositoryMethodNativeQueryGenerator {
 
     public final NativeQuery generate(MethodMetadata method) {
         return new NativeQuery(generateQuery(method),
+                               collectDeferredParameters(method),
                                collectProducedParameters(method),
                                collectConsumedParameters(method));
     }
 
     protected abstract String generateQuery(MethodMetadata method);
+
+    protected List<Parameter> collectDeferredParameters(MethodMetadata method) {
+        return emptyList();
+    }
 
     protected List<Parameter> collectProducedParameters(MethodMetadata method) {
         return emptyList();
@@ -41,7 +46,7 @@ public abstract class RepositoryMethodNativeQueryGenerator {
         return emptyList();
     }
 
-    protected String generateWhereClause(ConditionFragment condition) {
+    protected final String generateWhereClause(ConditionFragment condition) {
         StringJoiner orPredicateJoiner = new StringJoiner(" OR ");
 
         List<OrPredicate> orPredicates = condition.getOrPredicates();
@@ -129,8 +134,8 @@ public abstract class RepositoryMethodNativeQueryGenerator {
         return " WHERE " + orPredicateJoiner.toString();
     }
 
-    protected List<Parameter> collectConditionParameters(ConditionFragment condition,
-                                                         List<? extends VariableElement> methodParameters) {
+    protected final List<Parameter> collectConditionParameters(ConditionFragment condition,
+                                                               List<? extends VariableElement> methodParameters) {
         List<Parameter> conditionParameters = new ArrayList<>(methodParameters.size());
 
         int parameterIndex = 0;
@@ -153,5 +158,26 @@ public abstract class RepositoryMethodNativeQueryGenerator {
         }
 
         return conditionParameters;
+    }
+
+    protected final List<Parameter> collectDeferredParameters(ConditionFragment condition,
+                                                              List<? extends VariableElement> methodParameters) {
+        List<Parameter> deferredParameters = new ArrayList<>(methodParameters.size());
+
+        int parameterIndex = 0;
+        List<OrPredicate> orPredicates = condition.getOrPredicates();
+        for (OrPredicate orPredicate : orPredicates) {
+            List<AndPredicate> andPredicates = orPredicate.getAndPredicates();
+            for (AndPredicate andPredicate : andPredicates) {
+                OperatorType operator = andPredicate.getOperator();
+                if (operator == OperatorType.IN || operator == OperatorType.NOT_IN) {
+                    VariableElement parameterElement = methodParameters.get(parameterIndex);
+                    deferredParameters.add(Parameter.basedOn(parameterElement));
+                }
+                parameterIndex += operator.getParameterCount();
+            }
+        }
+
+        return deferredParameters;
     }
 }

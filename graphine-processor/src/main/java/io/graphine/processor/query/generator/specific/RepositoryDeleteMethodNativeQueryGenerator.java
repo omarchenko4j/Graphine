@@ -10,9 +10,12 @@ import io.graphine.processor.query.model.parameter.ComplexParameter;
 import io.graphine.processor.query.model.parameter.Parameter;
 
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.VariableElement;
 import java.util.List;
 
+import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.MethodForm;
 import static io.graphine.processor.util.StringUtils.uncapitalize;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.isNull;
 
@@ -57,6 +60,27 @@ public final class RepositoryDeleteMethodNativeQueryGenerator extends Repository
         }
 
         return queryBuilder.toString();
+    }
+
+    @Override
+    protected List<Parameter> collectDeferredParameters(MethodMetadata method) {
+        ExecutableElement methodElement = method.getNativeElement();
+        List<? extends VariableElement> methodParameters = methodElement.getParameters();
+
+        QueryableMethodName queryableName = method.getQueryableName();
+
+        ConditionFragment condition = queryableName.getCondition();
+        if (isNull(condition)) {
+            QualifierFragment qualifier = queryableName.getQualifier();
+            if (qualifier.getMethodForm() == MethodForm.PLURAL) {
+                VariableElement parameterElement = methodParameters.get(0);
+                return singletonList(Parameter.basedOn(parameterElement));
+            }
+        }
+        else {
+            return collectDeferredParameters(condition, methodParameters);
+        }
+        return emptyList();
     }
 
     @Override
