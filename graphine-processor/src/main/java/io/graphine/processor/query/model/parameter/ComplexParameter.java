@@ -21,6 +21,11 @@ public class ComplexParameter extends Parameter {
     }
 
     @Override
+    public <R> R accept(ParameterVisitor<R> visitor) {
+        return visitor.visit(this);
+    }
+
+    @Override
     public String toString() {
         return super.toString() + " " + join(childParameters, ", ", "{", "}");
     }

@@ -27,6 +27,10 @@ public class Parameter {
         return type;
     }
 
+    public <R> R accept(ParameterVisitor<R> visitor) {
+        return visitor.visit(this);
+    }
+
     @Override
     public String toString() {
         return name;
