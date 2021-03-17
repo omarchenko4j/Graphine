@@ -1,5 +1,9 @@
 package io.graphine.processor;
 
+import com.squareup.javapoet.JavaFile;
+import com.squareup.javapoet.TypeSpec;
+import io.graphine.core.util.UnnamedParameterUnwrapper;
+import io.graphine.processor.code.generator.repository.RepositoryImplementationGenerator;
 import io.graphine.processor.metadata.collector.EntityMetadataCollector;
 import io.graphine.processor.metadata.collector.RepositoryMetadataCollector;
 import io.graphine.processor.metadata.factory.entity.AttributeMetadataFactory;
@@ -18,8 +22,10 @@ import io.graphine.processor.support.EnvironmentContext;
 
 import javax.annotation.processing.*;
 import javax.lang.model.element.TypeElement;
+import java.io.IOException;
 import java.util.Set;
 
+import static io.graphine.processor.support.EnvironmentContext.filer;
 import static io.graphine.processor.support.EnvironmentContext.messager;
 import static javax.lang.model.SourceVersion.RELEASE_11;
 import static javax.tools.Diagnostic.Kind;
@@ -67,15 +73,34 @@ public class GraphineRepositoryProcessor extends AbstractProcessor {
             return true;
         }
         repositoryMetadataRegistry.getRepositories()
-                                  .forEach(repository -> messager.printMessage(Kind.NOTE, "Found repository: " + repository));
+                                  .forEach(repository -> messager.printMessage(Kind.NOTE,
+                                                                               "Found repository: " + repository));
 
-        // Step 3. Generating native queries
+        // Step 3. Generating native queries and repository implementations
         RepositoryNativeQueryGenerator repositoryNativeQueryGenerator = new RepositoryNativeQueryGenerator();
         for (RepositoryMetadata repository : repositoryMetadataRegistry.getRepositories()) {
             RepositoryNativeQueryRegistry repositoryNativeQueryRegistry =
                     repositoryNativeQueryGenerator.generate(repository);
             repositoryNativeQueryRegistry.getQueries()
-                                         .forEach(query -> messager.printMessage(Kind.NOTE, "Generated query: " + query.getValue()));
+                                         .forEach(query -> messager.printMessage(Kind.NOTE,
+                                                                                 "Generated query: " + query.getValue()));
+
+            // TODO: extract this into a separate standalone step
+            RepositoryImplementationGenerator repositoryImplementationGenerator =
+                    new RepositoryImplementationGenerator(repositoryNativeQueryRegistry);
+            TypeSpec typeSpec = repositoryImplementationGenerator.generate(repository);
+
+            JavaFile javaFile = JavaFile.builder(repository.getPackageName(), typeSpec)
+                                        .skipJavaLangImports(true)
+                                        .indent("\t")
+                                        .addStaticImport(UnnamedParameterUnwrapper.class, "unwrapFor")
+                                        .build();
+            try {
+                javaFile.writeTo(filer);
+            }
+            catch (IOException e) {
+                messager.printMessage(Kind.ERROR, e.getMessage(), repository.getNativeElement());
+            }
         }
 
         return true;
