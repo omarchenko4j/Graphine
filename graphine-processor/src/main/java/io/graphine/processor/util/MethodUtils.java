@@ -15,8 +15,12 @@ public final class MethodUtils {
     private static final String SETTER_PREFIX = "set";
 
     public static String getter(VariableElement field) {
-        String fieldName = field.getSimpleName().toString();
         TypeMirror fieldType = field.asType();
+        String fieldName = field.getSimpleName().toString();
+        return getter(fieldType, fieldName);
+    }
+
+    public static String getter(TypeMirror fieldType, String fieldName) {
         if (fieldType.getKind() == BOOLEAN) {
             return methodNameWithPrefix(fieldName, BOOLEAN_GETTER_PREFIX);
         }
@@ -25,6 +29,10 @@ public final class MethodUtils {
 
     public static String setter(VariableElement field) {
         String fieldName = field.getSimpleName().toString();
+        return setter(fieldName);
+    }
+
+    public static String setter(String fieldName) {
         return methodNameWithPrefix(fieldName, SETTER_PREFIX);
     }
 
