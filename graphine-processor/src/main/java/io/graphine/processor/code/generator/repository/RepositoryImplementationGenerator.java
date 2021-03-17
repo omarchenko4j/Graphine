@@ -29,9 +29,17 @@ public final class RepositoryImplementationGenerator {
     public static final String CLASS_NAME_PREFIX = "Graphine";
 
     private final RepositoryNativeQueryRegistry repositoryNativeQueryRegistry;
+    private final Map<MethodType, RepositoryMethodImplementationGenerator> methodGenerators;
 
     public RepositoryImplementationGenerator(RepositoryNativeQueryRegistry repositoryNativeQueryRegistry) {
         this.repositoryNativeQueryRegistry = repositoryNativeQueryRegistry;
+
+        this.methodGenerators = new EnumMap<>(MethodType.class);
+        this.methodGenerators.put(MethodType.FIND, new RepositoryFindMethodImplementationGenerator());
+        this.methodGenerators.put(MethodType.COUNT, new RepositoryCountMethodImplementationGenerator());
+        this.methodGenerators.put(MethodType.SAVE, new RepositorySaveMethodImplementationGenerator());
+        this.methodGenerators.put(MethodType.UPDATE, new RepositoryUpdateMethodImplementationGenerator());
+        this.methodGenerators.put(MethodType.DELETE, new RepositoryDeleteMethodImplementationGenerator());
     }
 
     public TypeSpec generate(RepositoryMetadata repository) {
@@ -39,6 +47,7 @@ public final class RepositoryImplementationGenerator {
 
         TypeSpec.Builder classBuilder = TypeSpec
                 .classBuilder(ClassName.get(repository.getPackageName(), CLASS_NAME_PREFIX + repository.getName()))
+                // TODO: transfer responsibility to the originating element dependency collector
                 .addOriginatingElement(repository.getNativeElement())
                 // Entity is a dependency of the repository implementation.
                 // It positively affects on incremental build!
@@ -55,24 +64,13 @@ public final class RepositoryImplementationGenerator {
                                      .addStatement("this.dataSource = dataSource")
                                      .build());
 
-        Map<MethodType, RepositoryMethodImplementationGenerator> methodImplementationGenerators = new EnumMap<>(MethodType.class);
-        methodImplementationGenerators.put(MethodType.FIND, new RepositoryFindMethodImplementationGenerator(entity));
-        methodImplementationGenerators.put(MethodType.COUNT, new RepositoryCountMethodImplementationGenerator(entity));
-        methodImplementationGenerators.put(MethodType.SAVE, new RepositorySaveMethodImplementationGenerator(entity));
-        methodImplementationGenerators.put(MethodType.UPDATE, new RepositoryUpdateMethodImplementationGenerator(entity));
-        methodImplementationGenerators.put(MethodType.DELETE, new RepositoryDeleteMethodImplementationGenerator(entity));
-
         List<MethodMetadata> methods = repository.getMethods();
         for (MethodMetadata method : methods) {
             QueryableMethodName queryableName = method.getQueryableName();
             QualifierFragment qualifier = queryableName.getQualifier();
-
-            RepositoryMethodImplementationGenerator methodImplementationGenerator =
-                    methodImplementationGenerators.get(qualifier.getMethodType());
-
+            RepositoryMethodImplementationGenerator methodGenerator = methodGenerators.get(qualifier.getMethodType());
             NativeQuery query = repositoryNativeQueryRegistry.getQuery(method);
-
-            classBuilder.addMethod(methodImplementationGenerator.generate(method, query));
+            classBuilder.addMethod(methodGenerator.generate(method, query));
         }
 
         return classBuilder.build();

@@ -7,7 +7,6 @@ import io.graphine.processor.code.renderer.PreparedStatementParameterRenderer;
 import io.graphine.processor.code.renderer.parameter.IncrementalParameterIndexProvider;
 import io.graphine.processor.code.renderer.parameter.NumericParameterIndexProvider;
 import io.graphine.processor.code.renderer.parameter.ParameterIndexProvider;
-import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.model.repository.method.name.QueryableMethodName;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment;
@@ -32,10 +31,6 @@ import static java.util.Objects.isNull;
  * @author Oleg Marchenko
  */
 public final class RepositoryDeleteMethodImplementationGenerator extends RepositoryMethodImplementationGenerator {
-    public RepositoryDeleteMethodImplementationGenerator(EntityMetadata entity) {
-        super(entity);
-    }
-
     @Override
     public MethodSpec generate(MethodMetadata method, NativeQuery query) {
         ExecutableElement methodElement = method.getNativeElement();

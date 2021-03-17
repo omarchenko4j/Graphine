@@ -7,7 +7,6 @@ import io.graphine.processor.code.renderer.ResultSetParameterRenderer;
 import io.graphine.processor.code.renderer.parameter.IncrementalParameterIndexProvider;
 import io.graphine.processor.code.renderer.parameter.NumericParameterIndexProvider;
 import io.graphine.processor.code.renderer.parameter.ParameterIndexProvider;
-import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.query.model.NativeQuery;
 import io.graphine.processor.query.model.parameter.Parameter;
@@ -28,10 +27,6 @@ import java.util.stream.Collectors;
  * @author Oleg Marchenko
  */
 public final class RepositoryFindMethodImplementationGenerator extends RepositoryMethodImplementationGenerator {
-    public RepositoryFindMethodImplementationGenerator(EntityMetadata entity) {
-        super(entity);
-    }
-
     @Override
     public MethodSpec generate(MethodMetadata method, NativeQuery query) {
         ExecutableElement methodElement = method.getNativeElement();

@@ -4,7 +4,6 @@ import com.squareup.javapoet.MethodSpec;
 import io.graphine.processor.code.renderer.GeneratedKeyParameterRenderer;
 import io.graphine.processor.code.renderer.PreparedStatementParameterRenderer;
 import io.graphine.processor.code.renderer.parameter.NumericParameterIndexProvider;
-import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.query.model.NativeQuery;
 import io.graphine.processor.query.model.parameter.Parameter;
@@ -23,10 +22,6 @@ import java.util.List;
  * @author Oleg Marchenko
  */
 public final class RepositorySaveMethodImplementationGenerator extends RepositoryMethodImplementationGenerator {
-    public RepositorySaveMethodImplementationGenerator(EntityMetadata entity) {
-        super(entity);
-    }
-
     @Override
     public MethodSpec generate(MethodMetadata method, NativeQuery query) {
         ExecutableElement methodElement = method.getNativeElement();
