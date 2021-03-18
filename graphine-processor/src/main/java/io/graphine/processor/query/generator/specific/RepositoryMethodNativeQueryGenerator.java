@@ -5,14 +5,17 @@ import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment;
 import io.graphine.processor.query.model.NativeQuery;
+import io.graphine.processor.query.model.parameter.ComputableParameter;
 import io.graphine.processor.query.model.parameter.Parameter;
 
 import javax.lang.model.element.VariableElement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
+import java.util.function.Function;
 
 import static io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment.*;
+import static io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment.OperatorType.*;
 import static java.util.Collections.emptyList;
 
 /**
@@ -85,22 +88,14 @@ public abstract class RepositoryMethodNativeQueryGenerator {
                         andPredicateJoiner.add(column + " >= ?");
                         break;
                     case LIKE:
+                    case STARTING_WITH:
+                    case ENDING_WITH:
+                    case CONTAINING:
                         andPredicateJoiner.add(column + " LIKE ?");
                         break;
                     case NOT_LIKE:
-                        andPredicateJoiner.add(column + " NOT LIKE ?");
-                        break;
-                    case STARTING_WITH:
-                        andPredicateJoiner.add(column + " LIKE CONCAT(?, '%')");
-                        break;
-                    case ENDING_WITH:
-                        andPredicateJoiner.add(column + " LIKE CONCAT('%', ?)");
-                        break;
-                    case CONTAINING:
-                        andPredicateJoiner.add(column + " LIKE CONCAT('%', ?, '%')");
-                        break;
                     case NOT_CONTAINING:
-                        andPredicateJoiner.add(column + " NOT LIKE CONCAT('%', ?, '%')");
+                        andPredicateJoiner.add(column + " NOT LIKE ?");
                         break;
                     case EMPTY:
                         andPredicateJoiner.add(column + " = ''");
@@ -150,7 +145,26 @@ public abstract class RepositoryMethodNativeQueryGenerator {
                 for (int i = parameterIndex; i < (parameterIndex + parameterCount); i++) {
                     VariableElement parameterElement = methodParameters.get(i);
 
-                    conditionParameters.add(Parameter.basedOn(parameterElement));
+                    Parameter parameter = Parameter.basedOn(parameterElement);
+                    if (operator == STARTING_WITH) {
+                        Function<Parameter, Parameter> computedFunction =
+                                targetParameter -> new Parameter(targetParameter.getName() + " + \"%\"",
+                                                                 targetParameter.getType());
+                        parameter = new ComputableParameter(parameter, computedFunction);
+                    }
+                    else if (operator == ENDING_WITH) {
+                        Function<Parameter, Parameter> computedFunction =
+                                targetParameter -> new Parameter("\"%\" + " + targetParameter.getName(),
+                                                                 targetParameter.getType());
+                        parameter = new ComputableParameter(parameter, computedFunction);
+                    }
+                    else if (operator == CONTAINING || operator == NOT_CONTAINING) {
+                        Function<Parameter, Parameter> computedFunction =
+                                targetParameter -> new Parameter("\"%\" + " + targetParameter.getName() + " + \"%\"",
+                                                                 targetParameter.getType());
+                        parameter = new ComputableParameter(parameter, computedFunction);
+                    }
+                    conditionParameters.add(parameter);
                 }
 
                 parameterIndex += parameterCount;
@@ -170,7 +184,7 @@ public abstract class RepositoryMethodNativeQueryGenerator {
             List<AndPredicate> andPredicates = orPredicate.getAndPredicates();
             for (AndPredicate andPredicate : andPredicates) {
                 OperatorType operator = andPredicate.getOperator();
-                if (operator == OperatorType.IN || operator == OperatorType.NOT_IN) {
+                if (operator == IN || operator == NOT_IN) {
                     VariableElement parameterElement = methodParameters.get(parameterIndex);
                     deferredParameters.add(Parameter.basedOn(parameterElement));
                 }
