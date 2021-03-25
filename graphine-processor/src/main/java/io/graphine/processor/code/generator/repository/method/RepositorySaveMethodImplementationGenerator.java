@@ -1,6 +1,6 @@
 package io.graphine.processor.code.generator.repository.method;
 
-import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.CodeBlock;
 import io.graphine.processor.code.renderer.GeneratedKeyParameterRenderer;
 import io.graphine.processor.code.renderer.PreparedStatementAddBatchMethodRenderer;
 import io.graphine.processor.code.renderer.PreparedStatementExecuteMethodRenderer;
@@ -9,8 +9,9 @@ import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.query.model.NativeQuery;
 import io.graphine.processor.query.model.parameter.Parameter;
 
-import javax.lang.model.element.ExecutableElement;
-import java.sql.*;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.List;
 
 /**
@@ -18,53 +19,74 @@ import java.util.List;
  */
 public final class RepositorySaveMethodImplementationGenerator extends RepositoryMethodImplementationGenerator {
     @Override
-    public MethodSpec generate(MethodMetadata method, NativeQuery query) {
-        ExecutableElement methodElement = method.getNativeElement();
+    protected CodeBlock renderQuery(NativeQuery query) {
+        return CodeBlock.builder()
+                        .addStatement("String query = $S", query.getValue())
+                        .build();
+    }
 
-        MethodSpec.Builder methodBuilder = MethodSpec.overriding(methodElement);
-        methodBuilder
-                .beginControlFlow("try ($T connection = dataSource.getConnection())", Connection.class);
-        methodBuilder
-                .addStatement("String query = $S", query.getValue());
+    @Override
+    protected CodeBlock renderStatement(MethodMetadata method, NativeQuery query) {
+        CodeBlock.Builder builder = CodeBlock.builder();
 
         List<Parameter> producedParameters = query.getProducedParameters();
         if (producedParameters.isEmpty()) {
-            methodBuilder
-                    .beginControlFlow("try ($T statement = connection.prepareStatement(query))",
-                                      PreparedStatement.class);
+            builder.beginControlFlow("try ($T statement = connection.prepareStatement(query))",
+                                     PreparedStatement.class);
         }
         else {
-            methodBuilder
-                    .beginControlFlow(
-                            "try ($T statement = connection.prepareStatement(query, $T.RETURN_GENERATED_KEYS))",
-                            PreparedStatement.class, Statement.class
-                    );
+            builder.beginControlFlow(
+                    "try ($T statement = connection.prepareStatement(query, $T.RETURN_GENERATED_KEYS))",
+                    PreparedStatement.class, Statement.class
+            );
         }
 
+        return builder.add(renderStatementParameters(method, query))
+                      .endControlFlow()
+                      .build();
+    }
+
+    @Override
+    protected CodeBlock renderStatementParameters(MethodMetadata method, NativeQuery query) {
+        CodeBlock.Builder builder = CodeBlock.builder();
+
         Parameter consumedParameter = query.getConsumedParameters().get(0);
-        methodBuilder.addCode(consumedParameter.accept(
+        builder.add(consumedParameter.accept(
                 new PreparedStatementAddBatchMethodRenderer(new NumericParameterIndexProvider()))
         );
-        methodBuilder.addCode(consumedParameter.accept(new PreparedStatementExecuteMethodRenderer()));
+        builder.add(consumedParameter.accept(new PreparedStatementExecuteMethodRenderer()));
 
+        return builder.build();
+    }
+
+    @Override
+    protected CodeBlock renderResultSet(MethodMetadata method, NativeQuery query) {
+        CodeBlock.Builder builder = CodeBlock.builder();
+
+        List<Parameter> producedParameters = query.getProducedParameters();
         if (!producedParameters.isEmpty()) {
-            Parameter producedParameter = producedParameters.get(0);
-            methodBuilder
-                    .beginControlFlow("try ($T generatedKeys = statement.getGeneratedKeys())", ResultSet.class)
-                    .addCode(producedParameter.accept(
-                            new GeneratedKeyParameterRenderer(new NumericParameterIndexProvider())
-                    ))
+            builder
+                    .beginControlFlow("try ($T generatedKeys = statement.getGeneratedKeys())",
+                                      ResultSet.class)
+                    .add(renderResultSetParameters(method, query))
                     .endControlFlow();
         }
 
-        methodBuilder
-                .endControlFlow();
-        methodBuilder
-                .endControlFlow();
-        methodBuilder
-                .beginControlFlow("catch ($T e)", SQLException.class)
-                .addStatement("throw new $T(e)", RuntimeException.class)
-                .endControlFlow();
-        return methodBuilder.build();
+        return builder.build();
+    }
+
+    @Override
+    protected CodeBlock renderResultSetParameters(MethodMetadata method, NativeQuery query) {
+        CodeBlock.Builder builder = CodeBlock.builder();
+
+        List<Parameter> producedParameters = query.getProducedParameters();
+        if (!producedParameters.isEmpty()) {
+            Parameter producedParameter = producedParameters.get(0);
+            builder.add(producedParameter.accept(
+                    new GeneratedKeyParameterRenderer(new NumericParameterIndexProvider())
+            ));
+        }
+
+        return builder.build();
     }
 }
