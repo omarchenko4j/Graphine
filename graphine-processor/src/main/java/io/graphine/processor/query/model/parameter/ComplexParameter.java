@@ -27,6 +27,6 @@ public class ComplexParameter extends Parameter {
 
     @Override
     public String toString() {
-        return super.toString() + " " + join(childParameters, ", ", "{", "}");
+        return super.toString() + " " + join(childParameters, ", ", "{ ", " }");
     }
 }

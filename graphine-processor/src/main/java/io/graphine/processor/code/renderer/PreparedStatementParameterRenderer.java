@@ -3,11 +3,11 @@ package io.graphine.processor.code.renderer;
 import com.squareup.javapoet.CodeBlock;
 import io.graphine.processor.code.renderer.parameter.ParameterIndexProvider;
 import io.graphine.processor.query.model.parameter.ComplexParameter;
+import io.graphine.processor.query.model.parameter.IterableParameter;
 import io.graphine.processor.query.model.parameter.Parameter;
 import io.graphine.processor.query.model.parameter.ParameterVisitor;
 
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import java.sql.Date;
@@ -68,15 +68,6 @@ public class PreparedStatementParameterRenderer implements ParameterVisitor<Code
             case DOUBLE:
                 return CodeBlock.builder()
                                 .addStatement("statement.setDouble($L, $L)", parameterIndex, parameterName)
-                                .build();
-            case ARRAY:
-                ArrayType arrayType = (ArrayType) parameterType;
-                TypeMirror componentType = arrayType.getComponentType();
-                return CodeBlock.builder()
-                                .beginControlFlow("for ($T $L : $L)",
-                                                  componentType, "element", parameterName)
-                                .add(new Parameter("element", componentType).accept(this))
-                                .endControlFlow()
                                 .build();
             case DECLARED:
                 DeclaredType declaredType = (DeclaredType) parameterType;
@@ -146,5 +137,16 @@ public class PreparedStatementParameterRenderer implements ParameterVisitor<Code
         }
 
         return builder.build();
+    }
+
+    @Override
+    public CodeBlock visit(IterableParameter parameter) {
+        Parameter iteratedParameter = parameter.getIteratedParameter();
+        return CodeBlock.builder()
+                        .beginControlFlow("for ($T $L : $L)",
+                                          iteratedParameter.getType(), iteratedParameter.getName(), parameter.getName())
+                        .add(iteratedParameter.accept(this))
+                        .endControlFlow()
+                        .build();
     }
 }

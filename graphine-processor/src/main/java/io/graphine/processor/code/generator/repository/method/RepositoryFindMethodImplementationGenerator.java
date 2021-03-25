@@ -70,62 +70,7 @@ public final class RepositoryFindMethodImplementationGenerator extends Repositor
             }
 
             for (Parameter parameter : consumedParameters) {
-                Parameter targetParameter = parameter;
-
-                String parameterName = targetParameter.getName();
-                TypeMirror parameterType = targetParameter.getType();
-                switch (parameterType.getKind()) {
-                    case ARRAY:
-                        ArrayType arrayType = (ArrayType) parameterType;
-                        TypeMirror componentType = arrayType.getComponentType();
-                        methodBuilder
-                                .beginControlFlow("for ($T $L : $L)",
-                                                  componentType, "element", parameterName);
-                        targetParameter = new Parameter("element", componentType);
-                        break;
-                    case DECLARED:
-                        DeclaredType declaredType = (DeclaredType) parameterType;
-                        TypeElement typeElement = (TypeElement) declaredType.asElement();
-                        switch (typeElement.getQualifiedName().toString()) {
-                            case "java.lang.Iterable":
-                            case "java.util.Collection":
-                            case "java.util.List":
-                            case "java.util.Set":
-                                TypeMirror genericType = declaredType.getTypeArguments().get(0);
-                                methodBuilder
-                                        .beginControlFlow("for ($T $L : $L)",
-                                                          genericType, "element", parameterName);
-                                targetParameter = new Parameter("element", genericType);
-                                break;
-                        }
-                        break;
-                }
-
-                methodBuilder.addCode(
-                        targetParameter.accept(
-                                new PreparedStatementParameterRenderer(parameterIndexProvider)
-                        )
-                );
-
-                switch (parameterType.getKind()) {
-                    case ARRAY:
-                        methodBuilder
-                                .endControlFlow();
-                        break;
-                    case DECLARED:
-                        DeclaredType declaredType = (DeclaredType) parameterType;
-                        TypeElement typeElement = (TypeElement) declaredType.asElement();
-                        switch (typeElement.getQualifiedName().toString()) {
-                            case "java.lang.Iterable":
-                            case "java.util.Collection":
-                            case "java.util.List":
-                            case "java.util.Set":
-                                methodBuilder
-                                        .endControlFlow();
-                                break;
-                        }
-                        break;
-                }
+                methodBuilder.addCode(parameter.accept(new PreparedStatementParameterRenderer(parameterIndexProvider)));
             }
         }
 
@@ -142,8 +87,7 @@ public final class RepositoryFindMethodImplementationGenerator extends Repositor
                                       ParameterizedTypeName.get(ClassName.get(Collection.class),
                                                                 TypeName.get(componentType)),
                                       "elements",
-                                      ArrayList.class)
-                        .beginControlFlow("while (resultSet.next())");
+                                      ArrayList.class);
                 break;
             case DECLARED:
                 DeclaredType declaredType = (DeclaredType) returnType;
@@ -156,8 +100,7 @@ public final class RepositoryFindMethodImplementationGenerator extends Repositor
                                               ParameterizedTypeName.get(ClassName.get(Collection.class),
                                                                         TypeName.get(genericType)),
                                               "elements",
-                                              ArrayList.class)
-                                .beginControlFlow("while (resultSet.next())");
+                                              ArrayList.class);
                         break;
                     case "java.util.Collection":
                     case "java.util.List":
@@ -165,15 +108,33 @@ public final class RepositoryFindMethodImplementationGenerator extends Repositor
                                 .addStatement("$T $L = new $T<>()",
                                               ParameterizedTypeName.get(returnType),
                                               "elements",
-                                              ArrayList.class)
-                                .beginControlFlow("while (resultSet.next())");
+                                              ArrayList.class);
                         break;
                     case "java.util.Set":
                         methodBuilder
                                 .addStatement("$T $L = new $T<>()",
                                               ParameterizedTypeName.get(returnType),
                                               "elements",
-                                              HashSet.class)
+                                              HashSet.class);
+                        break;
+                }
+                break;
+        }
+
+        switch (returnType.getKind()) {
+            case ARRAY:
+                methodBuilder
+                        .beginControlFlow("while (resultSet.next())");
+                break;
+            case DECLARED:
+                DeclaredType declaredType = (DeclaredType) returnType;
+                TypeElement typeElement = (TypeElement) declaredType.asElement();
+                switch (typeElement.getQualifiedName().toString()) {
+                    case "java.lang.Iterable":
+                    case "java.util.Collection":
+                    case "java.util.List":
+                    case "java.util.Set":
+                        methodBuilder
                                 .beginControlFlow("while (resultSet.next())");
                         break;
                     default:
@@ -224,12 +185,14 @@ public final class RepositoryFindMethodImplementationGenerator extends Repositor
             );
         }
 
+        methodBuilder
+                .endControlFlow();
+
         switch (returnType.getKind()) {
             case ARRAY:
                 ArrayType arrayType = (ArrayType) returnType;
                 TypeMirror componentType = arrayType.getComponentType();
                 methodBuilder
-                        .endControlFlow()
                         .addStatement("return elements.toArray(new $T[0])", componentType);
                 break;
             case DECLARED:
@@ -238,7 +201,6 @@ public final class RepositoryFindMethodImplementationGenerator extends Repositor
                 switch (typeElement.getQualifiedName().toString()) {
                     case "java.util.Optional":
                         methodBuilder
-                                .endControlFlow()
                                 .addStatement("return $T.empty()", Optional.class);
                         break;
                     case "java.lang.Iterable":
@@ -246,12 +208,10 @@ public final class RepositoryFindMethodImplementationGenerator extends Repositor
                     case "java.util.List":
                     case "java.util.Set":
                         methodBuilder
-                                .endControlFlow()
                                 .addStatement("return elements");
                         break;
                     default:
                         methodBuilder
-                                .endControlFlow()
                                 .addStatement("return null");
                         break;
                 }

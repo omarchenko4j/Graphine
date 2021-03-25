@@ -3,6 +3,7 @@ package io.graphine.processor.code.renderer;
 import com.squareup.javapoet.CodeBlock;
 import io.graphine.processor.code.renderer.parameter.ParameterIndexProvider;
 import io.graphine.processor.query.model.parameter.ComplexParameter;
+import io.graphine.processor.query.model.parameter.IterableParameter;
 import io.graphine.processor.query.model.parameter.Parameter;
 import io.graphine.processor.query.model.parameter.ParameterVisitor;
 
@@ -210,5 +211,11 @@ public class ResultSetParameterRenderer implements ParameterVisitor<CodeBlock> {
         builder.add(resultInserter.apply(CodeBlock.of("$L", parameterName)));
 
         return builder.build();
+    }
+
+    @Override
+    public CodeBlock visit(IterableParameter parameter) {
+        // TODO: implement in higher order renderer
+        return parameter.getIteratedParameter().accept(this);
     }
 }

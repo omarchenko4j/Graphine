@@ -6,4 +6,8 @@ package io.graphine.processor.query.model.parameter;
 public interface ParameterVisitor<R> {
     R visit(Parameter parameter);
     R visit(ComplexParameter parameter);
+    // TODO: remove default modifier after implement it
+    default R visit(IterableParameter parameter) {
+        return null;
+    }
 }

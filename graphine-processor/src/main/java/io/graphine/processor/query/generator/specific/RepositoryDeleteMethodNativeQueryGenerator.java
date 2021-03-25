@@ -7,6 +7,7 @@ import io.graphine.processor.metadata.model.repository.method.name.QueryableMeth
 import io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment;
 import io.graphine.processor.query.model.parameter.ComplexParameter;
+import io.graphine.processor.query.model.parameter.IterableParameter;
 import io.graphine.processor.query.model.parameter.Parameter;
 
 import javax.lang.model.element.ExecutableElement;
@@ -73,6 +74,7 @@ public final class RepositoryDeleteMethodNativeQueryGenerator extends Repository
         if (isNull(condition)) {
             QualifierFragment qualifier = queryableName.getQualifier();
             if (qualifier.getMethodForm() == MethodForm.PLURAL) {
+                // Validation must ensure that only one method parameter is present.
                 VariableElement parameterElement = methodParameters.get(0);
                 return singletonList(Parameter.basedOn(parameterElement));
             }
@@ -89,11 +91,21 @@ public final class RepositoryDeleteMethodNativeQueryGenerator extends Repository
 
         ConditionFragment condition = queryableName.getCondition();
         if (isNull(condition)) {
-            IdentifierMetadata identifier = entity.getIdentifier();
+            ExecutableElement methodElement = method.getNativeElement();
+            // Validation must ensure that only one method parameter is present.
+            VariableElement parameterElement = methodElement.getParameters().get(0);
 
-            Parameter parentParameter = new Parameter(uncapitalize(entity.getName()), entity.getNativeType());
-            Parameter childParameter = Parameter.basedOn(identifier.getNativeElement());
-            return singletonList(new ComplexParameter(parentParameter, singletonList(childParameter)));
+            Parameter parentParameter = Parameter.basedOn(parameterElement);
+            Parameter childParameter = Parameter.basedOn(entity.getIdentifier().getNativeElement());
+            Parameter parameter = new ComplexParameter(parentParameter, singletonList(childParameter));
+
+            QualifierFragment qualifier = queryableName.getQualifier();
+            if (qualifier.getMethodForm() == MethodForm.PLURAL) {
+                parentParameter = new Parameter(uncapitalize(entity.getName()), entity.getNativeType());
+                parameter = new ComplexParameter(parentParameter, singletonList(childParameter));
+                parameter = new IterableParameter(Parameter.basedOn(parameterElement), parameter);
+            }
+            return singletonList(parameter);
         }
         else {
             ExecutableElement methodElement = method.getNativeElement();

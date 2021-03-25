@@ -14,7 +14,6 @@ import io.graphine.processor.query.model.parameter.Parameter;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import java.sql.Connection;
@@ -71,62 +70,7 @@ public final class RepositoryCountMethodImplementationGenerator extends Reposito
             }
 
             for (Parameter parameter : consumedParameters) {
-                Parameter targetParameter = parameter;
-
-                String parameterName = targetParameter.getName();
-                TypeMirror parameterType = targetParameter.getType();
-                switch (parameterType.getKind()) {
-                    case ARRAY:
-                        ArrayType arrayType = (ArrayType) parameterType;
-                        TypeMirror componentType = arrayType.getComponentType();
-                        methodBuilder
-                                .beginControlFlow("for ($T $L : $L)",
-                                                  componentType, "element", parameterName);
-                        targetParameter = new Parameter("element", componentType);
-                        break;
-                    case DECLARED:
-                        DeclaredType declaredType = (DeclaredType) parameterType;
-                        TypeElement typeElement = (TypeElement) declaredType.asElement();
-                        switch (typeElement.getQualifiedName().toString()) {
-                            case "java.lang.Iterable":
-                            case "java.util.Collection":
-                            case "java.util.List":
-                            case "java.util.Set":
-                                TypeMirror genericType = declaredType.getTypeArguments().get(0);
-                                methodBuilder
-                                        .beginControlFlow("for ($T $L : $L)",
-                                                          genericType, "element", parameterName);
-                                targetParameter = new Parameter("element", genericType);
-                                break;
-                        }
-                        break;
-                }
-
-                methodBuilder.addCode(
-                        targetParameter.accept(
-                                new PreparedStatementParameterRenderer(parameterIndexProvider)
-                        )
-                );
-
-                switch (parameterType.getKind()) {
-                    case ARRAY:
-                        methodBuilder
-                                .endControlFlow();
-                        break;
-                    case DECLARED:
-                        DeclaredType declaredType = (DeclaredType) parameterType;
-                        TypeElement typeElement = (TypeElement) declaredType.asElement();
-                        switch (typeElement.getQualifiedName().toString()) {
-                            case "java.lang.Iterable":
-                            case "java.util.Collection":
-                            case "java.util.List":
-                            case "java.util.Set":
-                                methodBuilder
-                                        .endControlFlow();
-                                break;
-                        }
-                        break;
-                }
+                methodBuilder.addCode(parameter.accept(new PreparedStatementParameterRenderer(parameterIndexProvider)));
             }
         }
 
@@ -135,8 +79,8 @@ public final class RepositoryCountMethodImplementationGenerator extends Reposito
         methodBuilder
                 .beginControlFlow("if (resultSet.next())");
 
-        Parameter parameter = query.getProducedParameters().get(0);
-        methodBuilder.addCode(parameter.accept(
+        Parameter producedParameter = query.getProducedParameters().get(0);
+        methodBuilder.addCode(producedParameter.accept(
                 new ResultSetParameterRenderer(code -> CodeBlock.builder()
                                                                 .addStatement("return $L", code)
                                                                 .build(),

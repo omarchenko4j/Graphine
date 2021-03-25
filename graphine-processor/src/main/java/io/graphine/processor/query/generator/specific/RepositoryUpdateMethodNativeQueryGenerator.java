@@ -4,12 +4,18 @@ import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.IdentifierMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
+import io.graphine.processor.metadata.model.repository.method.name.QueryableMethodName;
+import io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment;
 import io.graphine.processor.query.model.parameter.ComplexParameter;
+import io.graphine.processor.query.model.parameter.IterableParameter;
 import io.graphine.processor.query.model.parameter.Parameter;
 
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.VariableElement;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.MethodForm;
 import static io.graphine.processor.util.StringUtils.uncapitalize;
 import static java.util.Collections.singletonList;
 
@@ -43,16 +49,27 @@ public final class RepositoryUpdateMethodNativeQueryGenerator extends Repository
 
     @Override
     protected List<Parameter> collectConsumedParameters(MethodMetadata method) {
-        IdentifierMetadata identifier = entity.getIdentifier();
+        ExecutableElement methodElement = method.getNativeElement();
+        // Validation must ensure that only one method parameter is present.
+        VariableElement parameterElement = methodElement.getParameters().get(0);
 
-        Parameter parentParameter = new Parameter(uncapitalize(entity.getName()), entity.getNativeType());
+        Parameter parentParameter = Parameter.basedOn(parameterElement);
         List<Parameter> childParameters =
                 entity.getAttributes(true)
                       .stream()
                       .map(AttributeMetadata::getNativeElement)
                       .map(Parameter::basedOn)
                       .collect(Collectors.toList());
-        childParameters.add(Parameter.basedOn(identifier.getNativeElement()));
-        return singletonList(new ComplexParameter(parentParameter, childParameters));
+        childParameters.add(Parameter.basedOn(entity.getIdentifier().getNativeElement()));
+        Parameter parameter = new ComplexParameter(parentParameter, childParameters);
+
+        QueryableMethodName queryableName = method.getQueryableName();
+        QualifierFragment qualifier = queryableName.getQualifier();
+        if (qualifier.getMethodForm() == MethodForm.PLURAL) {
+            parentParameter = new Parameter(uncapitalize(entity.getName()), entity.getNativeType());
+            parameter = new ComplexParameter(parentParameter, childParameters);
+            parameter = new IterableParameter(Parameter.basedOn(parameterElement), parameter);
+        }
+        return singletonList(parameter);
     }
 }

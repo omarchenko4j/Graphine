@@ -6,9 +6,14 @@ import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment;
 import io.graphine.processor.query.model.NativeQuery;
 import io.graphine.processor.query.model.parameter.ComputableParameter;
+import io.graphine.processor.query.model.parameter.IterableParameter;
 import io.graphine.processor.query.model.parameter.Parameter;
 
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.ArrayType;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeMirror;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
@@ -163,6 +168,31 @@ public abstract class RepositoryMethodNativeQueryGenerator {
                                 targetParameter -> new Parameter("\"%\" + " + targetParameter.getName() + " + \"%\"",
                                                                  targetParameter.getType());
                         parameter = new ComputableParameter(parameter, computedFunction);
+                    }
+                    else if (operator == IN || operator == NOT_IN) {
+                        TypeMirror parameterType = parameterElement.asType();
+                        switch (parameterType.getKind()) {
+                            case ARRAY:
+                                ArrayType arrayType = (ArrayType) parameterType;
+                                TypeMirror componentType = arrayType.getComponentType();
+                                parameter = new IterableParameter(parameter,
+                                                                  new Parameter("element", componentType));
+                                break;
+                            case DECLARED:
+                                DeclaredType declaredType = (DeclaredType) parameterType;
+                                TypeElement typeElement = (TypeElement) declaredType.asElement();
+                                switch (typeElement.getQualifiedName().toString()) {
+                                    case "java.lang.Iterable":
+                                    case "java.util.Collection":
+                                    case "java.util.List":
+                                    case "java.util.Set":
+                                        TypeMirror genericType = declaredType.getTypeArguments().get(0);
+                                        parameter = new IterableParameter(parameter,
+                                                                          new Parameter("element", genericType));
+                                        break;
+                                }
+                                break;
+                        }
                     }
                     conditionParameters.add(parameter);
                 }
