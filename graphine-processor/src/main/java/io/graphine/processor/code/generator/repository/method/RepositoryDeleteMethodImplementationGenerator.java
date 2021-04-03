@@ -16,7 +16,6 @@ public final class RepositoryDeleteMethodImplementationGenerator extends Reposit
                         .beginControlFlow("try ($T statement = connection.prepareStatement(query))",
                                           PreparedStatement.class)
                         .add(renderStatementParameters(method, query))
-                        .add(renderResultSet(method, query))
                         .addStatement("statement.executeUpdate()")
                         .endControlFlow()
                         .build();
