@@ -53,10 +53,8 @@ public final class RepositorySaveMethodNativeQueryGenerator extends RepositoryMe
         // Validation must ensure that only one method parameter is present.
         VariableElement parameterElement = methodElement.getParameters().get(0);
 
-        IdentifierMetadata identifier = entity.getIdentifier();
-
         Parameter parentParameter = Parameter.basedOn(parameterElement);
-        Parameter childParameter = Parameter.basedOn(identifier.getNativeElement());
+        Parameter childParameter = Parameter.basedOn(entity.getIdentifier().getNativeElement());
         Parameter parameter = new ComplexParameter(parentParameter, singletonList(childParameter));
 
         QueryableMethodName queryableName = method.getQueryableName();
@@ -66,7 +64,6 @@ public final class RepositorySaveMethodNativeQueryGenerator extends RepositoryMe
             parameter = new ComplexParameter(parentParameter, singletonList(childParameter));
             parameter = new IterableParameter(Parameter.basedOn(parameterElement), parameter);
         }
-
         return singletonList(parameter);
     }
 

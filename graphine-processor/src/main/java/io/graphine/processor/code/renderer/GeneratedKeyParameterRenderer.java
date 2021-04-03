@@ -18,34 +18,38 @@ import static io.graphine.processor.util.MethodUtils.setter;
 /**
  * @author Oleg Marchenko
  */
-public class GeneratedKeyParameterRenderer extends ResultSetParameterRenderer {
+public class GeneratedKeyParameterRenderer extends BasicGeneratedKeyParameterRenderer {
     public GeneratedKeyParameterRenderer(ParameterIndexProvider parameterIndexProvider) {
         this(Function.identity(), parameterIndexProvider);
     }
 
     public GeneratedKeyParameterRenderer(Function<CodeBlock, CodeBlock> resultInserter,
                                          ParameterIndexProvider parameterIndexProvider) {
-        super(resultInserter, "generatedKeys", parameterIndexProvider);
+        super(resultInserter, parameterIndexProvider);
     }
 
     @Override
     public CodeBlock visit(ComplexParameter parameter) {
         String parameterName = parameter.getName();
 
-        CodeBlock.Builder builder = CodeBlock.builder();
+        CodeBlock.Builder builder =
+                CodeBlock.builder()
+                         .beginControlFlow("if (generatedKeys.next())");
 
         List<Parameter> childParameters = parameter.getChildParameters();
         for (Parameter childParameter : childParameters) {
-            GeneratedKeyParameterRenderer generatedKeyParameterRenderer =
-                    new GeneratedKeyParameterRenderer(code -> CodeBlock.builder()
-                                                                       .addStatement("$L.$L($L)",
-                                                                                     parameterName,
-                                                                                     setter(childParameter.getName()),
-                                                                                     code)
-                                                                       .build(),
-                                                      parameterIndexProvider);
+            BasicGeneratedKeyParameterRenderer generatedKeyParameterRenderer =
+                    new BasicGeneratedKeyParameterRenderer(code -> CodeBlock.builder()
+                                                                            .addStatement("$L.$L($L)",
+                                                                                          parameterName,
+                                                                                          setter(childParameter.getName()),
+                                                                                          code)
+                                                                            .build(),
+                                                           parameterIndexProvider);
             builder.add(childParameter.accept(generatedKeyParameterRenderer));
         }
+
+        builder.endControlFlow();
 
         return builder.build();
     }
@@ -64,7 +68,7 @@ public class GeneratedKeyParameterRenderer extends ResultSetParameterRenderer {
                         .beginControlFlow("while (generatedKeys.next())")
                         .addStatement("$T $L = $L[i]",
                                       iteratedParameter.getType(), iteratedParameter.getName(), parameter.getName())
-                        .add(iteratedParameter.accept(new GeneratedKeyParameterRenderer(parameterIndexProvider)))
+                        .add(iteratedParameter.accept(new BasicGeneratedKeyParameterRenderer(parameterIndexProvider)))
                         .addStatement("i++")
                         .endControlFlow();
                 break;
@@ -81,7 +85,7 @@ public class GeneratedKeyParameterRenderer extends ResultSetParameterRenderer {
                                               Iterator.class, iteratedParameter.getType(), parameter.getName())
                                 .beginControlFlow("while (generatedKeys.next() && iterator.hasNext())")
                                 .addStatement("$T $L = iterator.next()", iteratedParameter.getType(), iteratedParameter.getName())
-                                .add(iteratedParameter.accept(new GeneratedKeyParameterRenderer(parameterIndexProvider)))
+                                .add(iteratedParameter.accept(new BasicGeneratedKeyParameterRenderer(parameterIndexProvider)))
                                 .endControlFlow();
                         break;
                 }

@@ -55,6 +55,7 @@ public final class RepositorySaveMethodImplementationGenerator extends Repositor
                 new PreparedStatementAddBatchMethodRenderer(new NumericParameterIndexProvider()))
         );
         builder.add(consumedParameter.accept(new PreparedStatementExecuteMethodRenderer()));
+        builder.add(renderResultSet(method, query));
 
         return builder.build();
     }
