@@ -1,4 +1,4 @@
-package io.graphine.processor.code.renderer.parameter;
+package io.graphine.processor.code.renderer.parameter.index_provider;
 
 import java.util.concurrent.atomic.AtomicInteger;
 

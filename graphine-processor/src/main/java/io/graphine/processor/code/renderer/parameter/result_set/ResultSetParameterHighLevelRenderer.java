@@ -1,10 +1,10 @@
-package io.graphine.processor.code.renderer;
+package io.graphine.processor.code.renderer.parameter.result_set;
 
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
-import io.graphine.processor.code.renderer.parameter.ParameterIndexProvider;
+import io.graphine.processor.code.renderer.parameter.index_provider.ParameterIndexProvider;
 import io.graphine.processor.query.model.parameter.ComplexParameter;
 import io.graphine.processor.query.model.parameter.IterableParameter;
 import io.graphine.processor.query.model.parameter.Parameter;

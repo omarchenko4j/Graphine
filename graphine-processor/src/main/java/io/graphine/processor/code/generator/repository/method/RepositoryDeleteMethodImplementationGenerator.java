@@ -6,7 +6,7 @@ import io.graphine.processor.query.model.NativeQuery;
 
 import java.sql.PreparedStatement;
 
-import static io.graphine.processor.code.renderer.PreparedStatementParameterRenderer.DEFAULT_STATEMENT_VARIABLE_NAME;
+import static io.graphine.processor.code.renderer.parameter.prepared_statement.PreparedStatementParameterRenderer.DEFAULT_STATEMENT_VARIABLE_NAME;
 
 /**
  * @author Oleg Marchenko

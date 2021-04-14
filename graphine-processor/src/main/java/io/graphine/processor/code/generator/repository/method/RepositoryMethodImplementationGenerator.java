@@ -3,10 +3,10 @@ package io.graphine.processor.code.generator.repository.method;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import io.graphine.core.util.UnnamedParameterUnwrapper;
-import io.graphine.processor.code.renderer.PreparedStatementParameterLowLevelRenderer;
-import io.graphine.processor.code.renderer.parameter.IncrementalParameterIndexProvider;
-import io.graphine.processor.code.renderer.parameter.NumericParameterIndexProvider;
-import io.graphine.processor.code.renderer.parameter.ParameterIndexProvider;
+import io.graphine.processor.code.renderer.parameter.index_provider.IncrementalParameterIndexProvider;
+import io.graphine.processor.code.renderer.parameter.index_provider.NumericParameterIndexProvider;
+import io.graphine.processor.code.renderer.parameter.index_provider.ParameterIndexProvider;
+import io.graphine.processor.code.renderer.parameter.prepared_statement.PreparedStatementParameterLowLevelRenderer;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.query.model.NativeQuery;
 import io.graphine.processor.query.model.parameter.Parameter;
@@ -18,8 +18,8 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static io.graphine.processor.code.renderer.PreparedStatementParameterRenderer.DEFAULT_STATEMENT_VARIABLE_NAME;
-import static io.graphine.processor.code.renderer.ResultSetParameterRenderer.DEFAULT_RESULT_SET_VARIABLE_NAME;
+import static io.graphine.processor.code.renderer.parameter.prepared_statement.PreparedStatementParameterRenderer.DEFAULT_STATEMENT_VARIABLE_NAME;
+import static io.graphine.processor.code.renderer.parameter.result_set.ResultSetParameterRenderer.DEFAULT_RESULT_SET_VARIABLE_NAME;
 
 /**
  * @author Oleg Marchenko

@@ -1,7 +1,7 @@
-package io.graphine.processor.code.renderer;
+package io.graphine.processor.code.renderer.parameter.result_set;
 
 import com.squareup.javapoet.CodeBlock;
-import io.graphine.processor.code.renderer.parameter.ParameterIndexProvider;
+import io.graphine.processor.code.renderer.parameter.index_provider.ParameterIndexProvider;
 import io.graphine.processor.query.model.parameter.ParameterVisitor;
 
 import java.util.function.Function;

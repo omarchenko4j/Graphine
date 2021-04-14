@@ -1,9 +1,9 @@
 package io.graphine.processor.code.generator.repository.method;
 
 import com.squareup.javapoet.CodeBlock;
-import io.graphine.processor.code.renderer.GeneratedKeyParameterHighLevelRenderer;
-import io.graphine.processor.code.renderer.PreparedStatementParameterHighLevelRenderer;
-import io.graphine.processor.code.renderer.parameter.NumericParameterIndexProvider;
+import io.graphine.processor.code.renderer.parameter.index_provider.NumericParameterIndexProvider;
+import io.graphine.processor.code.renderer.parameter.prepared_statement.PreparedStatementParameterHighLevelRenderer;
+import io.graphine.processor.code.renderer.parameter.result_set.GeneratedKeyParameterHighLevelRenderer;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.query.model.NativeQuery;
 import io.graphine.processor.query.model.parameter.Parameter;
@@ -13,8 +13,8 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.List;
 
-import static io.graphine.processor.code.renderer.GeneratedKeyParameterHighLevelRenderer.DEFAULT_GENERATED_KEY_VARIABLE_NAME;
-import static io.graphine.processor.code.renderer.PreparedStatementParameterRenderer.DEFAULT_STATEMENT_VARIABLE_NAME;
+import static io.graphine.processor.code.renderer.parameter.prepared_statement.PreparedStatementParameterRenderer.DEFAULT_STATEMENT_VARIABLE_NAME;
+import static io.graphine.processor.code.renderer.parameter.result_set.GeneratedKeyParameterHighLevelRenderer.DEFAULT_GENERATED_KEY_VARIABLE_NAME;
 
 /**
  * @author Oleg Marchenko

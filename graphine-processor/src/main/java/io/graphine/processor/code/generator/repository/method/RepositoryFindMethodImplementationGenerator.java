@@ -1,9 +1,9 @@
 package io.graphine.processor.code.generator.repository.method;
 
 import com.squareup.javapoet.CodeBlock;
-import io.graphine.processor.code.renderer.ResultSetParameterHighLevelRenderer;
-import io.graphine.processor.code.renderer.parameter.NumericParameterIndexProvider;
-import io.graphine.processor.code.renderer.parameter.ParameterIndexProvider;
+import io.graphine.processor.code.renderer.parameter.index_provider.NumericParameterIndexProvider;
+import io.graphine.processor.code.renderer.parameter.index_provider.ParameterIndexProvider;
+import io.graphine.processor.code.renderer.parameter.result_set.ResultSetParameterHighLevelRenderer;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.query.model.NativeQuery;
 import io.graphine.processor.query.model.parameter.Parameter;
