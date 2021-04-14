@@ -1,7 +1,7 @@
 package io.graphine.processor.code.generator.repository.method;
 
 import com.squareup.javapoet.CodeBlock;
-import io.graphine.processor.code.renderer.ResultSetParameterRenderer;
+import io.graphine.processor.code.renderer.ResultSetParameterHighLevelRenderer;
 import io.graphine.processor.code.renderer.parameter.NumericParameterIndexProvider;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.query.model.NativeQuery;
@@ -20,17 +20,13 @@ public final class RepositoryCountMethodImplementationGenerator extends Reposito
     protected CodeBlock renderResultSetParameters(MethodMetadata method, NativeQuery query) {
         CodeBlock.Builder builder = CodeBlock.builder();
 
-        builder.beginControlFlow("if (resultSet.next())");
-
         Parameter producedParameter = query.getProducedParameters().get(0);
         builder.add(producedParameter.accept(
-                new ResultSetParameterRenderer(snippet -> CodeBlock.builder()
-                                                                   .addStatement("return $L", snippet)
-                                                                   .build(),
-                                               new NumericParameterIndexProvider())
+                new ResultSetParameterHighLevelRenderer(snippet -> CodeBlock.builder()
+                                                                            .addStatement("return $L", snippet)
+                                                                            .build(),
+                                                        new NumericParameterIndexProvider())
         ));
-
-        builder.endControlFlow();
 
         ExecutableElement methodElement = method.getNativeElement();
         TypeMirror returnType = methodElement.getReturnType();

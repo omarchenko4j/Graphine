@@ -18,6 +18,8 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static io.graphine.processor.code.renderer.ResultSetParameterRenderer.DEFAULT_RESULT_SET_VARIABLE_NAME;
+
 /**
  * @author Oleg Marchenko
  */
@@ -100,7 +102,8 @@ public abstract class RepositoryMethodImplementationGenerator {
 
     protected CodeBlock renderResultSet(MethodMetadata method, NativeQuery query) {
         return CodeBlock.builder()
-                        .beginControlFlow("try ($T resultSet = statement.executeQuery())", ResultSet.class)
+                        .beginControlFlow("try ($T $L = statement.executeQuery())",
+                                          ResultSet.class, DEFAULT_RESULT_SET_VARIABLE_NAME)
                         .add(renderResultSetParameters(method, query))
                         .endControlFlow()
                         .build();

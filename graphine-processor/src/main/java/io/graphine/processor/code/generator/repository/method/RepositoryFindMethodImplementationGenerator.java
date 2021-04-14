@@ -1,10 +1,7 @@
 package io.graphine.processor.code.generator.repository.method;
 
-import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
-import com.squareup.javapoet.ParameterizedTypeName;
-import com.squareup.javapoet.TypeName;
-import io.graphine.processor.code.renderer.ResultSetParameterRenderer;
+import io.graphine.processor.code.renderer.ResultSetParameterHighLevelRenderer;
 import io.graphine.processor.code.renderer.parameter.NumericParameterIndexProvider;
 import io.graphine.processor.code.renderer.parameter.ParameterIndexProvider;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
@@ -16,7 +13,8 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
-import java.util.*;
+import java.util.List;
+import java.util.Optional;
 
 /**
  * @author Oleg Marchenko
@@ -28,68 +26,13 @@ public final class RepositoryFindMethodImplementationGenerator extends Repositor
 
         ExecutableElement methodElement = method.getNativeElement();
         TypeMirror returnType = methodElement.getReturnType();
-        switch (returnType.getKind()) {
-            case ARRAY:
-                ArrayType arrayType = (ArrayType) returnType;
-                TypeMirror componentType = arrayType.getComponentType();
-                builder.addStatement("$T $L = new $T<>()",
-                                     ParameterizedTypeName.get(ClassName.get(Collection.class),
-                                                               TypeName.get(componentType)),
-                                     "elements",
-                                     ArrayList.class);
-                break;
-            case DECLARED:
-                DeclaredType declaredType = (DeclaredType) returnType;
-                TypeElement typeElement = (TypeElement) declaredType.asElement();
-                switch (typeElement.getQualifiedName().toString()) {
-                    case "java.lang.Iterable":
-                        TypeMirror genericType = declaredType.getTypeArguments().get(0);
-                        builder.addStatement("$T $L = new $T<>()",
-                                             ParameterizedTypeName.get(ClassName.get(Collection.class),
-                                                                       TypeName.get(genericType)),
-                                             "elements",
-                                             ArrayList.class);
-                        break;
-                    case "java.util.Collection":
-                    case "java.util.List":
-                        builder.addStatement("$T $L = new $T<>()",
-                                             ParameterizedTypeName.get(returnType), "elements", ArrayList.class);
-                        break;
-                    case "java.util.Set":
-                        builder.addStatement("$T $L = new $T<>()",
-                                             ParameterizedTypeName.get(returnType), "elements", HashSet.class);
-                        break;
-                }
-                break;
-        }
-
-        switch (returnType.getKind()) {
-            case ARRAY:
-                builder.beginControlFlow("while (resultSet.next())");
-                break;
-            case DECLARED:
-                DeclaredType declaredType = (DeclaredType) returnType;
-                TypeElement typeElement = (TypeElement) declaredType.asElement();
-                switch (typeElement.getQualifiedName().toString()) {
-                    case "java.lang.Iterable":
-                    case "java.util.Collection":
-                    case "java.util.List":
-                    case "java.util.Set":
-                        builder.beginControlFlow("while (resultSet.next())");
-                        break;
-                    default:
-                        builder.beginControlFlow("if (resultSet.next())");
-                        break;
-                }
-                break;
-        }
 
         ParameterIndexProvider parameterIndexProvider = new NumericParameterIndexProvider();
 
         List<Parameter> producedParameters = query.getProducedParameters();
         for (Parameter parameter : producedParameters) {
             builder.add(parameter.accept(
-                    new ResultSetParameterRenderer(snippet -> {
+                    new ResultSetParameterHighLevelRenderer(snippet -> {
                         switch (returnType.getKind()) {
                             case ARRAY:
                                 return CodeBlock.builder()
@@ -121,8 +64,6 @@ public final class RepositoryFindMethodImplementationGenerator extends Repositor
                     }, parameterIndexProvider)
             ));
         }
-
-        builder.endControlFlow();
 
         switch (returnType.getKind()) {
             case ARRAY:

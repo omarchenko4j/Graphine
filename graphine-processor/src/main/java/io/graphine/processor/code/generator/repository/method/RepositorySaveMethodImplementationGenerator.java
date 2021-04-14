@@ -1,7 +1,7 @@
 package io.graphine.processor.code.generator.repository.method;
 
 import com.squareup.javapoet.CodeBlock;
-import io.graphine.processor.code.renderer.GeneratedKeyParameterRenderer;
+import io.graphine.processor.code.renderer.GeneratedKeyParameterHighLevelRenderer;
 import io.graphine.processor.code.renderer.PreparedStatementAddBatchMethodRenderer;
 import io.graphine.processor.code.renderer.PreparedStatementExecuteMethodRenderer;
 import io.graphine.processor.code.renderer.parameter.NumericParameterIndexProvider;
@@ -13,6 +13,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.List;
+
+import static io.graphine.processor.code.renderer.GeneratedKeyParameterHighLevelRenderer.DEFAULT_GENERATED_KEY_VARIABLE_NAME;
 
 /**
  * @author Oleg Marchenko
@@ -67,8 +69,8 @@ public final class RepositorySaveMethodImplementationGenerator extends Repositor
         List<Parameter> producedParameters = query.getProducedParameters();
         if (!producedParameters.isEmpty()) {
             builder
-                    .beginControlFlow("try ($T generatedKeys = statement.getGeneratedKeys())",
-                                      ResultSet.class)
+                    .beginControlFlow("try ($T $L = statement.getGeneratedKeys())",
+                                      ResultSet.class, DEFAULT_GENERATED_KEY_VARIABLE_NAME)
                     .add(renderResultSetParameters(method, query))
                     .endControlFlow();
         }
@@ -84,7 +86,7 @@ public final class RepositorySaveMethodImplementationGenerator extends Repositor
         if (!producedParameters.isEmpty()) {
             Parameter producedParameter = producedParameters.get(0);
             builder.add(producedParameter.accept(
-                    new GeneratedKeyParameterRenderer(new NumericParameterIndexProvider())
+                    new GeneratedKeyParameterHighLevelRenderer(new NumericParameterIndexProvider())
             ));
         }
 
