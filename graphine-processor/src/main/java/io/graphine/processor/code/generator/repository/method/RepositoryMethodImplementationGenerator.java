@@ -3,7 +3,7 @@ package io.graphine.processor.code.generator.repository.method;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import io.graphine.core.util.UnnamedParameterUnwrapper;
-import io.graphine.processor.code.renderer.PreparedStatementParameterRenderer;
+import io.graphine.processor.code.renderer.PreparedStatementParameterLowLevelRenderer;
 import io.graphine.processor.code.renderer.parameter.IncrementalParameterIndexProvider;
 import io.graphine.processor.code.renderer.parameter.NumericParameterIndexProvider;
 import io.graphine.processor.code.renderer.parameter.ParameterIndexProvider;
@@ -18,6 +18,7 @@ import java.sql.SQLException;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static io.graphine.processor.code.renderer.PreparedStatementParameterRenderer.DEFAULT_STATEMENT_VARIABLE_NAME;
 import static io.graphine.processor.code.renderer.ResultSetParameterRenderer.DEFAULT_RESULT_SET_VARIABLE_NAME;
 
 /**
@@ -68,8 +69,8 @@ public abstract class RepositoryMethodImplementationGenerator {
 
     protected CodeBlock renderStatement(MethodMetadata method, NativeQuery query) {
         return CodeBlock.builder()
-                        .beginControlFlow("try ($T statement = connection.prepareStatement(query))",
-                                          PreparedStatement.class)
+                        .beginControlFlow("try ($T $L = connection.prepareStatement(query))",
+                                          PreparedStatement.class, DEFAULT_STATEMENT_VARIABLE_NAME)
                         .add(renderStatementParameters(method, query))
                         .add(renderResultSet(method, query))
                         .endControlFlow()
@@ -93,7 +94,7 @@ public abstract class RepositoryMethodImplementationGenerator {
             }
 
             for (Parameter parameter : consumedParameters) {
-                builder.add(parameter.accept(new PreparedStatementParameterRenderer(parameterIndexProvider)));
+                builder.add(parameter.accept(new PreparedStatementParameterLowLevelRenderer(parameterIndexProvider)));
             }
         }
 
@@ -102,8 +103,10 @@ public abstract class RepositoryMethodImplementationGenerator {
 
     protected CodeBlock renderResultSet(MethodMetadata method, NativeQuery query) {
         return CodeBlock.builder()
-                        .beginControlFlow("try ($T $L = statement.executeQuery())",
-                                          ResultSet.class, DEFAULT_RESULT_SET_VARIABLE_NAME)
+                        .beginControlFlow("try ($T $L = $L.executeQuery())",
+                                          ResultSet.class,
+                                          DEFAULT_RESULT_SET_VARIABLE_NAME,
+                                          DEFAULT_STATEMENT_VARIABLE_NAME)
                         .add(renderResultSetParameters(method, query))
                         .endControlFlow()
                         .build();

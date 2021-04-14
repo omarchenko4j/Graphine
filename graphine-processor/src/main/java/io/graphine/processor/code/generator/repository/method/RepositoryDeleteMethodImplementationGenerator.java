@@ -6,6 +6,8 @@ import io.graphine.processor.query.model.NativeQuery;
 
 import java.sql.PreparedStatement;
 
+import static io.graphine.processor.code.renderer.PreparedStatementParameterRenderer.DEFAULT_STATEMENT_VARIABLE_NAME;
+
 /**
  * @author Oleg Marchenko
  */
@@ -13,10 +15,10 @@ public final class RepositoryDeleteMethodImplementationGenerator extends Reposit
     @Override
     protected CodeBlock renderStatement(MethodMetadata method, NativeQuery query) {
         return CodeBlock.builder()
-                        .beginControlFlow("try ($T statement = connection.prepareStatement(query))",
-                                          PreparedStatement.class)
+                        .beginControlFlow("try ($T $L = connection.prepareStatement(query))",
+                                          PreparedStatement.class, DEFAULT_STATEMENT_VARIABLE_NAME)
                         .add(renderStatementParameters(method, query))
-                        .addStatement("statement.executeUpdate()")
+                        .addStatement("$L.executeUpdate()", DEFAULT_STATEMENT_VARIABLE_NAME)
                         .endControlFlow()
                         .build();
     }

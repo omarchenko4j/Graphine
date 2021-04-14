@@ -1,8 +1,7 @@
 package io.graphine.processor.code.generator.repository.method;
 
 import com.squareup.javapoet.CodeBlock;
-import io.graphine.processor.code.renderer.PreparedStatementAddBatchMethodRenderer;
-import io.graphine.processor.code.renderer.PreparedStatementExecuteMethodRenderer;
+import io.graphine.processor.code.renderer.PreparedStatementParameterHighLevelRenderer;
 import io.graphine.processor.code.renderer.parameter.NumericParameterIndexProvider;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.query.model.NativeQuery;
@@ -21,15 +20,12 @@ public final class RepositoryUpdateMethodImplementationGenerator extends Reposit
 
     @Override
     protected CodeBlock renderStatementParameters(MethodMetadata method, NativeQuery query) {
-        CodeBlock.Builder builder = CodeBlock.builder();
-
         Parameter consumedParameter = query.getConsumedParameters().get(0);
-        builder.add(consumedParameter.accept(
-                new PreparedStatementAddBatchMethodRenderer(new NumericParameterIndexProvider()))
-        );
-        builder.add(consumedParameter.accept(new PreparedStatementExecuteMethodRenderer()));
-
-        return builder.build();
+        return CodeBlock.builder()
+                        .add(consumedParameter.accept(
+                                new PreparedStatementParameterHighLevelRenderer(new NumericParameterIndexProvider())
+                        ))
+                        .build();
     }
 
     @Override
