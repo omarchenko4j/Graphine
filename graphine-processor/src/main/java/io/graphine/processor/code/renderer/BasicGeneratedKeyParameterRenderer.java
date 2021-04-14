@@ -18,9 +18,9 @@ public class BasicGeneratedKeyParameterRenderer extends ResultSetParameterRender
         this(Function.identity(), parameterIndexProvider);
     }
 
-    public BasicGeneratedKeyParameterRenderer(Function<CodeBlock, CodeBlock> resultInserter,
+    public BasicGeneratedKeyParameterRenderer(Function<CodeBlock, CodeBlock> snippetMerger,
                                               ParameterIndexProvider parameterIndexProvider) {
-        super(resultInserter, "generatedKeys", parameterIndexProvider);
+        super(snippetMerger, "generatedKeys", parameterIndexProvider);
     }
 
     @Override
@@ -32,12 +32,12 @@ public class BasicGeneratedKeyParameterRenderer extends ResultSetParameterRender
         List<Parameter> childParameters = parameter.getChildParameters();
         for (Parameter childParameter : childParameters) {
             GeneratedKeyParameterRenderer generatedKeyParameterRenderer =
-                    new GeneratedKeyParameterRenderer(code -> CodeBlock.builder()
-                                                                       .addStatement("$L.$L($L)",
-                                                                                     parameterName,
-                                                                                     setter(childParameter.getName()),
-                                                                                     code)
-                                                                       .build(),
+                    new GeneratedKeyParameterRenderer(snippet -> CodeBlock.builder()
+                                                                          .addStatement("$L.$L($L)",
+                                                                                        parameterName,
+                                                                                        setter(childParameter.getName()),
+                                                                                        snippet)
+                                                                          .build(),
                                                       parameterIndexProvider);
             builder.add(childParameter.accept(generatedKeyParameterRenderer));
         }

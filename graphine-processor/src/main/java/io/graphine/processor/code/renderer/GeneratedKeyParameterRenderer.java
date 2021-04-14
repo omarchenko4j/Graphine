@@ -23,9 +23,9 @@ public class GeneratedKeyParameterRenderer extends BasicGeneratedKeyParameterRen
         this(Function.identity(), parameterIndexProvider);
     }
 
-    public GeneratedKeyParameterRenderer(Function<CodeBlock, CodeBlock> resultInserter,
+    public GeneratedKeyParameterRenderer(Function<CodeBlock, CodeBlock> snippetMerger,
                                          ParameterIndexProvider parameterIndexProvider) {
-        super(resultInserter, parameterIndexProvider);
+        super(snippetMerger, parameterIndexProvider);
     }
 
     @Override
@@ -39,12 +39,12 @@ public class GeneratedKeyParameterRenderer extends BasicGeneratedKeyParameterRen
         List<Parameter> childParameters = parameter.getChildParameters();
         for (Parameter childParameter : childParameters) {
             BasicGeneratedKeyParameterRenderer generatedKeyParameterRenderer =
-                    new BasicGeneratedKeyParameterRenderer(code -> CodeBlock.builder()
-                                                                            .addStatement("$L.$L($L)",
-                                                                                          parameterName,
-                                                                                          setter(childParameter.getName()),
-                                                                                          code)
-                                                                            .build(),
+                    new BasicGeneratedKeyParameterRenderer(snippet -> CodeBlock.builder()
+                                                                               .addStatement("$L.$L($L)",
+                                                                                             parameterName,
+                                                                                             setter(childParameter.getName()),
+                                                                                             snippet)
+                                                                               .build(),
                                                            parameterIndexProvider);
             builder.add(childParameter.accept(generatedKeyParameterRenderer));
         }
@@ -84,7 +84,8 @@ public class GeneratedKeyParameterRenderer extends BasicGeneratedKeyParameterRen
                                 .addStatement("$T<$T> iterator = $L.iterator()",
                                               Iterator.class, iteratedParameter.getType(), parameter.getName())
                                 .beginControlFlow("while (generatedKeys.next() && iterator.hasNext())")
-                                .addStatement("$T $L = iterator.next()", iteratedParameter.getType(), iteratedParameter.getName())
+                                .addStatement("$T $L = iterator.next()",
+                                              iteratedParameter.getType(), iteratedParameter.getName())
                                 .add(iteratedParameter.accept(new BasicGeneratedKeyParameterRenderer(parameterIndexProvider)))
                                 .endControlFlow();
                         break;

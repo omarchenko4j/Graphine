@@ -89,11 +89,11 @@ public final class RepositoryFindMethodImplementationGenerator extends Repositor
         List<Parameter> producedParameters = query.getProducedParameters();
         for (Parameter parameter : producedParameters) {
             builder.add(parameter.accept(
-                    new ResultSetParameterRenderer(code -> {
+                    new ResultSetParameterRenderer(snippet -> {
                         switch (returnType.getKind()) {
                             case ARRAY:
                                 return CodeBlock.builder()
-                                                .addStatement("elements.add($L)", code)
+                                                .addStatement("elements.add($L)", snippet)
                                                 .build();
                             case DECLARED:
                                 DeclaredType declaredType = (DeclaredType) returnType;
@@ -101,18 +101,18 @@ public final class RepositoryFindMethodImplementationGenerator extends Repositor
                                 switch (typeElement.getQualifiedName().toString()) {
                                     case "java.util.Optional":
                                         return CodeBlock.builder()
-                                                        .addStatement("return $T.of($L)", Optional.class, code)
+                                                        .addStatement("return $T.of($L)", Optional.class, snippet)
                                                         .build();
                                     case "java.lang.Iterable":
                                     case "java.util.Collection":
                                     case "java.util.List":
                                     case "java.util.Set":
                                         return CodeBlock.builder()
-                                                        .addStatement("elements.add($L)", code)
+                                                        .addStatement("elements.add($L)", snippet)
                                                         .build();
                                     default:
                                         return CodeBlock.builder()
-                                                        .addStatement("return $L", code)
+                                                        .addStatement("return $L", snippet)
                                                         .build();
                                 }
                             default:

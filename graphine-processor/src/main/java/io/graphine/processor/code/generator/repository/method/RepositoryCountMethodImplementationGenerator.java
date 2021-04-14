@@ -24,9 +24,9 @@ public final class RepositoryCountMethodImplementationGenerator extends Reposito
 
         Parameter producedParameter = query.getProducedParameters().get(0);
         builder.add(producedParameter.accept(
-                new ResultSetParameterRenderer(code -> CodeBlock.builder()
-                                                                .addStatement("return $L", code)
-                                                                .build(),
+                new ResultSetParameterRenderer(snippet -> CodeBlock.builder()
+                                                                   .addStatement("return $L", snippet)
+                                                                   .build(),
                                                new NumericParameterIndexProvider())
         ));
 
