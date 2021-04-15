@@ -15,7 +15,7 @@ import java.util.function.Function;
 /**
  * @author Oleg Marchenko
  */
-public class GeneratedKeyParameterHighLevelRenderer extends ResultSetParameterRenderer {
+public final class GeneratedKeyParameterHighLevelRenderer extends ResultSetParameterRenderer {
     public static final String DEFAULT_GENERATED_KEY_VARIABLE_NAME = "generatedKeys";
 
     public GeneratedKeyParameterHighLevelRenderer(ParameterIndexProvider parameterIndexProvider) {
@@ -29,14 +29,18 @@ public class GeneratedKeyParameterHighLevelRenderer extends ResultSetParameterRe
 
     @Override
     public CodeBlock visit(Parameter parameter) {
-        return CodeBlock.builder().build();
+        throw new UnsupportedOperationException();
     }
 
     @Override
     public CodeBlock visit(ComplexParameter parameter) {
         return CodeBlock.builder()
                         .beginControlFlow("if ($L.next())", resultSetVariableName)
-                        .add(parameter.accept(new ResultSetParameterLowLevelRenderer(snippetMerger, DEFAULT_GENERATED_KEY_VARIABLE_NAME, parameterIndexProvider)))
+                        .add(parameter.accept(
+                                new ResultSetParameterLowLevelRenderer(snippetMerger,
+                                                                       DEFAULT_GENERATED_KEY_VARIABLE_NAME,
+                                                                       parameterIndexProvider)
+                        ))
                         .endControlFlow()
                         .build();
     }
@@ -55,7 +59,11 @@ public class GeneratedKeyParameterHighLevelRenderer extends ResultSetParameterRe
                         .beginControlFlow("while ($L.next())", resultSetVariableName)
                         .addStatement("$T $L = $L[i]",
                                       iteratedParameter.getType(), iteratedParameter.getName(), parameter.getName())
-                        .add(parameter.accept(new ResultSetParameterLowLevelRenderer(snippetMerger, DEFAULT_GENERATED_KEY_VARIABLE_NAME, parameterIndexProvider)))
+                        .add(iteratedParameter.accept(
+                                new ResultSetParameterLowLevelRenderer(snippetMerger,
+                                                                       DEFAULT_GENERATED_KEY_VARIABLE_NAME,
+                                                                       parameterIndexProvider)
+                        ))
                         .addStatement("i++")
                         .endControlFlow();
                 break;
@@ -70,10 +78,15 @@ public class GeneratedKeyParameterHighLevelRenderer extends ResultSetParameterRe
                         builder
                                 .addStatement("$T<$T> iterator = $L.iterator()",
                                               Iterator.class, iteratedParameter.getType(), parameter.getName())
-                                .beginControlFlow("while ($L.next() && iterator.hasNext())", resultSetVariableName)
+                                .beginControlFlow("while ($L.next() && iterator.hasNext())",
+                                                  resultSetVariableName)
                                 .addStatement("$T $L = iterator.next()",
                                               iteratedParameter.getType(), iteratedParameter.getName())
-                                .add(parameter.accept(new ResultSetParameterLowLevelRenderer(snippetMerger, DEFAULT_GENERATED_KEY_VARIABLE_NAME, parameterIndexProvider)))
+                                .add(iteratedParameter.accept(
+                                        new ResultSetParameterLowLevelRenderer(snippetMerger,
+                                                                               DEFAULT_GENERATED_KEY_VARIABLE_NAME,
+                                                                               parameterIndexProvider)
+                                ))
                                 .endControlFlow();
                         break;
                 }

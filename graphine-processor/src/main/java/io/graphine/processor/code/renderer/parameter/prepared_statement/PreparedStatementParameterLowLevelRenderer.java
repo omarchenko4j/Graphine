@@ -20,7 +20,7 @@ import static io.graphine.processor.util.MethodUtils.getter;
 /**
  * @author Oleg Marchenko
  */
-public class PreparedStatementParameterLowLevelRenderer extends PreparedStatementParameterRenderer {
+public final class PreparedStatementParameterLowLevelRenderer extends PreparedStatementParameterRenderer {
     public PreparedStatementParameterLowLevelRenderer(ParameterIndexProvider parameterIndexProvider) {
         super(parameterIndexProvider);
     }

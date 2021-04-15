@@ -21,7 +21,7 @@ import java.util.function.Function;
 /**
  * @author Oleg Marchenko
  */
-public class ResultSetParameterHighLevelRenderer extends ResultSetParameterRenderer {
+public final class ResultSetParameterHighLevelRenderer extends ResultSetParameterRenderer {
     public ResultSetParameterHighLevelRenderer(Function<CodeBlock, CodeBlock> snippetMerger,
                                                ParameterIndexProvider parameterIndexProvider) {
         super(snippetMerger, parameterIndexProvider);
@@ -31,7 +31,9 @@ public class ResultSetParameterHighLevelRenderer extends ResultSetParameterRende
     public CodeBlock visit(Parameter parameter) {
         return CodeBlock.builder()
                         .beginControlFlow("if ($L.next())", resultSetVariableName)
-                        .add(parameter.accept(new ResultSetParameterMiddleLevelRenderer(snippetMerger, parameterIndexProvider)))
+                        .add(parameter.accept(
+                                new ResultSetParameterMiddleLevelRenderer(snippetMerger, parameterIndexProvider)
+                        ))
                         .endControlFlow()
                         .build();
     }
@@ -40,7 +42,9 @@ public class ResultSetParameterHighLevelRenderer extends ResultSetParameterRende
     public CodeBlock visit(ComplexParameter parameter) {
         return CodeBlock.builder()
                         .beginControlFlow("if ($L.next())", resultSetVariableName)
-                        .add(parameter.accept(new ResultSetParameterMiddleLevelRenderer(snippetMerger, parameterIndexProvider)))
+                        .add(parameter.accept(
+                                new ResultSetParameterMiddleLevelRenderer(snippetMerger, parameterIndexProvider)
+                        ))
                         .endControlFlow()
                         .build();
     }
@@ -87,7 +91,9 @@ public class ResultSetParameterHighLevelRenderer extends ResultSetParameterRende
         }
 
         return builder.beginControlFlow("while ($L.next())", resultSetVariableName)
-                      .add(parameter.accept(new ResultSetParameterMiddleLevelRenderer(snippetMerger, parameterIndexProvider)))
+                      .add(parameter.getIteratedParameter().accept(
+                              new ResultSetParameterMiddleLevelRenderer(snippetMerger, parameterIndexProvider)
+                      ))
                       .endControlFlow()
                       .build();
     }

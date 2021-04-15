@@ -20,7 +20,7 @@ import static io.graphine.processor.util.MethodUtils.setter;
 /**
  * @author Oleg Marchenko
  */
-public class ResultSetParameterLowLevelRenderer extends ResultSetParameterRenderer {
+public final class ResultSetParameterLowLevelRenderer extends ResultSetParameterRenderer {
     public ResultSetParameterLowLevelRenderer(Function<CodeBlock, CodeBlock> snippetMerger,
                                               ParameterIndexProvider parameterIndexProvider) {
         super(snippetMerger, parameterIndexProvider);
@@ -184,14 +184,15 @@ public class ResultSetParameterLowLevelRenderer extends ResultSetParameterRender
         List<Parameter> childParameters = parameter.getChildParameters();
         for (Parameter childParameter : childParameters) {
             builder.add(childParameter.accept(
-                    new ResultSetParameterLowLevelRenderer(snippet -> CodeBlock.builder()
-                                                                               .addStatement("$L.$L($L)",
-                                                                                             parameterName,
-                                                                                             setter(childParameter.getName()),
-                                                                                             snippet)
-                                                                               .build(),
-                                                           resultSetVariableName,
-                                                           parameterIndexProvider)
+                    new ResultSetParameterLowLevelRenderer(
+                            snippet -> CodeBlock.builder()
+                                                .addStatement("$L.$L($L)",
+                                                              parameterName,
+                                                              setter(childParameter.getName()),
+                                                              snippet)
+                                                .build(),
+                            resultSetVariableName,
+                            parameterIndexProvider)
             ));
         }
 
@@ -200,6 +201,6 @@ public class ResultSetParameterLowLevelRenderer extends ResultSetParameterRender
 
     @Override
     public CodeBlock visit(IterableParameter parameter) {
-        return parameter.getIteratedParameter().accept(this);
+        throw new UnsupportedOperationException();
     }
 }

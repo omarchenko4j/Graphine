@@ -9,7 +9,7 @@ import io.graphine.processor.query.model.parameter.Parameter;
 /**
  * @author Oleg Marchenko
  */
-public class PreparedStatementParameterHighLevelRenderer extends PreparedStatementParameterRenderer {
+public final class PreparedStatementParameterHighLevelRenderer extends PreparedStatementParameterRenderer {
     public PreparedStatementParameterHighLevelRenderer(ParameterIndexProvider parameterIndexProvider) {
         super(parameterIndexProvider);
     }
@@ -36,7 +36,8 @@ public class PreparedStatementParameterHighLevelRenderer extends PreparedStateme
         return CodeBlock.builder()
                         .beginControlFlow("for ($T $L : $L)",
                                           iteratedParameter.getType(), iteratedParameter.getName(), parameter.getName())
-                        .add(parameter.getIteratedParameter().accept(new PreparedStatementParameterLowLevelRenderer(parameterIndexProvider)))
+                        .add(parameter.getIteratedParameter()
+                                      .accept(new PreparedStatementParameterLowLevelRenderer(parameterIndexProvider)))
                         .addStatement("$L.addBatch()", DEFAULT_STATEMENT_VARIABLE_NAME)
                         .endControlFlow()
                         .addStatement("$L.executeBatch()", DEFAULT_STATEMENT_VARIABLE_NAME)

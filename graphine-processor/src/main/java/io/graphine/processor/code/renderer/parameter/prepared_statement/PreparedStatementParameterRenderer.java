@@ -20,8 +20,8 @@ public abstract class PreparedStatementParameterRenderer implements ParameterVis
         this(parameterIndexProvider, parameter -> CodeBlock.of(parameter.getName()));
     }
 
-    public PreparedStatementParameterRenderer(ParameterIndexProvider parameterIndexProvider,
-                                              Function<Parameter, CodeBlock> parameterNameMapper) {
+    protected PreparedStatementParameterRenderer(ParameterIndexProvider parameterIndexProvider,
+                                                 Function<Parameter, CodeBlock> parameterNameMapper) {
         this.parameterIndexProvider = parameterIndexProvider;
         this.parameterNameMapper = parameterNameMapper;
     }

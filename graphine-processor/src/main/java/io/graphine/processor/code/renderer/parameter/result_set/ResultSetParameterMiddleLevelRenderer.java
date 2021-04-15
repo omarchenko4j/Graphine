@@ -12,7 +12,7 @@ import java.util.function.Function;
 /**
  * @author Oleg Marchenko
  */
-public class ResultSetParameterMiddleLevelRenderer extends ResultSetParameterRenderer {
+public final class ResultSetParameterMiddleLevelRenderer extends ResultSetParameterRenderer {
     public ResultSetParameterMiddleLevelRenderer(Function<CodeBlock, CodeBlock> snippetMerger,
                                                  ParameterIndexProvider parameterIndexProvider) {
         super(snippetMerger, parameterIndexProvider);
@@ -30,13 +30,15 @@ public class ResultSetParameterMiddleLevelRenderer extends ResultSetParameterRen
         return CodeBlock.builder()
                         .addStatement("$T $L = new $T()",
                                       parameterType, parameterName, parameterType)
-                        .add(parameter.accept(new ResultSetParameterLowLevelRenderer(snippetMerger, parameterIndexProvider)))
+                        .add(parameter.accept(
+                                new ResultSetParameterLowLevelRenderer(snippetMerger, parameterIndexProvider)
+                        ))
                         .add(snippetMerger.apply(CodeBlock.of("$L", parameterName)))
                         .build();
     }
 
     @Override
     public CodeBlock visit(IterableParameter parameter) {
-        return parameter.getIteratedParameter().accept(this);
+        throw new UnsupportedOperationException();
     }
 }
