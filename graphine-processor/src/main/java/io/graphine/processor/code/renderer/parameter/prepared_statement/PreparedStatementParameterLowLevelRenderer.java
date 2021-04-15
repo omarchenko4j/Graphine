@@ -15,7 +15,7 @@ import java.sql.Timestamp;
 import java.util.List;
 import java.util.function.Function;
 
-import static io.graphine.processor.util.MethodUtils.getter;
+import static io.graphine.processor.util.AccessorUtils.getter;
 
 /**
  * @author Oleg Marchenko
@@ -135,17 +135,12 @@ public final class PreparedStatementParameterLowLevelRenderer extends PreparedSt
 
         List<Parameter> childParameters = parameter.getChildParameters();
         for (Parameter childParameter : childParameters) {
-            builder.add(
-                    childParameter.accept(
-                            new PreparedStatementParameterLowLevelRenderer(
-                                    parameterIndexProvider,
-                                    innerParameter -> CodeBlock.of("$L.$L()",
-                                                                   parameter.getName(),
-                                                                   getter(innerParameter.getType(),
-                                                                          innerParameter.getName()))
-                            )
+            builder.add(childParameter.accept(
+                    new PreparedStatementParameterLowLevelRenderer(
+                            parameterIndexProvider,
+                            innerParameter -> CodeBlock.of("$L.$L()", parameter.getName(), getter(innerParameter))
                     )
-            );
+            ));
         }
 
         return builder.build();

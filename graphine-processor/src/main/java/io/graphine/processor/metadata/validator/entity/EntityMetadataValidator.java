@@ -3,7 +3,7 @@ package io.graphine.processor.metadata.validator.entity;
 import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.IdentifierMetadata;
-import io.graphine.processor.util.MethodUtils;
+import io.graphine.processor.util.AccessorUtils;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
@@ -98,8 +98,8 @@ public final class EntityMetadataValidator {
                 messager.printMessage(Kind.ERROR, "Attribute must not be final", attributeElement);
             }
 
-            String getterName = MethodUtils.getter(attributeElement);
-            String setterName = MethodUtils.setter(attributeElement);
+            String getterName = AccessorUtils.getter(attributeElement);
+            String setterName = AccessorUtils.setter(attributeElement);
 
             boolean hasGetter = methodNameToMethodMap.containsKey(getterName);
             boolean hasSetter = methodNameToMethodMap.containsKey(setterName);

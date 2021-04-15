@@ -1,5 +1,7 @@
 package io.graphine.processor.util;
 
+import io.graphine.processor.query.model.parameter.Parameter;
+
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 
@@ -9,7 +11,7 @@ import static javax.lang.model.type.TypeKind.BOOLEAN;
 /**
  * @author Oleg Marchenko
  */
-public final class MethodUtils {
+public final class AccessorUtils {
     private static final String GETTER_PREFIX = "get";
     private static final String BOOLEAN_GETTER_PREFIX = "is";
     private static final String SETTER_PREFIX = "set";
@@ -20,7 +22,11 @@ public final class MethodUtils {
         return getter(fieldType, fieldName);
     }
 
-    public static String getter(TypeMirror fieldType, String fieldName) {
+    public static String getter(Parameter parameter) {
+        return getter(parameter.getType(), parameter.getName());
+    }
+
+    private static String getter(TypeMirror fieldType, String fieldName) {
         if (fieldType.getKind() == BOOLEAN) {
             return methodNameWithPrefix(fieldName, BOOLEAN_GETTER_PREFIX);
         }
@@ -32,7 +38,11 @@ public final class MethodUtils {
         return setter(fieldName);
     }
 
-    public static String setter(String fieldName) {
+    public static String setter(Parameter parameter) {
+        return setter(parameter.getName());
+    }
+
+    private static String setter(String fieldName) {
         return methodNameWithPrefix(fieldName, SETTER_PREFIX);
     }
 
@@ -40,6 +50,6 @@ public final class MethodUtils {
         return prefix + capitalize(fieldName);
     }
 
-    private MethodUtils() {
+    private AccessorUtils() {
     }
 }

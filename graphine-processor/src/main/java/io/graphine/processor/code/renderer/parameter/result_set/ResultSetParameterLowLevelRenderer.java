@@ -15,7 +15,7 @@ import java.sql.Timestamp;
 import java.util.List;
 import java.util.function.Function;
 
-import static io.graphine.processor.util.MethodUtils.setter;
+import static io.graphine.processor.util.AccessorUtils.setter;
 
 /**
  * @author Oleg Marchenko
@@ -187,9 +187,7 @@ public final class ResultSetParameterLowLevelRenderer extends ResultSetParameter
                     new ResultSetParameterLowLevelRenderer(
                             snippet -> CodeBlock.builder()
                                                 .addStatement("$L.$L($L)",
-                                                              parameterName,
-                                                              setter(childParameter.getName()),
-                                                              snippet)
+                                                              parameterName, setter(childParameter), snippet)
                                                 .build(),
                             resultSetVariableName,
                             parameterIndexProvider)
