@@ -36,11 +36,29 @@ public class FilmRepositoryTest {
         Film film = filmRepository.findById(1);
         Assert.assertNotNull(film);
         Assert.assertEquals(film.getId(), Long.valueOf(1));
+        Assert.assertEquals(film.getImdbId(), "tt0371746");
         Assert.assertEquals(film.getTitle(), "Iron Man");
         Assert.assertEquals(film.getYear(), 2008);
         Assert.assertEquals(film.getBudget(), Long.valueOf(140_000_000));
         Assert.assertEquals(film.getGross(), Long.valueOf(585_000_000));
         Assert.assertEquals(film.getTagline(), "Get ready for a different breed of heavy metal hero.");
+        Assert.assertTrue(film.isWasReleased());
+    }
+
+    @Test
+    public void testFindByImdbId() {
+        Optional<Film> filmOptional = filmRepository.findByImdbId("tt1228705");
+        Assert.assertNotNull(filmOptional);
+        Assert.assertTrue(filmOptional.isPresent());
+
+        Film film = filmOptional.get();
+        Assert.assertEquals(film.getId(), Long.valueOf(3));
+        Assert.assertEquals(film.getImdbId(), "tt1228705");
+        Assert.assertEquals(film.getTitle(), "Iron Man 2");
+        Assert.assertEquals(film.getYear(), 2010);
+        Assert.assertEquals(film.getBudget(), Long.valueOf(200_000_000));
+        Assert.assertEquals(film.getGross(), Long.valueOf(623_000_000));
+        Assert.assertEquals(film.getTagline(), "It's not the armor that makes the hero, but the man inside.");
         Assert.assertTrue(film.isWasReleased());
     }
 
@@ -246,6 +264,48 @@ public class FilmRepositoryTest {
     }
 
     @Test
+    public void testFindAllByYearBetweenOrderByYear() {
+        List<Film> films = filmRepository.findAllByYearBetweenOrderByYear(2010, 2012);
+        Assert.assertNotNull(films);
+        Assert.assertEquals(films.size(), 4);
+        Assert.assertTrue(films.stream().allMatch(Objects::nonNull));
+        Assert.assertEquals(films.get(0).getYear(), 2010);
+        Assert.assertEquals(films.get(1).getYear(), 2011);
+        Assert.assertEquals(films.get(2).getYear(), 2011);
+        Assert.assertEquals(films.get(3).getYear(), 2012);
+    }
+
+    @Test
+    public void testFindAllByYearLessThanEqualOrderByYearAsc() {
+        List<Film> films = filmRepository.findAllByYearLessThanEqualOrderByYearAsc(2012);
+        Assert.assertNotNull(films);
+        Assert.assertEquals(films.size(), 6);
+        Assert.assertTrue(films.stream().allMatch(Objects::nonNull));
+        Assert.assertEquals(films.get(0).getYear(), 2008);
+        Assert.assertEquals(films.get(1).getYear(), 2008);
+        Assert.assertEquals(films.get(2).getYear(), 2010);
+        Assert.assertEquals(films.get(3).getYear(), 2011);
+        Assert.assertEquals(films.get(4).getYear(), 2011);
+        Assert.assertEquals(films.get(5).getYear(), 2012);
+    }
+
+    @Test
+    public void testFindAllByYearGreaterThanAndTaglineIsNotEmptyOrderByYearDesc() {
+        List<Film> films = filmRepository.findAllByYearGreaterThanAndTaglineIsNotEmptyOrderByYearDesc(2016);
+        Assert.assertNotNull(films);
+        Assert.assertEquals(films.size(), 8);
+        Assert.assertTrue(films.stream().allMatch(Objects::nonNull));
+        Assert.assertEquals(films.get(0).getYear(), 2019);
+        Assert.assertEquals(films.get(1).getYear(), 2019);
+        Assert.assertEquals(films.get(2).getYear(), 2018);
+        Assert.assertEquals(films.get(3).getYear(), 2018);
+        Assert.assertEquals(films.get(4).getYear(), 2018);
+        Assert.assertEquals(films.get(5).getYear(), 2017);
+        Assert.assertEquals(films.get(6).getYear(), 2017);
+        Assert.assertEquals(films.get(7).getYear(), 2017);
+    }
+
+    @Test
     public void testCountAll() {
         long numberOfFilms = filmRepository.countAll();
         Assert.assertEquals(numberOfFilms, 27);
@@ -259,25 +319,25 @@ public class FilmRepositoryTest {
 
     @Test
     public void testSave() {
-        Film film = new Film("Doctor Strange in the Multiverse of Madness", 2022, false);
+        Film film = new Film("tt9419884", "Doctor Strange in the Multiverse of Madness", 2022, false);
         filmRepository.save(film);
 
         Assert.assertNotNull(film.getId());
 
         try (Connection connection = DATA_SOURCE.getConnection()) {
             try (PreparedStatement statement =
-                         connection.prepareStatement("SELECT id, title, year, was_released FROM films WHERE id = ?")) {
+                         connection.prepareStatement("SELECT id, imdb_id, title, year, was_released FROM films WHERE id = ?")) {
                 statement.setLong(1, film.getId());
                 try (ResultSet resultSet = statement.executeQuery()) {
                     Assert.assertTrue(resultSet.next());
+                    Assert.assertEquals(resultSet.getString("imdb_id"), "tt9419884");
                     Assert.assertEquals(resultSet.getString("title"), "Doctor Strange in the Multiverse of Madness");
                     Assert.assertEquals(resultSet.getInt("year"), 2022);
                     Assert.assertFalse(resultSet.getBoolean("was_released"));
                 }
             }
 
-            try (PreparedStatement statement =
-                         connection.prepareStatement("DELETE FROM films WHERE id = ?")) {
+            try (PreparedStatement statement = connection.prepareStatement("DELETE FROM films WHERE id = ?")) {
                 statement.setLong(1, film.getId());
                 statement.executeUpdate();
             }
@@ -289,8 +349,8 @@ public class FilmRepositoryTest {
 
     @Test
     public void testSaveAll() {
-        Film film1 = new Film("Doctor Strange in the Multiverse of Madness", 2022, false);
-        Film film2 = new Film("Thor: Love and Thunder", 2022, false);
+        Film film1 = new Film("tt9419884", "Doctor Strange in the Multiverse of Madness", 2022, false);
+        Film film2 = new Film("tt10648342", "Thor: Love and Thunder", 2022, false);
         filmRepository.saveAll(film1, film2);
 
         Assert.assertNotNull(film1.getId());
@@ -298,7 +358,7 @@ public class FilmRepositoryTest {
 
         try (Connection connection = DATA_SOURCE.getConnection()) {
             try (PreparedStatement statement =
-                         connection.prepareStatement("SELECT id, title, year, was_released FROM films WHERE id IN (?, ?)")) {
+                         connection.prepareStatement("SELECT id, imdb_id, title, year, was_released FROM films WHERE id IN (?, ?)")) {
                 statement.setLong(1, film1.getId());
                 statement.setLong(2, film2.getId());
                 try (ResultSet resultSet = statement.executeQuery()) {
@@ -306,11 +366,13 @@ public class FilmRepositoryTest {
                     while (resultSet.next()) {
                         long id = resultSet.getLong("id");
                         if (id == film1.getId()) {
+                            Assert.assertEquals(resultSet.getString("imdb_id"), "tt9419884");
                             Assert.assertEquals(resultSet.getString("title"), "Doctor Strange in the Multiverse of Madness");
                             Assert.assertEquals(resultSet.getInt("year"), 2022);
                             Assert.assertFalse(resultSet.getBoolean("was_released"));
                         }
                         else if (id == film2.getId()) {
+                            Assert.assertEquals(resultSet.getString("imdb_id"), "tt10648342");
                             Assert.assertEquals(resultSet.getString("title"), "Thor: Love and Thunder");
                             Assert.assertEquals(resultSet.getInt("year"), 2022);
                             Assert.assertFalse(resultSet.getBoolean("was_released"));
@@ -321,8 +383,7 @@ public class FilmRepositoryTest {
                 }
             }
 
-            try (PreparedStatement statement =
-                         connection.prepareStatement("DELETE FROM films WHERE id IN (?, ?)")) {
+            try (PreparedStatement statement = connection.prepareStatement("DELETE FROM films WHERE id IN (?, ?)")) {
                 statement.setLong(1, film1.getId());
                 statement.setLong(2, film2.getId());
                 statement.executeUpdate();
@@ -335,15 +396,16 @@ public class FilmRepositoryTest {
 
     @Test
     public void testUpdate() {
-        Film film = new Film("Doctor Strange in the Multiverse of Madness", 2022, false);
+        Film film = new Film("tt9419884", "Doctor Strange in the Multiverse of Madness", 2022, false);
 
         try (Connection connection = DATA_SOURCE.getConnection()) {
             try (PreparedStatement statement =
-                         connection.prepareStatement("INSERT INTO films(title, year, was_released) VALUES (?, ?, ?)",
+                         connection.prepareStatement("INSERT INTO films(imdb_id, title, year, was_released) VALUES (?, ?, ?, ?)",
                                                      Statement.RETURN_GENERATED_KEYS)) {
-                statement.setString(1, film.getTitle());
-                statement.setLong(2, film.getYear());
-                statement.setBoolean(3, film.isWasReleased());
+                statement.setString(1, film.getImdbId());
+                statement.setString(2, film.getTitle());
+                statement.setLong(3, film.getYear());
+                statement.setBoolean(4, film.isWasReleased());
                 statement.executeUpdate();
                 try (ResultSet generatedKeys = statement.getGeneratedKeys()) {
                     if (generatedKeys.next()) {
@@ -356,23 +418,25 @@ public class FilmRepositoryTest {
             throw new RuntimeException(e);
         }
 
+        film.setImdbId("tt10648342");
         film.setTitle("Thor: Love and Thunder");
+        film.setWasReleased(true);
         filmRepository.update(film);
 
         try (Connection connection = DATA_SOURCE.getConnection()) {
             try (PreparedStatement statement =
-                         connection.prepareStatement("SELECT id, title, year, was_released FROM films WHERE id = ?")) {
+                         connection.prepareStatement("SELECT id, imdb_id, title, year, was_released FROM films WHERE id = ?")) {
                 statement.setLong(1, film.getId());
                 try (ResultSet resultSet = statement.executeQuery()) {
                     Assert.assertTrue(resultSet.next());
+                    Assert.assertEquals(resultSet.getString("imdb_id"), "tt10648342");
                     Assert.assertEquals(resultSet.getString("title"), "Thor: Love and Thunder");
                     Assert.assertEquals(resultSet.getInt("year"), 2022);
-                    Assert.assertFalse(resultSet.getBoolean("was_released"));
+                    Assert.assertTrue(resultSet.getBoolean("was_released"));
                 }
             }
 
-            try (PreparedStatement statement =
-                         connection.prepareStatement("DELETE FROM films WHERE id = ?")) {
+            try (PreparedStatement statement = connection.prepareStatement("DELETE FROM films WHERE id = ?")) {
                 statement.setLong(1, film.getId());
                 statement.executeUpdate();
             }
@@ -384,26 +448,29 @@ public class FilmRepositoryTest {
 
     @Test
     public void testUpdateAll() {
-        Film film1 = new Film(100L, "Doctor Strange in the Multiverse of Madness", 2022, false);
-        Film film2 = new Film(101L, "Thor: Love and Thunder", 2022, false);
-        Film film3 = new Film(102L, "Black Panther II", 2022, false);
+        Film film1 = new Film(100L, "tt9419884", "Doctor Strange in the Multiverse of Madness", 2022);
+        Film film2 = new Film(101L, "tt10648342", "Thor: Love and Thunder", 2022);
+        Film film3 = new Film(102L, "tt9114286", "Black Panther II", 2022);
 
         try (Connection connection = DATA_SOURCE.getConnection()) {
             try (PreparedStatement statement =
-                         connection.prepareStatement("INSERT INTO films(id, title, year) VALUES (?, ?, ?)")) {
+                         connection.prepareStatement("INSERT INTO films(id, imdb_id, title, year) VALUES (?, ?, ?, ?)")) {
                 statement.setLong(1, film1.getId());
-                statement.setString(2, film1.getTitle());
-                statement.setLong(3, film1.getYear());
+                statement.setString(2, film1.getImdbId());
+                statement.setString(3, film1.getTitle());
+                statement.setLong(4, film1.getYear());
                 statement.executeUpdate();
 
                 statement.setLong(1, film2.getId());
-                statement.setString(2, film2.getTitle());
-                statement.setLong(3, film2.getYear());
+                statement.setString(2, film2.getImdbId());
+                statement.setString(3, film2.getTitle());
+                statement.setLong(4, film2.getYear());
                 statement.executeUpdate();
 
                 statement.setLong(1, film3.getId());
-                statement.setString(2, film3.getTitle());
-                statement.setLong(3, film3.getYear());
+                statement.setString(2, film3.getImdbId());
+                statement.setString(3, film3.getTitle());
+                statement.setLong(4, film3.getYear());
                 statement.executeUpdate();
             }
         }
@@ -411,8 +478,13 @@ public class FilmRepositoryTest {
             throw new RuntimeException(e);
         }
 
+        film1.setImdbId("tt10676048");
         film1.setTitle("Captain Marvel 2");
+
+        film2.setImdbId("tt11213558");
         film2.setTitle("Ant-Man and the Wasp: Quantumania");
+
+        film3.setImdbId("tt6791350");
         film3.setTitle("Guardians of the Galaxy Vol. 3");
         film3.setYear(2023);
 
@@ -420,18 +492,22 @@ public class FilmRepositoryTest {
 
         try (Connection connection = DATA_SOURCE.getConnection()) {
             try (Statement statement = connection.createStatement()) {
-                try (ResultSet resultSet = statement.executeQuery("SELECT id, title, year FROM films WHERE id IN (1, 2, 3)")) {
+                try (ResultSet resultSet =
+                             statement.executeQuery("SELECT id, imdb_id, title, year FROM films WHERE id IN (1, 2, 3)")) {
                     while (resultSet.next()) {
                         long id = resultSet.getLong("id");
                         if (id == film1.getId()) {
+                            Assert.assertEquals(resultSet.getString("imdb_id"), "tt10676048");
                             Assert.assertEquals(resultSet.getString("title"), "Captain Marvel 2");
                             Assert.assertEquals(resultSet.getInt("year"), 2022);
                         }
                         else if (id == film2.getId()) {
+                            Assert.assertEquals(resultSet.getString("imdb_id"), "tt11213558");
                             Assert.assertEquals(resultSet.getString("title"), "Ant-Man and the Wasp: Quantumania");
                             Assert.assertEquals(resultSet.getInt("year"), 2022);
                         }
                         else if (id == film3.getId()) {
+                            Assert.assertEquals(resultSet.getString("imdb_id"), "tt6791350");
                             Assert.assertEquals(resultSet.getString("title"), "Guardians of the Galaxy Vol. 3");
                             Assert.assertEquals(resultSet.getInt("year"), 2023);
                         }
@@ -439,8 +515,7 @@ public class FilmRepositoryTest {
                 }
             }
 
-            try (PreparedStatement statement =
-                         connection.prepareStatement("DELETE FROM films WHERE id IN (?, ?, ?)")) {
+            try (PreparedStatement statement = connection.prepareStatement("DELETE FROM films WHERE id IN (?, ?, ?)")) {
                 statement.setLong(1, film1.getId());
                 statement.setLong(2, film2.getId());
                 statement.setLong(3, film3.getId());
@@ -454,14 +529,15 @@ public class FilmRepositoryTest {
 
     @Test
     public void testDelete() {
-        Film film = new Film(100L, "Guardians of the Galaxy Vol. 3", 2023);
+        Film film = new Film(100L, "tt6791350", "Guardians of the Galaxy Vol. 3", 2023);
 
         try (Connection connection = DATA_SOURCE.getConnection()) {
             try (PreparedStatement statement =
-                         connection.prepareStatement("INSERT INTO films(id, title, year) VALUES (?, ?, ?)")) {
+                         connection.prepareStatement("INSERT INTO films(id, imdb_id, title, year) VALUES (?, ?, ?, ?)")) {
                 statement.setLong(1, film.getId());
-                statement.setString(2, film.getTitle());
-                statement.setLong(3, film.getYear());
+                statement.setString(2, film.getImdbId());
+                statement.setString(3, film.getTitle());
+                statement.setLong(4, film.getYear());
                 statement.executeUpdate();
             }
         }
@@ -472,8 +548,7 @@ public class FilmRepositoryTest {
         filmRepository.delete(film);
 
         try (Connection connection = DATA_SOURCE.getConnection()) {
-            try (PreparedStatement statement =
-                         connection.prepareStatement("SELECT id FROM films WHERE id = ?")) {
+            try (PreparedStatement statement = connection.prepareStatement("SELECT id FROM films WHERE id = ?")) {
                 statement.setLong(1, 100L);
                 try (ResultSet resultSet = statement.executeQuery()) {
                     Assert.assertFalse(resultSet.next());
@@ -487,14 +562,15 @@ public class FilmRepositoryTest {
 
     @Test
     public void testDeleteById() {
-        Film film = new Film(100L, "Doctor Strange in the Multiverse of Madness", 2022);
+        Film film = new Film(100L, "tt9419884", "Doctor Strange in the Multiverse of Madness", 2022);
 
         try (Connection connection = DATA_SOURCE.getConnection()) {
             try (PreparedStatement statement =
-                         connection.prepareStatement("INSERT INTO films(id, title, year) VALUES (?, ?, ?)")) {
+                         connection.prepareStatement("INSERT INTO films(id, imdb_id, title, year) VALUES (?, ?, ?, ?)")) {
                 statement.setLong(1, film.getId());
-                statement.setString(2, film.getTitle());
-                statement.setLong(3, film.getYear());
+                statement.setString(2, film.getImdbId());
+                statement.setString(3, film.getTitle());
+                statement.setLong(4, film.getYear());
                 statement.executeUpdate();
             }
         }
@@ -505,8 +581,7 @@ public class FilmRepositoryTest {
         filmRepository.deleteById(film.getId());
 
         try (Connection connection = DATA_SOURCE.getConnection()) {
-            try (PreparedStatement statement =
-                         connection.prepareStatement("SELECT id FROM films WHERE id = ?")) {
+            try (PreparedStatement statement = connection.prepareStatement("SELECT id FROM films WHERE id = ?")) {
                 statement.setLong(1, film.getId());
                 try (ResultSet resultSet = statement.executeQuery()) {
                     Assert.assertFalse(resultSet.next());
@@ -520,26 +595,29 @@ public class FilmRepositoryTest {
 
     @Test
     public void testDeleteAll() {
-        Film film1 = new Film(100L, "Doctor Strange in the Multiverse of Madness", 2022, false);
-        Film film2 = new Film(101L, "Thor: Love and Thunder", 2022, false);
-        Film film3 = new Film(102L, "Black Panther II", 2022, false);
+        Film film1 = new Film(100L, "tt9419884", "Doctor Strange in the Multiverse of Madness", 2022);
+        Film film2 = new Film(101L, "tt10648342", "Thor: Love and Thunder", 2022);
+        Film film3 = new Film(102L, "tt9114286", "Black Panther II", 2022);
 
         try (Connection connection = DATA_SOURCE.getConnection()) {
             try (PreparedStatement statement =
-                         connection.prepareStatement("INSERT INTO films(id, title, year) VALUES (?, ?, ?)")) {
+                         connection.prepareStatement("INSERT INTO films(id, imdb_id, title, year) VALUES (?, ?, ?, ?)")) {
                 statement.setLong(1, film1.getId());
-                statement.setString(2, film1.getTitle());
-                statement.setLong(3, film1.getYear());
+                statement.setString(2, film1.getImdbId());
+                statement.setString(3, film1.getTitle());
+                statement.setLong(4, film1.getYear());
                 statement.executeUpdate();
 
                 statement.setLong(1, film2.getId());
-                statement.setString(2, film2.getTitle());
-                statement.setLong(3, film2.getYear());
+                statement.setString(2, film2.getImdbId());
+                statement.setString(3, film2.getTitle());
+                statement.setLong(4, film2.getYear());
                 statement.executeUpdate();
 
                 statement.setLong(1, film3.getId());
-                statement.setString(2, film3.getTitle());
-                statement.setLong(3, film3.getYear());
+                statement.setString(2, film3.getImdbId());
+                statement.setString(3, film3.getTitle());
+                statement.setLong(4, film3.getYear());
                 statement.executeUpdate();
             }
         }
@@ -550,8 +628,7 @@ public class FilmRepositoryTest {
         filmRepository.deleteAll(film1, film2, film3);
 
         try (Connection connection = DATA_SOURCE.getConnection()) {
-            try (PreparedStatement statement =
-                         connection.prepareStatement("SELECT id FROM films WHERE id IN (?, ?, ?)")) {
+            try (PreparedStatement statement = connection.prepareStatement("SELECT id FROM films WHERE id IN (?, ?, ?)")) {
                 statement.setLong(1, film1.getId());
                 statement.setLong(2, film2.getId());
                 statement.setLong(3, film3.getId());
@@ -567,32 +644,36 @@ public class FilmRepositoryTest {
 
     @Test
     public void testDeleteAllByYearIn() {
-        Film film1 = new Film(100L, "Doctor Strange in the Multiverse of Madness", 2022);
-        Film film2 = new Film(101L, "Thor: Love and Thunder", 2022);
-        Film film3 = new Film(102L, "Black Panther II", 2022);
-        Film film4 = new Film(103L, "Guardians of the Galaxy Vol. 3", 2023);
+        Film film1 = new Film(100L, "tt9419884", "Doctor Strange in the Multiverse of Madness", 2022);
+        Film film2 = new Film(101L, "tt10648342", "Thor: Love and Thunder", 2022);
+        Film film3 = new Film(102L, "tt9114286", "Black Panther II", 2022);
+        Film film4 = new Film(103L, "tt6791350", "Guardians of the Galaxy Vol. 3", 2023);
 
         try (Connection connection = DATA_SOURCE.getConnection()) {
             try (PreparedStatement statement =
-                         connection.prepareStatement("INSERT INTO films(id, title, year) VALUES (?, ?, ?)")) {
+                         connection.prepareStatement("INSERT INTO films(id, imdb_id, title, year) VALUES (?, ?, ?, ?)")) {
                 statement.setLong(1, film1.getId());
-                statement.setString(2, film1.getTitle());
-                statement.setLong(3, film1.getYear());
+                statement.setString(2, film1.getImdbId());
+                statement.setString(3, film1.getTitle());
+                statement.setLong(4, film1.getYear());
                 statement.executeUpdate();
 
                 statement.setLong(1, film2.getId());
-                statement.setString(2, film2.getTitle());
-                statement.setLong(3, film2.getYear());
+                statement.setString(2, film2.getImdbId());
+                statement.setString(3, film2.getTitle());
+                statement.setLong(4, film2.getYear());
                 statement.executeUpdate();
 
                 statement.setLong(1, film3.getId());
-                statement.setString(2, film3.getTitle());
-                statement.setLong(3, film3.getYear());
+                statement.setString(2, film3.getImdbId());
+                statement.setString(3, film3.getTitle());
+                statement.setLong(4, film3.getYear());
                 statement.executeUpdate();
 
                 statement.setLong(1, film4.getId());
-                statement.setString(2, film4.getTitle());
-                statement.setLong(3, film4.getYear());
+                statement.setString(2, film4.getImdbId());
+                statement.setString(3, film4.getTitle());
+                statement.setLong(4, film4.getYear());
                 statement.executeUpdate();
             }
         }

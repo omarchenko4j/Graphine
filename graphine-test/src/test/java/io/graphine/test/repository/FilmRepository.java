@@ -5,6 +5,7 @@ import io.graphine.test.model.Film;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -13,6 +14,7 @@ import java.util.Set;
 @Repository(Film.class)
 public interface FilmRepository {
     Film findById(long id);
+    Optional<Film> findByImdbId(String imdbId);
     Collection<Film> findAll();
     Collection<Film> findAllByYear(int year);
     Collection<Film> findAllByYearIsNot(int year);
@@ -38,6 +40,9 @@ public interface FilmRepository {
     Set<Film> findAllByYearNotIn(int... years);
     Set<Film> findAllByBudgetGreaterThanEqualAndGrossGreaterThan(long budget, long gross);
     Set<Film> findAllByBudgetBetweenOrGrossBetween(long budget1, long budget2, long gross1, long gross2);
+    List<Film> findAllByYearBetweenOrderByYear(int year1, int year2);
+    List<Film> findAllByYearLessThanEqualOrderByYearAsc(int year);
+    List<Film> findAllByYearGreaterThanAndTaglineIsNotEmptyOrderByYearDesc(int year);
     long countAll();
     int countAllByYear(int year);
     void save(Film film);

@@ -13,6 +13,8 @@ import java.util.Objects;
 public class Film {
     @Id
     private Long id;
+    @Attribute(column = "imdb_id")
+    private String imdbId;
     @Attribute
     private String title;
     @Attribute
@@ -29,16 +31,17 @@ public class Film {
     public Film() {
     }
 
-    public Film(Long id, String title, int year) {
-        this(id, title, year, false);
+    public Film(String imdbId, String title, Integer year, boolean wasReleased) {
+        this(null, imdbId, title, year, wasReleased);
     }
 
-    public Film(String title, Integer year, boolean wasReleased) {
-        this(null, title, year, wasReleased);
+    public Film(Long id, String imdbId, String title, Integer year) {
+        this(id, imdbId, title, year, false);
     }
 
-    public Film(Long id, String title, int year, boolean wasReleased) {
+    public Film(Long id, String imdbId, String title, int year, boolean wasReleased) {
         this.id = id;
+        this.imdbId = imdbId;
         this.title = title;
         this.year = year;
         this.wasReleased = wasReleased;
@@ -50,6 +53,14 @@ public class Film {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getImdbId() {
+        return imdbId;
+    }
+
+    public void setImdbId(String imdbId) {
+        this.imdbId = imdbId;
     }
 
     public String getTitle() {
@@ -107,6 +118,7 @@ public class Film {
         Film film = (Film) o;
         return year == film.year &&
                 wasReleased == film.wasReleased &&
+                imdbId.equals(film.imdbId) &&
                 title.equals(film.title) &&
                 Objects.equals(budget, film.budget) &&
                 Objects.equals(gross, film.gross) &&
@@ -115,13 +127,14 @@ public class Film {
 
     @Override
     public int hashCode() {
-        return Objects.hash(title, year, budget, gross, tagline, wasReleased);
+        return Objects.hash(imdbId, title, year, budget, gross, tagline, wasReleased);
     }
 
     @Override
     public String toString() {
         return "Film{" +
                 "id=" + id +
+                ", imdbId='" + imdbId + '\'' +
                 ", title='" + title + '\'' +
                 ", year=" + year +
                 ", budget=" + budget +
