@@ -2,7 +2,7 @@ package io.graphine.processor;
 
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.TypeSpec;
-import io.graphine.core.util.UnnamedParameterUnwrapper;
+import io.graphine.core.util.UnnamedParameterRepeater;
 import io.graphine.processor.code.generator.repository.RepositoryImplementationGenerator;
 import io.graphine.processor.metadata.collector.EntityMetadataCollector;
 import io.graphine.processor.metadata.collector.RepositoryMetadataCollector;
@@ -93,7 +93,8 @@ public class GraphineRepositoryProcessor extends AbstractProcessor {
             JavaFile javaFile = JavaFile.builder(repository.getPackageName(), typeSpec)
                                         .skipJavaLangImports(true)
                                         .indent("\t")
-                                        .addStaticImport(UnnamedParameterUnwrapper.class, "unwrapFor")
+                                        // TODO: imported even if not used
+                                        .addStaticImport(UnnamedParameterRepeater.class, "repeat", "repeatFor")
                                         .build();
             try {
                 javaFile.writeTo(filer);

@@ -2,7 +2,7 @@ package io.graphine.processor.code.generator.repository.method;
 
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
-import io.graphine.core.util.UnnamedParameterUnwrapper;
+import io.graphine.core.util.UnnamedParameterRepeater;
 import io.graphine.processor.code.renderer.parameter.index_provider.IncrementalParameterIndexProvider;
 import io.graphine.processor.code.renderer.parameter.index_provider.NumericParameterIndexProvider;
 import io.graphine.processor.code.renderer.parameter.index_provider.ParameterIndexProvider;
@@ -11,12 +11,15 @@ import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.query.model.NativeQuery;
 import io.graphine.processor.query.model.parameter.Parameter;
 
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeMirror;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static io.graphine.processor.code.renderer.parameter.prepared_statement.PreparedStatementParameterRenderer.DEFAULT_STATEMENT_VARIABLE_NAME;
 import static io.graphine.processor.code.renderer.parameter.result_set.ResultSetParameterRenderer.DEFAULT_RESULT_SET_VARIABLE_NAME;
@@ -52,17 +55,37 @@ public abstract class RepositoryMethodImplementationGenerator {
                             .build();
         }
         else {
-            List<CodeBlock> unnamedParameters =
-                    deferredParameters.stream()
-                                      .map(Parameter::getName)
-                                      .map(parameterName ->
-                                                   CodeBlock.of("$T.unwrapFor($L)",
-                                                                UnnamedParameterUnwrapper.class, parameterName))
-                                      .collect(Collectors.toList());
+            List<CodeBlock> unnamedParameterSnippets = new ArrayList<>(deferredParameters.size());
+            for (Parameter parameter : deferredParameters) {
+                String parameterName = parameter.getName();
+                TypeMirror parameterType = parameter.getType();
+                switch (parameterType.getKind()) {
+                    case ARRAY:
+                        unnamedParameterSnippets.add(CodeBlock.of("$T.repeat($L.length)",
+                                                                  UnnamedParameterRepeater.class, parameterName));
+                        break;
+                    case DECLARED:
+                        DeclaredType declaredType = (DeclaredType) parameterType;
+                        TypeElement typeElement = (TypeElement) declaredType.asElement();
+                        switch (typeElement.getQualifiedName().toString()) {
+                            case "java.lang.Iterable":
+                                unnamedParameterSnippets.add(CodeBlock.of("$T.repeatFor($L)",
+                                                                          UnnamedParameterRepeater.class, parameterName));
+                                break;
+                            case "java.util.Collection":
+                            case "java.util.List":
+                            case "java.util.Set":
+                                unnamedParameterSnippets.add(CodeBlock.of("$T.repeat($L.size())",
+                                                                          UnnamedParameterRepeater.class, parameterName));
+                                break;
+                        }
+                        break;
+                }
+            }
             return CodeBlock.builder()
                             .addStatement("$T query = $T.format($S, $L)",
                                           String.class, String.class, query.getValue(),
-                                          CodeBlock.join(unnamedParameters, ", "))
+                                          CodeBlock.join(unnamedParameterSnippets, ", "))
                             .build();
         }
     }
