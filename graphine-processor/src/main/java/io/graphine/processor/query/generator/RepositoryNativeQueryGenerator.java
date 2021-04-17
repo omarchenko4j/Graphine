@@ -9,15 +9,22 @@ import io.graphine.processor.metadata.model.repository.method.name.fragment.Qual
 import io.graphine.processor.query.generator.specific.*;
 import io.graphine.processor.query.model.NativeQuery;
 import io.graphine.processor.query.registry.RepositoryNativeQueryRegistry;
+import io.graphine.processor.query.registry.RepositoryNativeQueryRegistryStorage;
 
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Oleg Marchenko
  */
 public final class RepositoryNativeQueryGenerator {
+    public RepositoryNativeQueryRegistryStorage generate(Collection<RepositoryMetadata> repositories) {
+        List<RepositoryNativeQueryRegistry> registries = new ArrayList<>(repositories.size());
+        for (RepositoryMetadata repository : repositories) {
+            registries.add(generate(repository));
+        }
+        return new RepositoryNativeQueryRegistryStorage(registries);
+    }
+
     public RepositoryNativeQueryRegistry generate(RepositoryMetadata repository) {
         EntityMetadata entity = repository.getEntity();
 
