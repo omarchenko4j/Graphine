@@ -21,6 +21,7 @@ import io.graphine.processor.query.generator.RepositoryNativeQueryGenerator;
 import io.graphine.processor.query.registry.RepositoryNativeQueryRegistry;
 import io.graphine.processor.query.registry.RepositoryNativeQueryRegistryStorage;
 import io.graphine.processor.support.EnvironmentContext;
+import io.graphine.processor.support.SupportedOptions;
 
 import javax.annotation.processing.*;
 import javax.lang.model.element.TypeElement;
@@ -44,6 +45,11 @@ public class GraphineRepositoryProcessor extends AbstractProcessor {
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
         EnvironmentContext.init(processingEnv);
+    }
+
+    @Override
+    public Set<String> getSupportedOptions() {
+        return SupportedOptions.names();
     }
 
     @Override

@@ -9,7 +9,9 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import java.util.List;
 
-import static io.graphine.processor.util.StringUtils.*;
+import static io.graphine.processor.support.SupportedOptions.DEFAULT_SCHEME;
+import static io.graphine.processor.util.StringUtils.isEmpty;
+import static io.graphine.processor.util.StringUtils.uncapitalize;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 
@@ -28,8 +30,7 @@ public final class EntityMetadataFactory {
 
         String schema = entity.schema();
         if (isEmpty(schema)) {
-            // TODO: use the default scheme from processor options
-            schema = EMPTY;
+            schema = DEFAULT_SCHEME.value();
         }
 
         String table = entity.table();

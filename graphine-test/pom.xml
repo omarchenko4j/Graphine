@@ -70,6 +70,9 @@
               <version>0.2.0-SNAPSHOT</version>
             </path>
           </annotationProcessorPaths>
+          <compilerArgs>
+            <arg>-Agraphine.default_schema=public</arg>
+          </compilerArgs>
         </configuration>
       </plugin>
     </plugins>
