@@ -139,6 +139,14 @@ public final class ResultSetParameterLowLevelRenderer extends ResultSetParameter
                                         .add(snippetMerger.apply(CodeBlock.of("$L.getTimestamp($L)",
                                                                               resultSetVariableName, parameterIndex)))
                                         .build();
+                    case "java.time.Instant":
+                        return CodeBlock.builder()
+                                        .addStatement("$T $L = $L.getTimestamp($L)",
+                                                      Timestamp.class, parameterName, resultSetVariableName, parameterIndex)
+                                        .beginControlFlow("if ($L != null)", parameterName)
+                                        .add(snippetMerger.apply(CodeBlock.of("$L.toInstant()", parameterName)))
+                                        .endControlFlow()
+                                        .build();
                     case "java.time.LocalDate":
                         return CodeBlock.builder()
                                         .addStatement("$T $L = $L.getDate($L)",

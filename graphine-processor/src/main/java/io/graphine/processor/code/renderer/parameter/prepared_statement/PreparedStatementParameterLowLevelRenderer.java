@@ -100,6 +100,12 @@ public final class PreparedStatementParameterLowLevelRenderer extends PreparedSt
                                         .addStatement("$L.setTimestamp($L, $L)",
                                                       DEFAULT_STATEMENT_VARIABLE_NAME, parameterIndex, parameterName)
                                         .build();
+                    case "java.time.Instant":
+                        return CodeBlock.builder()
+                                        .addStatement("$L.setTimestamp($L, $L != null ? $T.from($L) : null)",
+                                                      DEFAULT_STATEMENT_VARIABLE_NAME,
+                                                      parameterIndex, parameterName, Timestamp.class, parameterName)
+                                        .build();
                     case "java.time.LocalDate":
                         return CodeBlock.builder()
                                         .addStatement("$L.setDate($L, $L != null ? $T.valueOf($L) : null)",
