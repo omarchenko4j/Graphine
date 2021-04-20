@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.function.Function;
 
 import static io.graphine.processor.util.AccessorUtils.getter;
+import static javax.lang.model.element.ElementKind.ENUM;
 
 /**
  * @author Oleg Marchenko
@@ -131,6 +132,13 @@ public final class PreparedStatementParameterLowLevelRenderer extends PreparedSt
                                                       parameterIndex, parameterName, parameterName)
                                         .build();
                     default:
+                        if (typeElement.getKind() == ENUM) {
+                            return CodeBlock.builder()
+                                            .addStatement("$L.setString($L, $L != null ? $L.name() : null)",
+                                                          DEFAULT_STATEMENT_VARIABLE_NAME,
+                                                          parameterIndex, parameterName, parameterName)
+                                            .build();
+                        }
                         return CodeBlock.builder()
                                         .addStatement("$L.setObject($L, $L)",
                                                       DEFAULT_STATEMENT_VARIABLE_NAME, parameterIndex, parameterName)

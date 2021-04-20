@@ -17,6 +17,7 @@ import java.util.UUID;
 import java.util.function.Function;
 
 import static io.graphine.processor.util.AccessorUtils.setter;
+import static javax.lang.model.element.ElementKind.ENUM;
 
 /**
  * @author Oleg Marchenko
@@ -181,6 +182,16 @@ public final class ResultSetParameterLowLevelRenderer extends ResultSetParameter
                                         .endControlFlow()
                                         .build();
                     default:
+                        if (typeElement.getKind() == ENUM) {
+                            return CodeBlock.builder()
+                                            .addStatement("$T $L = $L.getString($L)",
+                                                          String.class, parameterName, resultSetVariableName, parameterIndex)
+                                            .beginControlFlow("if ($L != null)", parameterName)
+                                            .add(snippetMerger.apply(CodeBlock.of("$T.valueOf($L)",
+                                                                                  parameterType, parameterName)))
+                                            .endControlFlow()
+                                            .build();
+                        }
                         return CodeBlock.builder()
                                         .add(snippetMerger.apply(CodeBlock.of("($T) $L.getObject($L)",
                                                                               parameterType,
