@@ -13,6 +13,7 @@ import java.sql.Date;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.UUID;
 import java.util.function.Function;
 
 import static io.graphine.processor.util.AccessorUtils.setter;
@@ -160,6 +161,15 @@ public final class ResultSetParameterLowLevelRenderer extends ResultSetParameter
                                                       Timestamp.class, parameterName, resultSetVariableName, parameterIndex)
                                         .beginControlFlow("if ($L != null)", parameterName)
                                         .add(snippetMerger.apply(CodeBlock.of("$L.toLocalDateTime()", parameterName)))
+                                        .endControlFlow()
+                                        .build();
+                    case "java.util.UUID":
+                        return CodeBlock.builder()
+                                        .addStatement("$T $L = $L.getString($L)",
+                                                      String.class, parameterName, resultSetVariableName, parameterIndex)
+                                        .beginControlFlow("if ($L != null)", parameterName)
+                                        .add(snippetMerger.apply(CodeBlock.of("$T.fromString($L)",
+                                                                              UUID.class, parameterName)))
                                         .endControlFlow()
                                         .build();
                     default:

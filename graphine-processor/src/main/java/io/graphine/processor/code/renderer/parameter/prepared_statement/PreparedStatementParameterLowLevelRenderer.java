@@ -118,6 +118,12 @@ public final class PreparedStatementParameterLowLevelRenderer extends PreparedSt
                                                       DEFAULT_STATEMENT_VARIABLE_NAME,
                                                       parameterIndex, parameterName, Timestamp.class, parameterName)
                                         .build();
+                    case "java.util.UUID":
+                        return CodeBlock.builder()
+                                        .addStatement("$L.setString($L, $L != null ? $L.toString() : null)",
+                                                      DEFAULT_STATEMENT_VARIABLE_NAME,
+                                                      parameterIndex, parameterName, parameterName)
+                                        .build();
                     default:
                         return CodeBlock.builder()
                                         .addStatement("$L.setObject($L, $L)",
