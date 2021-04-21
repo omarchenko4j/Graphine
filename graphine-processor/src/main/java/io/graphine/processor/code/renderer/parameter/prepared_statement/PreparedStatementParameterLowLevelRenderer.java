@@ -7,6 +7,7 @@ import io.graphine.processor.query.model.parameter.IterableParameter;
 import io.graphine.processor.query.model.parameter.Parameter;
 
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import java.sql.Date;
@@ -17,6 +18,7 @@ import java.util.function.Function;
 
 import static io.graphine.processor.util.AccessorUtils.getter;
 import static javax.lang.model.element.ElementKind.ENUM;
+import static javax.lang.model.type.TypeKind.BYTE;
 
 /**
  * @author Oleg Marchenko
@@ -72,6 +74,16 @@ public final class PreparedStatementParameterLowLevelRenderer extends PreparedSt
                                 .addStatement("$L.setDouble($L, $L)",
                                               DEFAULT_STATEMENT_VARIABLE_NAME, parameterIndex, parameterName)
                                 .build();
+            case ARRAY:
+                ArrayType arrayType = (ArrayType) parameterType;
+                TypeMirror componentType = arrayType.getComponentType();
+                if (componentType.getKind() == BYTE) {
+                    return CodeBlock.builder()
+                                    .addStatement("$L.setBytes($L, $L)",
+                                                  DEFAULT_STATEMENT_VARIABLE_NAME, parameterIndex, parameterName)
+                                    .build();
+                }
+                throw new IllegalStateException("Unsupported array type: " + parameterType);
             case DECLARED:
                 DeclaredType declaredType = (DeclaredType) parameterType;
                 TypeElement typeElement = (TypeElement) declaredType.asElement();
