@@ -319,7 +319,12 @@ public class FilmRepositoryTest {
 
     @Test
     public void testSave() {
-        Film film = new Film("tt9419884", "Doctor Strange in the Multiverse of Madness", 2022, false);
+        Film film = Film.builder()
+                .imdbId("tt9419884")
+                .title("Doctor Strange in the Multiverse of Madness")
+                .year(2022)
+                .wasReleased(false)
+                .build();
         filmRepository.save(film);
 
         Assert.assertNotNull(film.getId());
@@ -349,8 +354,18 @@ public class FilmRepositoryTest {
 
     @Test
     public void testSaveAll() {
-        Film film1 = new Film("tt9419884", "Doctor Strange in the Multiverse of Madness", 2022, false);
-        Film film2 = new Film("tt10648342", "Thor: Love and Thunder", 2022, false);
+        Film film1 = Film.builder()
+                .imdbId("tt9419884")
+                .title("Doctor Strange in the Multiverse of Madness")
+                .year(2022)
+                .wasReleased(false)
+                .build();
+        Film film2 = Film.builder()
+                .imdbId("tt10648342")
+                .title("Thor: Love and Thunder")
+                .year(2022)
+                .wasReleased(false)
+                .build();
         filmRepository.saveAll(film1, film2);
 
         Assert.assertNotNull(film1.getId());
@@ -396,7 +411,12 @@ public class FilmRepositoryTest {
 
     @Test
     public void testUpdate() {
-        Film film = new Film("tt9419884", "Doctor Strange in the Multiverse of Madness", 2022, false);
+        Film film = Film.builder()
+                .imdbId("tt9419884")
+                .title("Doctor Strange in the Multiverse of Madness")
+                .year(2022)
+                .wasReleased(false)
+                .build();
 
         try (Connection connection = DATA_SOURCE.getConnection()) {
             try (PreparedStatement statement =
@@ -448,9 +468,24 @@ public class FilmRepositoryTest {
 
     @Test
     public void testUpdateAll() {
-        Film film1 = new Film(100L, "tt9419884", "Doctor Strange in the Multiverse of Madness", 2022);
-        Film film2 = new Film(101L, "tt10648342", "Thor: Love and Thunder", 2022);
-        Film film3 = new Film(102L, "tt9114286", "Black Panther II", 2022);
+        Film film1 = Film.builder()
+                .id(100L)
+                .imdbId("tt9419884")
+                .title("Doctor Strange in the Multiverse of Madness")
+                .year(2022)
+                .build();
+        Film film2 = Film.builder()
+                .id(101L)
+                .imdbId("tt10648342")
+                .title("Thor: Love and Thunder")
+                .year(2022)
+                .build();
+        Film film3 = Film.builder()
+                .id(102L)
+                .imdbId("tt9114286")
+                .title("Black Panther II")
+                .year(2022)
+                .build();
 
         try (Connection connection = DATA_SOURCE.getConnection()) {
             try (PreparedStatement statement =
@@ -529,7 +564,12 @@ public class FilmRepositoryTest {
 
     @Test
     public void testDelete() {
-        Film film = new Film(100L, "tt6791350", "Guardians of the Galaxy Vol. 3", 2023);
+        Film film = Film.builder()
+                .id(100L)
+                .imdbId("tt6791350")
+                .title("Guardians of the Galaxy Vol. 3")
+                .year(2023)
+                .build();
 
         try (Connection connection = DATA_SOURCE.getConnection()) {
             try (PreparedStatement statement =
@@ -562,7 +602,12 @@ public class FilmRepositoryTest {
 
     @Test
     public void testDeleteById() {
-        Film film = new Film(100L, "tt9419884", "Doctor Strange in the Multiverse of Madness", 2022);
+        Film film = Film.builder()
+                .id(100L)
+                .imdbId("tt9419884")
+                .title("Doctor Strange in the Multiverse of Madness")
+                .year(2022)
+                .build();
 
         try (Connection connection = DATA_SOURCE.getConnection()) {
             try (PreparedStatement statement =
@@ -595,9 +640,24 @@ public class FilmRepositoryTest {
 
     @Test
     public void testDeleteAll() {
-        Film film1 = new Film(100L, "tt9419884", "Doctor Strange in the Multiverse of Madness", 2022);
-        Film film2 = new Film(101L, "tt10648342", "Thor: Love and Thunder", 2022);
-        Film film3 = new Film(102L, "tt9114286", "Black Panther II", 2022);
+        Film film1 = Film.builder()
+                .id(100L)
+                .imdbId("tt9419884")
+                .title("Doctor Strange in the Multiverse of Madness")
+                .year(2022)
+                .build();
+        Film film2 = Film.builder()
+                .id(101L)
+                .imdbId("tt10648342")
+                .title("Thor: Love and Thunder")
+                .year(2022)
+                .build();
+        Film film3 = Film.builder()
+                .id(102L)
+                .imdbId("tt9114286")
+                .title("Black Panther II")
+                .year(2022)
+                .build();
 
         try (Connection connection = DATA_SOURCE.getConnection()) {
             try (PreparedStatement statement =
@@ -644,10 +704,30 @@ public class FilmRepositoryTest {
 
     @Test
     public void testDeleteAllByYearIn() {
-        Film film1 = new Film(100L, "tt9419884", "Doctor Strange in the Multiverse of Madness", 2022);
-        Film film2 = new Film(101L, "tt10648342", "Thor: Love and Thunder", 2022);
-        Film film3 = new Film(102L, "tt9114286", "Black Panther II", 2022);
-        Film film4 = new Film(103L, "tt6791350", "Guardians of the Galaxy Vol. 3", 2023);
+        Film film1 = Film.builder()
+                .id(100L)
+                .imdbId("tt9419884")
+                .title("Doctor Strange in the Multiverse of Madness")
+                .year(2022)
+                .build();
+        Film film2 = Film.builder()
+                .id(101L)
+                .imdbId("tt10648342")
+                .title("Thor: Love and Thunder")
+                .year(2022)
+                .build();
+        Film film3 = Film.builder()
+                .id(102L)
+                .imdbId("tt9114286")
+                .title("Black Panther II")
+                .year(2022)
+                .build();
+        Film film4 = Film.builder()
+                .id(103L)
+                .imdbId("tt6791350")
+                .title("Guardians of the Galaxy Vol. 3")
+                .year(2023)
+                .build();
 
         try (Connection connection = DATA_SOURCE.getConnection()) {
             try (PreparedStatement statement =
