@@ -2,7 +2,6 @@ package io.graphine.processor.code.generator.repository.method;
 
 import com.squareup.javapoet.CodeBlock;
 import io.graphine.processor.code.renderer.parameter.index_provider.NumericParameterIndexProvider;
-import io.graphine.processor.code.renderer.parameter.index_provider.ParameterIndexProvider;
 import io.graphine.processor.code.renderer.parameter.result_set.ResultSetParameterHighLevelRenderer;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.query.model.NativeQuery;
@@ -13,7 +12,6 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -27,49 +25,45 @@ public final class RepositoryFindMethodImplementationGenerator extends Repositor
         ExecutableElement methodElement = method.getNativeElement();
         TypeMirror returnType = methodElement.getReturnType();
 
-        ParameterIndexProvider parameterIndexProvider = new NumericParameterIndexProvider();
-
-        List<Parameter> producedParameters = query.getProducedParameters();
-        for (Parameter parameter : producedParameters) {
-            builder.add(parameter.accept(
-                    new ResultSetParameterHighLevelRenderer(snippet -> {
-                        switch (returnType.getKind()) {
-                            case ARRAY:
-                                return CodeBlock.builder()
-                                                .addStatement("elements.add($L)", snippet)
-                                                .build();
-                            case DECLARED:
-                                DeclaredType declaredType = (DeclaredType) returnType;
-                                TypeElement typeElement = (TypeElement) declaredType.asElement();
-                                switch (typeElement.getQualifiedName().toString()) {
-                                    case "java.util.Optional":
-                                        return CodeBlock.builder()
-                                                        .addStatement("return $T.of($L)", Optional.class, snippet)
-                                                        .build();
-                                    case "java.lang.Iterable":
-                                    case "java.util.Collection":
-                                    case "java.util.List":
-                                    case "java.util.Set":
-                                        return CodeBlock.builder()
-                                                        .addStatement("elements.add($L)", snippet)
-                                                        .build();
-                                    default:
-                                        return CodeBlock.builder()
-                                                        .addStatement("return $L", snippet)
-                                                        .build();
-                                }
-                            default:
-                                return CodeBlock.builder().build();
-                        }
-                    }, parameterIndexProvider)
-            ));
-        }
+        Parameter producedParameter = query.getProducedParameters().get(0);
+        builder.add(producedParameter.accept(
+                new ResultSetParameterHighLevelRenderer(snippet -> {
+                    switch (returnType.getKind()) {
+                        case ARRAY:
+                            return CodeBlock.builder()
+                                            .addStatement("$L.add($L)", producedParameter.getName(), snippet)
+                                            .build();
+                        case DECLARED:
+                            DeclaredType declaredType = (DeclaredType) returnType;
+                            TypeElement typeElement = (TypeElement) declaredType.asElement();
+                            switch (typeElement.getQualifiedName().toString()) {
+                                case "java.util.Optional":
+                                    return CodeBlock.builder()
+                                                    .addStatement("return $T.of($L)", Optional.class, snippet)
+                                                    .build();
+                                case "java.lang.Iterable":
+                                case "java.util.Collection":
+                                case "java.util.List":
+                                case "java.util.Set":
+                                    return CodeBlock.builder()
+                                                    .addStatement("$L.add($L)", producedParameter.getName(), snippet)
+                                                    .build();
+                                default:
+                                    return CodeBlock.builder()
+                                                    .addStatement("return $L", snippet)
+                                                    .build();
+                            }
+                        default:
+                            return CodeBlock.builder().build();
+                    }
+                }, new NumericParameterIndexProvider())
+        ));
 
         switch (returnType.getKind()) {
             case ARRAY:
                 ArrayType arrayType = (ArrayType) returnType;
                 TypeMirror componentType = arrayType.getComponentType();
-                builder.addStatement("return elements.toArray(new $T[0])", componentType);
+                builder.addStatement("return $L.toArray(new $T[0])", producedParameter.getName(), componentType);
                 break;
             case DECLARED:
                 DeclaredType declaredType = (DeclaredType) returnType;
@@ -82,7 +76,7 @@ public final class RepositoryFindMethodImplementationGenerator extends Repositor
                     case "java.util.Collection":
                     case "java.util.List":
                     case "java.util.Set":
-                        builder.addStatement("return elements");
+                        builder.addStatement("return $L", producedParameter.getName());
                         break;
                     default:
                         builder.addStatement("return null");
