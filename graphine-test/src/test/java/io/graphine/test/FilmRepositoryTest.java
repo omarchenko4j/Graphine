@@ -1,5 +1,6 @@
 package io.graphine.test;
 
+import io.graphine.core.NonUniqueResultException;
 import io.graphine.test.model.Film;
 import io.graphine.test.repository.FilmRepository;
 import io.graphine.test.repository.GraphineFilmRepository;
@@ -85,6 +86,19 @@ public class FilmRepositoryTest {
         Optional<Film> film = filmRepository.findByImdbId("tt9999999");
         Assert.assertNotNull(film);
         Assert.assertFalse(film.isPresent());
+    }
+
+    @Test(expected = NonUniqueResultException.class)
+    public void testFindByImdbIdMethodThrownNonUniqueResultException() {
+        Film film1 = MarvelFilms.ironMan();
+        film1.setImdbId("tt0000000");
+
+        Film film2 = MarvelFilms.ironMan2();
+        film2.setImdbId("tt0000000");
+
+        insertFilms(Arrays.asList(film1, film2));
+
+        filmRepository.findByImdbId("tt0000000");
     }
 
     @Test

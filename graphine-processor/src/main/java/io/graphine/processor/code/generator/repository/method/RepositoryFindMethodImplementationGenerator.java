@@ -1,6 +1,7 @@
 package io.graphine.processor.code.generator.repository.method;
 
 import com.squareup.javapoet.CodeBlock;
+import io.graphine.core.NonUniqueResultException;
 import io.graphine.processor.code.renderer.parameter.index_provider.NumericParameterIndexProvider;
 import io.graphine.processor.code.renderer.parameter.result_set.ResultSetParameterHighLevelRenderer;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
@@ -13,6 +14,8 @@ import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import java.util.Optional;
+
+import static io.graphine.processor.code.renderer.parameter.result_set.ResultSetParameterRenderer.DEFAULT_RESULT_SET_VARIABLE_NAME;
 
 /**
  * @author Oleg Marchenko
@@ -39,6 +42,9 @@ public final class RepositoryFindMethodImplementationGenerator extends Repositor
                             switch (typeElement.getQualifiedName().toString()) {
                                 case "java.util.Optional":
                                     return CodeBlock.builder()
+                                                    .beginControlFlow("if ($L.next())", DEFAULT_RESULT_SET_VARIABLE_NAME)
+                                                    .addStatement("throw new $T()", NonUniqueResultException.class)
+                                                    .endControlFlow()
                                                     .addStatement("return $T.of($L)", Optional.class, snippet)
                                                     .build();
                                 case "java.lang.Iterable":
@@ -50,6 +56,9 @@ public final class RepositoryFindMethodImplementationGenerator extends Repositor
                                                     .build();
                                 default:
                                     return CodeBlock.builder()
+                                                    .beginControlFlow("if ($L.next())", DEFAULT_RESULT_SET_VARIABLE_NAME)
+                                                    .addStatement("throw new $T()", NonUniqueResultException.class)
+                                                    .endControlFlow()
                                                     .addStatement("return $L", snippet)
                                                     .build();
                             }
