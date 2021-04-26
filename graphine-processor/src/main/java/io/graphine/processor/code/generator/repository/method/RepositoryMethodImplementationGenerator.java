@@ -2,6 +2,7 @@ package io.graphine.processor.code.generator.repository.method;
 
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
+import io.graphine.core.GraphineException;
 import io.graphine.core.util.UnnamedParameterRepeater;
 import io.graphine.processor.code.renderer.parameter.index_provider.IncrementalParameterIndexProvider;
 import io.graphine.processor.code.renderer.parameter.index_provider.NumericParameterIndexProvider;
@@ -36,13 +37,12 @@ public abstract class RepositoryMethodImplementationGenerator {
 
     protected CodeBlock renderConnection(MethodMetadata method, NativeQuery query) {
         return CodeBlock.builder()
-                        .beginControlFlow("try ($T connection = dataSource.getConnection())",
-                                          Connection.class)
+                        .beginControlFlow("try ($T connection = dataSource.getConnection())", Connection.class)
                         .add(renderQuery(query))
                         .add(renderStatement(method, query))
                         .endControlFlow()
                         .beginControlFlow("catch ($T e)", SQLException.class)
-                        .addStatement("throw new $T(e)", RuntimeException.class) // TODO: use a custom exception
+                        .addStatement("throw new $T(e)", GraphineException.class)
                         .endControlFlow()
                         .build();
     }
