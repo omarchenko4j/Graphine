@@ -14,6 +14,7 @@ public final class DataSourceProvider {
 
     private static DataSource createProxyDataSource() {
         return ProxyDataSourceBuilder.create()
+                                     .name("proxied-hsqldb-pool")
                                      .dataSource(DATA_SOURCE)
                                      .logQueryToSysOut()
                                      .build();
