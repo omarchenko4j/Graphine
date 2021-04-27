@@ -6,10 +6,7 @@ import io.graphine.test.repository.FilmRepository;
 import io.graphine.test.repository.GraphineFilmRepository;
 import lombok.Cleanup;
 import lombok.SneakyThrows;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -30,18 +27,15 @@ public class FilmRepositoryTest {
     public static void createTable() {
         @Cleanup Connection connection = DATA_SOURCE.getConnection();
         @Cleanup Statement statement = connection.createStatement();
-        statement.executeQuery("CREATE SEQUENCE public.seq_films_id START WITH 1");
         statement.executeQuery("CREATE TABLE public.films(" +
-                               "id BIGINT NOT NULL DEFAULT nextval('public.seq_films_id'), " +
+                               "id BIGSERIAL PRIMARY KEY, " +
                                "imdb_id TEXT NOT NULL, " +
                                "title TEXT NOT NULL, " +
                                "year INTEGER NOT NULL, " +
                                "budget BIGINT, " +
                                "gross BIGINT, " +
                                "tagline TEXT, " +
-                               "was_released BOOLEAN NOT NULL DEFAULT FALSE, " +
-                               "CONSTRAINT pk_films_id PRIMARY KEY (id) " +
-                               ")");
+                               "was_released BOOLEAN NOT NULL DEFAULT FALSE)");
     }
 
     @After
@@ -50,6 +44,14 @@ public class FilmRepositoryTest {
         @Cleanup Connection connection = DATA_SOURCE.getConnection();
         @Cleanup Statement statement = connection.createStatement();
         statement.executeQuery("TRUNCATE TABLE public.films");
+    }
+
+    @AfterClass
+    @SneakyThrows
+    public static void dropTable() {
+        @Cleanup Connection connection = DATA_SOURCE.getConnection();
+        @Cleanup Statement statement = connection.createStatement();
+        statement.executeQuery("DROP TABLE public.films");
     }
 
     private final FilmRepository filmRepository = new GraphineFilmRepository(PROXY_DATA_SOURCE);
@@ -368,9 +370,6 @@ public class FilmRepositoryTest {
         List<Film> films = Arrays.asList(film1, film2);
         insertFilms(films);
 
-        film1.setBudget(0L); // TODO: Must be null
-        film2.setBudget(0L); // TODO: Must be null
-
         Set<Film> foundFilms = filmRepository.findAllByBudgetIsNull();
         Assert.assertNotNull(foundFilms);
         Assert.assertEquals(films.size(), foundFilms.size());
@@ -575,8 +574,6 @@ public class FilmRepositoryTest {
                         .imdbId("tt9419884")
                         .title("Doctor Strange in the Multiverse of Madness")
                         .year(2022)
-                        .budget(0L) // TODO: Must be null
-                        .gross(0L) // TODO: Must be null
                         .wasReleased(false)
                         .build();
         filmRepository.save(film);
@@ -593,16 +590,12 @@ public class FilmRepositoryTest {
                          .imdbId("tt9419884")
                          .title("Doctor Strange in the Multiverse of Madness")
                          .year(2022)
-                         .budget(0L) // TODO: Must be null
-                         .gross(0L) // TODO: Must be null
                          .wasReleased(false)
                          .build();
         Film film2 = Film.builder()
                          .imdbId("tt10648342")
                          .title("Thor: Love and Thunder")
                          .year(2022)
-                         .budget(0L) // TODO: Must be null
-                         .gross(0L) // TODO: Must be null
                          .wasReleased(false)
                          .build();
         filmRepository.saveAll(film1, film2);
@@ -771,8 +764,8 @@ public class FilmRepositoryTest {
                        .imdbId(resultSet.getString("imdb_id"))
                        .title(resultSet.getString("title"))
                        .year(resultSet.getInt("year"))
-                       .budget(resultSet.getLong("budget"))
-                       .gross(resultSet.getLong("gross"))
+                       .budget((Long) resultSet.getObject("budget"))
+                       .gross((Long) resultSet.getObject("gross"))
                        .tagline(resultSet.getString("tagline"))
                        .wasReleased(resultSet.getBoolean("was_released"))
                        .build();

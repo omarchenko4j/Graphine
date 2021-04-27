@@ -91,50 +91,14 @@ public final class ResultSetParameterLowLevelRenderer extends ResultSetParameter
                 DeclaredType declaredType = (DeclaredType) parameterType;
                 TypeElement typeElement = (TypeElement) declaredType.asElement();
                 switch (typeElement.getQualifiedName().toString()) {
-                    // TODO: use default behavior option for mapping wrapper types
-                    case "java.lang.Boolean":
+                    case "java.lang.String":
                         return CodeBlock.builder()
-                                        .add(snippetMerger.apply(CodeBlock.of("$L.getBoolean($L)",
-                                                                              resultSetVariableName, parameterIndex)))
-                                        .build();
-                    case "java.lang.Byte":
-                        return CodeBlock.builder()
-                                        .add(snippetMerger.apply(CodeBlock.of("$L.getByte($L)",
-                                                                              resultSetVariableName, parameterIndex)))
-                                        .build();
-                    case "java.lang.Short":
-                        return CodeBlock.builder()
-                                        .add(snippetMerger.apply(CodeBlock.of("$L.getShort($L)",
-                                                                              resultSetVariableName, parameterIndex)))
-                                        .build();
-                    case "java.lang.Integer":
-                        return CodeBlock.builder()
-                                        .add(snippetMerger.apply(CodeBlock.of("$L.getInt($L)",
-                                                                              resultSetVariableName, parameterIndex)))
-                                        .build();
-                    case "java.lang.Long":
-                        return CodeBlock.builder()
-                                        .add(snippetMerger.apply(CodeBlock.of("$L.getLong($L)",
-                                                                              resultSetVariableName, parameterIndex)))
-                                        .build();
-                    case "java.lang.Float":
-                        return CodeBlock.builder()
-                                        .add(snippetMerger.apply(CodeBlock.of("$L.getFloat($L)",
-                                                                              resultSetVariableName, parameterIndex)))
-                                        .build();
-                    case "java.lang.Double":
-                        return CodeBlock.builder()
-                                        .add(snippetMerger.apply(CodeBlock.of("$L.getDouble($L)",
+                                        .add(snippetMerger.apply(CodeBlock.of("$L.getString($L)",
                                                                               resultSetVariableName, parameterIndex)))
                                         .build();
                     case "java.math.BigDecimal":
                         return CodeBlock.builder()
                                         .add(snippetMerger.apply(CodeBlock.of("$L.getBigDecimal($L)",
-                                                                              resultSetVariableName, parameterIndex)))
-                                        .build();
-                    case "java.lang.String":
-                        return CodeBlock.builder()
-                                        .add(snippetMerger.apply(CodeBlock.of("$L.getString($L)",
                                                                               resultSetVariableName, parameterIndex)))
                                         .build();
                     case "java.sql.Date":
