@@ -6,7 +6,7 @@ import io.graphine.test.repository.FilmRepository;
 import io.graphine.test.repository.GraphineFilmRepository;
 import lombok.Cleanup;
 import lombok.SneakyThrows;
-import org.junit.*;
+import org.junit.jupiter.api.*;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -22,7 +22,7 @@ import static io.graphine.test.util.DataSourceProvider.PROXY_DATA_SOURCE;
  */
 public class FilmRepositoryTest {
 
-    @BeforeClass
+    @BeforeAll
     @SneakyThrows
     public static void createTable() {
         @Cleanup Connection connection = DATA_SOURCE.getConnection();
@@ -38,7 +38,7 @@ public class FilmRepositoryTest {
                                "was_released BOOLEAN NOT NULL DEFAULT FALSE)");
     }
 
-    @After
+    @AfterEach
     @SneakyThrows
     public void cleanTable() {
         @Cleanup Connection connection = DATA_SOURCE.getConnection();
@@ -46,7 +46,7 @@ public class FilmRepositoryTest {
         statement.executeQuery("TRUNCATE TABLE public.films");
     }
 
-    @AfterClass
+    @AfterAll
     @SneakyThrows
     public static void dropTable() {
         @Cleanup Connection connection = DATA_SOURCE.getConnection();
@@ -62,14 +62,14 @@ public class FilmRepositoryTest {
         insertFilm(film);
 
         Film foundFilm = filmRepository.findById(film.getId());
-        Assert.assertNotNull(foundFilm);
-        Assert.assertEquals(film, foundFilm);
+        Assertions.assertNotNull(foundFilm);
+        Assertions.assertEquals(film, foundFilm);
     }
 
     @Test
     public void testFindByIdMethodReturnNull() {
         Film film = filmRepository.findById(999);
-        Assert.assertNull(film);
+        Assertions.assertNull(film);
     }
 
     @Test
@@ -78,19 +78,19 @@ public class FilmRepositoryTest {
         insertFilm(film);
 
         Optional<Film> foundFilm = filmRepository.findByImdbId(film.getImdbId());
-        Assert.assertNotNull(foundFilm);
-        Assert.assertTrue(foundFilm.isPresent());
-        Assert.assertEquals(film, foundFilm.get());
+        Assertions.assertNotNull(foundFilm);
+        Assertions.assertTrue(foundFilm.isPresent());
+        Assertions.assertEquals(film, foundFilm.get());
     }
 
     @Test
     public void testFindByImdbIdMethodReturnEmptyOptional() {
         Optional<Film> film = filmRepository.findByImdbId("tt9999999");
-        Assert.assertNotNull(film);
-        Assert.assertFalse(film.isPresent());
+        Assertions.assertNotNull(film);
+        Assertions.assertFalse(film.isPresent());
     }
 
-    @Test(expected = NonUniqueResultException.class)
+    @Test
     public void testFindByImdbIdMethodThrownNonUniqueResultException() {
         Film film1 = MarvelFilms.ironMan();
         film1.setImdbId("tt0000000");
@@ -100,7 +100,7 @@ public class FilmRepositoryTest {
 
         insertFilms(Arrays.asList(film1, film2));
 
-        filmRepository.findByImdbId("tt0000000");
+        Assertions.assertThrows(NonUniqueResultException.class, () -> filmRepository.findByImdbId("tt0000000"));
     }
 
     @Test
@@ -113,16 +113,16 @@ public class FilmRepositoryTest {
         insertFilms(films);
 
         Collection<Film> foundFilms = filmRepository.findAll();
-        Assert.assertNotNull(foundFilms);
-        Assert.assertEquals(films.size(), foundFilms.size());
-        Assert.assertTrue(films.containsAll(foundFilms));
+        Assertions.assertNotNull(foundFilms);
+        Assertions.assertEquals(films.size(), foundFilms.size());
+        Assertions.assertTrue(films.containsAll(foundFilms));
     }
 
     @Test
     public void testFindAllMethodReturnEmptyResult() {
         Collection<Film> films = filmRepository.findAll();
-        Assert.assertNotNull(films);
-        Assert.assertEquals(0, films.size());
+        Assertions.assertNotNull(films);
+        Assertions.assertEquals(0, films.size());
     }
 
     @Test
@@ -134,16 +134,16 @@ public class FilmRepositoryTest {
         insertFilms(films);
 
         Collection<Film> foundFilms = filmRepository.findAllByYear(2008);
-        Assert.assertNotNull(foundFilms);
-        Assert.assertEquals(films.size(), foundFilms.size());
-        Assert.assertTrue(films.containsAll(foundFilms));
+        Assertions.assertNotNull(foundFilms);
+        Assertions.assertEquals(films.size(), foundFilms.size());
+        Assertions.assertTrue(films.containsAll(foundFilms));
     }
 
     @Test
     public void testFindAllByYearMethodNotReturnResults() {
         Collection<Film> films = filmRepository.findAllByYear(2000);
-        Assert.assertNotNull(films);
-        Assert.assertEquals(0, films.size());
+        Assertions.assertNotNull(films);
+        Assertions.assertEquals(0, films.size());
     }
 
     @Test
@@ -155,9 +155,9 @@ public class FilmRepositoryTest {
         insertFilms(films);
 
         Collection<Film> foundFilms = filmRepository.findAllByYearIsNot(2010);
-        Assert.assertNotNull(foundFilms);
-        Assert.assertEquals(films.size(), foundFilms.size());
-        Assert.assertTrue(films.containsAll(foundFilms));
+        Assertions.assertNotNull(foundFilms);
+        Assertions.assertEquals(films.size(), foundFilms.size());
+        Assertions.assertTrue(films.containsAll(foundFilms));
     }
 
     @Test
@@ -169,9 +169,9 @@ public class FilmRepositoryTest {
         insertFilms(films);
 
         Collection<Film> foundFilms = filmRepository.findAllByBudgetBetween(140_000_000, 150_000_000);
-        Assert.assertNotNull(foundFilms);
-        Assert.assertEquals(films.size(), foundFilms.size());
-        Assert.assertTrue(films.containsAll(foundFilms));
+        Assertions.assertNotNull(foundFilms);
+        Assertions.assertEquals(films.size(), foundFilms.size());
+        Assertions.assertTrue(films.containsAll(foundFilms));
     }
 
     @Test
@@ -183,9 +183,9 @@ public class FilmRepositoryTest {
         insertFilms(films);
 
         Collection<Film> foundFilms = filmRepository.findAllByBudgetNotBetween(200_000_000, 300_000_000);
-        Assert.assertNotNull(foundFilms);
-        Assert.assertEquals(films.size(), foundFilms.size());
-        Assert.assertTrue(films.containsAll(foundFilms));
+        Assertions.assertNotNull(foundFilms);
+        Assertions.assertEquals(films.size(), foundFilms.size());
+        Assertions.assertTrue(films.containsAll(foundFilms));
     }
 
     @Test
@@ -197,9 +197,9 @@ public class FilmRepositoryTest {
         insertFilms(films);
 
         Collection<Film> foundFilms = filmRepository.findAllByBudgetLessThan(200_000_000);
-        Assert.assertNotNull(foundFilms);
-        Assert.assertEquals(films.size(), foundFilms.size());
-        Assert.assertTrue(films.containsAll(foundFilms));
+        Assertions.assertNotNull(foundFilms);
+        Assertions.assertEquals(films.size(), foundFilms.size());
+        Assertions.assertTrue(films.containsAll(foundFilms));
     }
 
     @Test
@@ -212,9 +212,9 @@ public class FilmRepositoryTest {
         insertFilms(films);
 
         Collection<Film> foundFilms = filmRepository.findAllByBudgetLessThanEqual(200_000_000);
-        Assert.assertNotNull(foundFilms);
-        Assert.assertEquals(films.size(), foundFilms.size());
-        Assert.assertTrue(films.containsAll(foundFilms));
+        Assertions.assertNotNull(foundFilms);
+        Assertions.assertEquals(films.size(), foundFilms.size());
+        Assertions.assertTrue(films.containsAll(foundFilms));
     }
 
     @Test
@@ -226,9 +226,9 @@ public class FilmRepositoryTest {
         insertFilms(films);
 
         Collection<Film> foundFilms = filmRepository.findAllByGrossGreaterThan(600_000_000);
-        Assert.assertNotNull(foundFilms);
-        Assert.assertEquals(films.size(), foundFilms.size());
-        Assert.assertTrue(films.containsAll(foundFilms));
+        Assertions.assertNotNull(foundFilms);
+        Assertions.assertEquals(films.size(), foundFilms.size());
+        Assertions.assertTrue(films.containsAll(foundFilms));
     }
 
     @Test
@@ -237,9 +237,9 @@ public class FilmRepositoryTest {
         insertFilms(films);
 
         Collection<Film> foundFilms = filmRepository.findAllByGrossGreaterThanEqual(1_000_000_000);
-        Assert.assertNotNull(foundFilms);
-        Assert.assertEquals(films.size(), foundFilms.size());
-        Assert.assertTrue(films.containsAll(foundFilms));
+        Assertions.assertNotNull(foundFilms);
+        Assertions.assertEquals(films.size(), foundFilms.size());
+        Assertions.assertTrue(films.containsAll(foundFilms));
     }
 
     @Test
@@ -254,9 +254,9 @@ public class FilmRepositoryTest {
         insertFilms(films);
 
         List<Film> foundFilms = filmRepository.findAllByTaglineIsEmpty();
-        Assert.assertNotNull(foundFilms);
-        Assert.assertEquals(films.size(), foundFilms.size());
-        Assert.assertTrue(films.containsAll(foundFilms));
+        Assertions.assertNotNull(foundFilms);
+        Assertions.assertEquals(films.size(), foundFilms.size());
+        Assertions.assertTrue(films.containsAll(foundFilms));
     }
 
     @Test
@@ -268,9 +268,9 @@ public class FilmRepositoryTest {
         insertFilms(films);
 
         List<Film> foundFilms = filmRepository.findAllByTaglineIsNotEmpty();
-        Assert.assertNotNull(foundFilms);
-        Assert.assertEquals(films.size(), foundFilms.size());
-        Assert.assertTrue(films.containsAll(foundFilms));
+        Assertions.assertNotNull(foundFilms);
+        Assertions.assertEquals(films.size(), foundFilms.size());
+        Assertions.assertTrue(films.containsAll(foundFilms));
     }
 
     @Test
@@ -283,9 +283,9 @@ public class FilmRepositoryTest {
         insertFilms(films);
 
         List<Film> foundFilms = filmRepository.findAllByTitleLike("Iron Man%");
-        Assert.assertNotNull(foundFilms);
-        Assert.assertEquals(films.size(), foundFilms.size());
-        Assert.assertTrue(films.containsAll(foundFilms));
+        Assertions.assertNotNull(foundFilms);
+        Assertions.assertEquals(films.size(), foundFilms.size());
+        Assertions.assertTrue(films.containsAll(foundFilms));
     }
 
     @Test
@@ -298,9 +298,9 @@ public class FilmRepositoryTest {
         insertFilms(films);
 
         List<Film> foundFilms = filmRepository.findAllByTitleNotLike("Captain America%");
-        Assert.assertNotNull(foundFilms);
-        Assert.assertEquals(films.size(), foundFilms.size());
-        Assert.assertTrue(films.containsAll(foundFilms));
+        Assertions.assertNotNull(foundFilms);
+        Assertions.assertEquals(films.size(), foundFilms.size());
+        Assertions.assertTrue(films.containsAll(foundFilms));
     }
 
     @Test
@@ -313,9 +313,9 @@ public class FilmRepositoryTest {
         insertFilms(films);
 
         List<Film> foundFilms = filmRepository.findAllByTitleStartingWith("Iron Man");
-        Assert.assertNotNull(foundFilms);
-        Assert.assertEquals(films.size(), foundFilms.size());
-        Assert.assertTrue(films.containsAll(foundFilms));
+        Assertions.assertNotNull(foundFilms);
+        Assertions.assertEquals(films.size(), foundFilms.size());
+        Assertions.assertTrue(films.containsAll(foundFilms));
     }
 
     @Test
@@ -324,9 +324,9 @@ public class FilmRepositoryTest {
         insertFilm(film);
 
         List<Film> foundFilms = filmRepository.findAllByTitleEndingWith("Man");
-        Assert.assertNotNull(foundFilms);
-        Assert.assertEquals(1, foundFilms.size());
-        Assert.assertEquals(film, foundFilms.get(0));
+        Assertions.assertNotNull(foundFilms);
+        Assertions.assertEquals(1, foundFilms.size());
+        Assertions.assertEquals(film, foundFilms.get(0));
     }
 
     @Test
@@ -339,9 +339,9 @@ public class FilmRepositoryTest {
         insertFilms(films);
 
         List<Film> foundFilms = filmRepository.findAllByTitleContaining("Man");
-        Assert.assertNotNull(foundFilms);
-        Assert.assertEquals(films.size(), foundFilms.size());
-        Assert.assertTrue(films.containsAll(foundFilms));
+        Assertions.assertNotNull(foundFilms);
+        Assertions.assertEquals(films.size(), foundFilms.size());
+        Assertions.assertTrue(films.containsAll(foundFilms));
     }
 
     @Test
@@ -354,9 +354,9 @@ public class FilmRepositoryTest {
         insertFilms(films);
 
         List<Film> foundFilms = filmRepository.findAllByTitleNotContaining("Avenger");
-        Assert.assertNotNull(foundFilms);
-        Assert.assertEquals(films.size(), foundFilms.size());
-        Assert.assertTrue(films.containsAll(foundFilms));
+        Assertions.assertNotNull(foundFilms);
+        Assertions.assertEquals(films.size(), foundFilms.size());
+        Assertions.assertTrue(films.containsAll(foundFilms));
     }
 
     @Test
@@ -371,9 +371,9 @@ public class FilmRepositoryTest {
         insertFilms(films);
 
         Set<Film> foundFilms = filmRepository.findAllByBudgetIsNull();
-        Assert.assertNotNull(foundFilms);
-        Assert.assertEquals(films.size(), foundFilms.size());
-        Assert.assertTrue(films.containsAll(foundFilms));
+        Assertions.assertNotNull(foundFilms);
+        Assertions.assertEquals(films.size(), foundFilms.size());
+        Assertions.assertTrue(films.containsAll(foundFilms));
     }
 
     @Test
@@ -386,9 +386,9 @@ public class FilmRepositoryTest {
         insertFilms(films);
 
         Set<Film> foundFilms = filmRepository.findAllByGrossIsNotNull();
-        Assert.assertNotNull(foundFilms);
-        Assert.assertEquals(films.size(), foundFilms.size());
-        Assert.assertTrue(films.containsAll(foundFilms));
+        Assertions.assertNotNull(foundFilms);
+        Assertions.assertEquals(films.size(), foundFilms.size());
+        Assertions.assertTrue(films.containsAll(foundFilms));
     }
 
     @Test
@@ -401,9 +401,9 @@ public class FilmRepositoryTest {
         insertFilms(films);
 
         Set<Film> foundFilms = filmRepository.findAllByWasReleasedIsTrue();
-        Assert.assertNotNull(foundFilms);
-        Assert.assertEquals(films.size(), foundFilms.size());
-        Assert.assertTrue(films.containsAll(foundFilms));
+        Assertions.assertNotNull(foundFilms);
+        Assertions.assertEquals(films.size(), foundFilms.size());
+        Assertions.assertTrue(films.containsAll(foundFilms));
     }
 
     @Test
@@ -418,9 +418,9 @@ public class FilmRepositoryTest {
         insertFilms(films);
 
         Set<Film> foundFilms = filmRepository.findAllByWasReleasedIsFalse();
-        Assert.assertNotNull(foundFilms);
-        Assert.assertEquals(films.size(), foundFilms.size());
-        Assert.assertTrue(films.containsAll(foundFilms));
+        Assertions.assertNotNull(foundFilms);
+        Assertions.assertEquals(films.size(), foundFilms.size());
+        Assertions.assertTrue(films.containsAll(foundFilms));
     }
 
     @Test
@@ -434,9 +434,9 @@ public class FilmRepositoryTest {
         insertFilms(films);
 
         Set<Film> foundFilms = filmRepository.findAllByYearIn(Arrays.asList(2008, 2010, 2013));
-        Assert.assertNotNull(foundFilms);
-        Assert.assertEquals(films.size(), foundFilms.size());
-        Assert.assertTrue(films.containsAll(foundFilms));
+        Assertions.assertNotNull(foundFilms);
+        Assertions.assertEquals(films.size(), foundFilms.size());
+        Assertions.assertTrue(films.containsAll(foundFilms));
     }
 
     @Test
@@ -450,9 +450,9 @@ public class FilmRepositoryTest {
         insertFilms(films);
 
         Set<Film> foundFilms = filmRepository.findAllByYearNotIn(2000, 2001, 2002);
-        Assert.assertNotNull(foundFilms);
-        Assert.assertEquals(films.size(), foundFilms.size());
-        Assert.assertTrue(films.containsAll(foundFilms));
+        Assertions.assertNotNull(foundFilms);
+        Assertions.assertEquals(films.size(), foundFilms.size());
+        Assertions.assertTrue(films.containsAll(foundFilms));
     }
 
     @Test
@@ -462,9 +462,9 @@ public class FilmRepositoryTest {
 
         Set<Film> foundFilms = filmRepository.findAllByBudgetGreaterThanEqualAndGrossGreaterThan(200_000_000,
                                                                                                  1_000_000_000);
-        Assert.assertNotNull(foundFilms);
-        Assert.assertEquals(films.size(), foundFilms.size());
-        Assert.assertTrue(films.containsAll(foundFilms));
+        Assertions.assertNotNull(foundFilms);
+        Assertions.assertEquals(films.size(), foundFilms.size());
+        Assertions.assertTrue(films.containsAll(foundFilms));
     }
 
     @Test
@@ -478,9 +478,9 @@ public class FilmRepositoryTest {
 
         Set<Film> foundFilms = filmRepository.findAllByBudgetBetweenOrGrossBetween(100_000_000, 150_000_000,
                                                                                    600_000_000, 1_500_000_000);
-        Assert.assertNotNull(foundFilms);
-        Assert.assertEquals(films.size(), foundFilms.size());
-        Assert.assertTrue(films.containsAll(foundFilms));
+        Assertions.assertNotNull(foundFilms);
+        Assertions.assertEquals(films.size(), foundFilms.size());
+        Assertions.assertTrue(films.containsAll(foundFilms));
     }
 
     @Test
@@ -493,12 +493,12 @@ public class FilmRepositoryTest {
         insertFilms(films);
 
         List<Film> foundFilms = filmRepository.findAllByYearBetweenOrderByYear(2008, 2013);
-        Assert.assertNotNull(foundFilms);
-        Assert.assertEquals(films.size(), foundFilms.size());
-        Assert.assertTrue(films.containsAll(foundFilms));
-        Assert.assertEquals(foundFilms.get(0).getYear(), 2008);
-        Assert.assertEquals(foundFilms.get(1).getYear(), 2010);
-        Assert.assertEquals(foundFilms.get(2).getYear(), 2013);
+        Assertions.assertNotNull(foundFilms);
+        Assertions.assertEquals(films.size(), foundFilms.size());
+        Assertions.assertTrue(films.containsAll(foundFilms));
+        Assertions.assertEquals(foundFilms.get(0).getYear(), 2008);
+        Assertions.assertEquals(foundFilms.get(1).getYear(), 2010);
+        Assertions.assertEquals(foundFilms.get(2).getYear(), 2013);
     }
 
     @Test
@@ -511,12 +511,12 @@ public class FilmRepositoryTest {
         insertFilms(films);
 
         List<Film> foundFilms = filmRepository.findAllByYearLessThanEqualOrderByYearAsc(2013);
-        Assert.assertNotNull(foundFilms);
-        Assert.assertEquals(films.size(), foundFilms.size());
-        Assert.assertTrue(films.containsAll(foundFilms));
-        Assert.assertEquals(foundFilms.get(0).getYear(), 2008);
-        Assert.assertEquals(foundFilms.get(1).getYear(), 2010);
-        Assert.assertEquals(foundFilms.get(2).getYear(), 2013);
+        Assertions.assertNotNull(foundFilms);
+        Assertions.assertEquals(films.size(), foundFilms.size());
+        Assertions.assertTrue(films.containsAll(foundFilms));
+        Assertions.assertEquals(foundFilms.get(0).getYear(), 2008);
+        Assertions.assertEquals(foundFilms.get(1).getYear(), 2010);
+        Assertions.assertEquals(foundFilms.get(2).getYear(), 2013);
     }
 
     @Test
@@ -529,12 +529,12 @@ public class FilmRepositoryTest {
         insertFilms(films);
 
         List<Film> foundFilms = filmRepository.findAllByYearGreaterThanAndTaglineIsNotEmptyOrderByYearDesc(2005);
-        Assert.assertNotNull(foundFilms);
-        Assert.assertEquals(films.size(), foundFilms.size());
-        Assert.assertTrue(films.containsAll(foundFilms));
-        Assert.assertEquals(foundFilms.get(0).getYear(), 2013);
-        Assert.assertEquals(foundFilms.get(1).getYear(), 2010);
-        Assert.assertEquals(foundFilms.get(2).getYear(), 2008);
+        Assertions.assertNotNull(foundFilms);
+        Assertions.assertEquals(films.size(), foundFilms.size());
+        Assertions.assertTrue(films.containsAll(foundFilms));
+        Assertions.assertEquals(foundFilms.get(0).getYear(), 2013);
+        Assertions.assertEquals(foundFilms.get(1).getYear(), 2010);
+        Assertions.assertEquals(foundFilms.get(2).getYear(), 2008);
     }
 
     @Test
@@ -547,7 +547,7 @@ public class FilmRepositoryTest {
         insertFilms(films);
 
         long numberOfFilms = filmRepository.countAll();
-        Assert.assertEquals(films.size(), numberOfFilms);
+        Assertions.assertEquals(films.size(), numberOfFilms);
     }
 
     @Test
@@ -559,13 +559,13 @@ public class FilmRepositoryTest {
         insertFilms(films);
 
         int numberOfFilms = filmRepository.countAllByYear(2008);
-        Assert.assertEquals(films.size(), numberOfFilms);
+        Assertions.assertEquals(films.size(), numberOfFilms);
     }
 
     @Test
     public void testCountAllByYearMethodReturnZero() {
         int numberOfFilms = filmRepository.countAllByYear(2000);
-        Assert.assertEquals(0, numberOfFilms);
+        Assertions.assertEquals(0, numberOfFilms);
     }
 
     @Test
@@ -578,10 +578,10 @@ public class FilmRepositoryTest {
                         .build();
         filmRepository.save(film);
 
-        Assert.assertNotNull(film.getId());
+        Assertions.assertNotNull(film.getId());
 
         Film foundFilm = selectFilmById(film.getId());
-        Assert.assertEquals(film, foundFilm);
+        Assertions.assertEquals(film, foundFilm);
     }
 
     @Test
@@ -600,13 +600,13 @@ public class FilmRepositoryTest {
                          .build();
         filmRepository.saveAll(film1, film2);
 
-        Assert.assertNotNull(film1.getId());
-        Assert.assertNotNull(film2.getId());
+        Assertions.assertNotNull(film1.getId());
+        Assertions.assertNotNull(film2.getId());
 
         Film foundFilm1 = selectFilmById(film1.getId());
         Film foundFilm2 = selectFilmById(film2.getId());
-        Assert.assertEquals(film1, foundFilm1);
-        Assert.assertEquals(film2, foundFilm2);
+        Assertions.assertEquals(film1, foundFilm1);
+        Assertions.assertEquals(film2, foundFilm2);
     }
 
     @Test
@@ -623,7 +623,7 @@ public class FilmRepositoryTest {
         filmRepository.update(film);
 
         Film foundFilm = selectFilmById(film.getId());
-        Assert.assertEquals(film, foundFilm);
+        Assertions.assertEquals(film, foundFilm);
     }
 
     @Test
@@ -650,8 +650,8 @@ public class FilmRepositoryTest {
 
         Film foundFilm1 = selectFilmById(film1.getId());
         Film foundFilm2 = selectFilmById(film2.getId());
-        Assert.assertEquals(film1, foundFilm1);
-        Assert.assertEquals(film2, foundFilm2);
+        Assertions.assertEquals(film1, foundFilm1);
+        Assertions.assertEquals(film2, foundFilm2);
     }
 
     @Test
@@ -662,7 +662,7 @@ public class FilmRepositoryTest {
         filmRepository.delete(film);
 
         Film foundFilm = selectFilmById(film.getId());
-        Assert.assertNull(foundFilm);
+        Assertions.assertNull(foundFilm);
     }
 
     @Test
@@ -673,7 +673,7 @@ public class FilmRepositoryTest {
         filmRepository.deleteById(film.getId());
 
         Film foundFilm = selectFilmById(film.getId());
-        Assert.assertNull(foundFilm);
+        Assertions.assertNull(foundFilm);
     }
 
     @Test
@@ -689,7 +689,7 @@ public class FilmRepositoryTest {
 
         films.forEach(film -> {
             Film foundFilm = selectFilmById(film.getId());
-            Assert.assertNull(foundFilm);
+            Assertions.assertNull(foundFilm);
         });
     }
 
@@ -706,7 +706,7 @@ public class FilmRepositoryTest {
 
         films.forEach(film -> {
             Film foundFilm = selectFilmById(film.getId());
-            Assert.assertNull(foundFilm);
+            Assertions.assertNull(foundFilm);
         });
     }
 
@@ -829,5 +829,4 @@ public class FilmRepositoryTest {
         private MarvelFilms() {
         }
     }
-
 }
