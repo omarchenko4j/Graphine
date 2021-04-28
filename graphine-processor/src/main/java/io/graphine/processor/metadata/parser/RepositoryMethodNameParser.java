@@ -18,7 +18,7 @@ import static javax.tools.Diagnostic.Kind;
  */
 public final class RepositoryMethodNameParser {
     public static final Pattern METHOD_NAME_PATTERN =
-            Pattern.compile("^(?<qualifier>(find|count|save|update|delete)(All)?(Distinct)?)(By(?<condition>.*?))?(OrderBy(?<sorting>.*?))?$");
+            Pattern.compile("^(?<qualifier>(find|count|save|update|delete)(All|First)?(Distinct)?)(By(?<condition>.*?))?(OrderBy(?<sorting>.*?))?$");
 
     public QueryableMethodName parse(ExecutableElement methodElement) {
         String methodName = methodElement.getSimpleName().toString();

@@ -5,6 +5,8 @@ import io.graphine.core.NonUniqueResultException;
 import io.graphine.processor.code.renderer.parameter.index_provider.NumericParameterIndexProvider;
 import io.graphine.processor.code.renderer.parameter.result_set.ResultSetParameterHighLevelRenderer;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
+import io.graphine.processor.metadata.model.repository.method.name.QueryableMethodName;
+import io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment;
 import io.graphine.processor.query.model.NativeQuery;
 import io.graphine.processor.query.model.parameter.Parameter;
 
@@ -16,6 +18,7 @@ import javax.lang.model.type.TypeMirror;
 import java.util.Optional;
 
 import static io.graphine.processor.code.renderer.parameter.result_set.ResultSetParameterRenderer.DEFAULT_RESULT_SET_VARIABLE_NAME;
+import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.SpecifierType;
 
 /**
  * @author Oleg Marchenko
@@ -39,14 +42,8 @@ public final class RepositoryFindMethodImplementationGenerator extends Repositor
                         case DECLARED:
                             DeclaredType declaredType = (DeclaredType) returnType;
                             TypeElement typeElement = (TypeElement) declaredType.asElement();
-                            switch (typeElement.getQualifiedName().toString()) {
-                                case "java.util.Optional":
-                                    return CodeBlock.builder()
-                                                    .beginControlFlow("if ($L.next())", DEFAULT_RESULT_SET_VARIABLE_NAME)
-                                                    .addStatement("throw new $T()", NonUniqueResultException.class)
-                                                    .endControlFlow()
-                                                    .addStatement("return $T.of($L)", Optional.class, snippet)
-                                                    .build();
+                            String elementQualifiedName = typeElement.getQualifiedName().toString();
+                            switch (elementQualifiedName) {
                                 case "java.lang.Iterable":
                                 case "java.util.Collection":
                                 case "java.util.List":
@@ -55,12 +52,27 @@ public final class RepositoryFindMethodImplementationGenerator extends Repositor
                                                     .addStatement("$L.add($L)", producedParameter.getName(), snippet)
                                                     .build();
                                 default:
-                                    return CodeBlock.builder()
-                                                    .beginControlFlow("if ($L.next())", DEFAULT_RESULT_SET_VARIABLE_NAME)
-                                                    .addStatement("throw new $T()", NonUniqueResultException.class)
-                                                    .endControlFlow()
-                                                    .addStatement("return $L", snippet)
-                                                    .build();
+                                    CodeBlock.Builder snippetBuilder = CodeBlock.builder();
+
+                                    QueryableMethodName queryableName = method.getQueryableName();
+                                    QualifierFragment qualifier = queryableName.getQualifier();
+                                    if (!qualifier.getSpecifiers().contains(SpecifierType.FIRST)) {
+                                        snippetBuilder
+                                                .beginControlFlow("if ($L.next())", DEFAULT_RESULT_SET_VARIABLE_NAME)
+                                                .addStatement("throw new $T()", NonUniqueResultException.class)
+                                                .endControlFlow();
+                                    }
+
+                                    if (elementQualifiedName.equals("java.util.Optional")) {
+                                        snippetBuilder
+                                                .addStatement("return $T.of($L)", Optional.class, snippet);
+                                    }
+                                    else {
+                                        snippetBuilder
+                                                .addStatement("return $L", snippet);
+                                    }
+
+                                    return snippetBuilder.build();
                             }
                         default:
                             return CodeBlock.builder().build();

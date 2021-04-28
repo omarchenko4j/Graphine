@@ -22,7 +22,7 @@ import java.util.Set;
 
 import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.MethodForm;
 import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.MethodForm.SINGULAR;
-import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.SpecifierType.DISTINCT;
+import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.SpecifierType;
 import static io.graphine.processor.support.EnvironmentContext.messager;
 import static io.graphine.processor.support.EnvironmentContext.typeUtils;
 import static java.util.Objects.isNull;
@@ -115,7 +115,7 @@ public final class RepositoryFindMethodMetadataValidator extends MethodMetadataV
 
         QualifierFragment qualifier = queryableName.getQualifier();
         if (qualifier.getMethodForm() == SINGULAR) {
-            if (DISTINCT.equals(qualifier.getSpecifierType())) {
+            if (qualifier.getSpecifiers().contains(SpecifierType.DISTINCT)) {
                 valid = false;
                 messager.printMessage(Kind.ERROR, "Method name must not include 'Distinct' keyword", methodElement);
             }
@@ -123,7 +123,7 @@ public final class RepositoryFindMethodMetadataValidator extends MethodMetadataV
 
         ConditionFragment condition = queryableName.getCondition();
         if (isNull(condition)) {
-            if (qualifier.getMethodForm() == SINGULAR) {
+            if (qualifier.getMethodForm() == SINGULAR && !qualifier.getSpecifiers().contains(SpecifierType.FIRST)) {
                 valid = false;
                 messager.printMessage(Kind.ERROR,
                                       "Method name must have condition parameters after 'By' keyword",
@@ -147,12 +147,17 @@ public final class RepositoryFindMethodMetadataValidator extends MethodMetadataV
 
         SortingFragment sorting = queryableName.getSorting();
         if (nonNull(sorting)) {
-            if (qualifier.getMethodForm() == SINGULAR) {
+            if (qualifier.getMethodForm() == SINGULAR && !qualifier.getSpecifiers().contains(SpecifierType.FIRST)) {
                 valid = false;
                 messager.printMessage(Kind.ERROR, "Method name must not include sorting", methodElement);
             }
             if (!validateSortingParameters(methodElement, sorting)) {
                 valid = false;
+            }
+        }
+        else {
+            if (qualifier.getSpecifiers().contains(SpecifierType.FIRST)) {
+                messager.printMessage(Kind.WARNING, "Use explicit sorting in the method name", methodElement);
             }
         }
 

@@ -1,17 +1,20 @@
 package io.graphine.processor.metadata.model.repository.method.name.fragment;
 
+import java.util.EnumSet;
+import java.util.Set;
+
 /**
  * @author Oleg Marchenko
  */
 public final class QualifierFragment {
     private final MethodType methodType;
     private final MethodForm methodForm;
-    private final SpecifierType specifierType;
+    private final Set<SpecifierType> specifiers;
 
     public QualifierFragment(String fragment) {
         this.methodType = MethodType.defineBy(fragment);
         this.methodForm = MethodForm.defineBy(fragment);
-        this.specifierType = SpecifierType.defineBy(fragment);
+        this.specifiers = SpecifierType.defineAllBy(fragment);
     }
 
     public MethodType getMethodType() {
@@ -22,8 +25,8 @@ public final class QualifierFragment {
         return methodForm;
     }
 
-    public SpecifierType getSpecifierType() {
-        return specifierType;
+    public Set<SpecifierType> getSpecifiers() {
+        return specifiers;
     }
 
     public enum MethodType {
@@ -61,13 +64,18 @@ public final class QualifierFragment {
     }
 
     public enum SpecifierType {
-        DISTINCT;
+        DISTINCT,
+        FIRST;
 
-        public static SpecifierType defineBy(String value) {
+        public static Set<SpecifierType> defineAllBy(String value) {
+            Set<SpecifierType> specifiers = EnumSet.noneOf(SpecifierType.class);
             if (value.contains("Distinct")) {
-                return DISTINCT;
+                specifiers.add(DISTINCT);
             }
-            return null;
+            if (value.contains("First")) {
+                specifiers.add(FIRST);
+            }
+            return specifiers;
         }
     }
 }

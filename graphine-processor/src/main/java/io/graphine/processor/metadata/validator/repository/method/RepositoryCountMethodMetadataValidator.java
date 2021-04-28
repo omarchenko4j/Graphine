@@ -13,9 +13,10 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import java.util.List;
+import java.util.Set;
 
 import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.MethodForm;
-import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.SpecifierType.DISTINCT;
+import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.SpecifierType;
 import static io.graphine.processor.support.EnvironmentContext.messager;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
@@ -69,9 +70,15 @@ public final class RepositoryCountMethodMetadataValidator extends MethodMetadata
         if (qualifier.getMethodForm() == MethodForm.SINGULAR) {
             messager.printMessage(Kind.WARNING, "Use a semantic prefix (countAll) in the method name", methodElement);
         }
-        if (DISTINCT.equals(qualifier.getSpecifierType())) {
+
+        Set<SpecifierType> specifiers = qualifier.getSpecifiers();
+        if (specifiers.contains(SpecifierType.DISTINCT)) {
             valid = false;
             messager.printMessage(Kind.ERROR, "Method name must not include 'Distinct' keyword", methodElement);
+        }
+        if (specifiers.contains(SpecifierType.FIRST)) {
+            valid = false;
+            messager.printMessage(Kind.ERROR, "Method name must not include 'First' keyword", methodElement);
         }
 
         ConditionFragment condition = queryableName.getCondition();

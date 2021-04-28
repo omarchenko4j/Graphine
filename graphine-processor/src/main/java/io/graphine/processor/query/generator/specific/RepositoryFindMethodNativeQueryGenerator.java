@@ -13,10 +13,11 @@ import io.graphine.processor.query.model.parameter.Parameter;
 
 import javax.lang.model.element.ExecutableElement;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.MethodForm;
-import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.SpecifierType.DISTINCT;
+import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.SpecifierType;
 import static io.graphine.processor.util.StringUtils.uncapitalize;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -39,7 +40,8 @@ public final class RepositoryFindMethodNativeQueryGenerator extends RepositoryMe
         QueryableMethodName queryableName = method.getQueryableName();
 
         QualifierFragment qualifier = queryableName.getQualifier();
-        if (DISTINCT.equals(qualifier.getSpecifierType())) {
+        Set<SpecifierType> specifiers = qualifier.getSpecifiers();
+        if (specifiers.contains(SpecifierType.DISTINCT)) {
             queryBuilder.append("DISTINCT ");
         }
 
@@ -61,6 +63,10 @@ public final class RepositoryFindMethodNativeQueryGenerator extends RepositoryMe
         SortingFragment sorting = queryableName.getSorting();
         if (nonNull(sorting)) {
             queryBuilder.append(generateOrderClause(sorting));
+        }
+
+        if (specifiers.contains(SpecifierType.FIRST)) {
+            queryBuilder.append(" LIMIT 1");
         }
 
         return queryBuilder.toString();

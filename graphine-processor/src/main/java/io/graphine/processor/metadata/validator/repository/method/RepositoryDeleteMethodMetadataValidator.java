@@ -7,8 +7,9 @@ import io.graphine.processor.metadata.model.repository.method.name.fragment.Qual
 import io.graphine.processor.metadata.model.repository.method.name.fragment.SortingFragment;
 
 import javax.lang.model.element.ExecutableElement;
+import java.util.Set;
 
-import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.SpecifierType.DISTINCT;
+import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.SpecifierType;
 import static io.graphine.processor.support.EnvironmentContext.messager;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
@@ -27,9 +28,15 @@ public final class RepositoryDeleteMethodMetadataValidator extends RepositoryMod
         boolean valid = true;
 
         QualifierFragment qualifier = queryableName.getQualifier();
-        if (DISTINCT.equals(qualifier.getSpecifierType())) {
+
+        Set<SpecifierType> specifiers = qualifier.getSpecifiers();
+        if (specifiers.contains(SpecifierType.DISTINCT)) {
             valid = false;
             messager.printMessage(Kind.ERROR, "Method name must not include 'Distinct' keyword", methodElement);
+        }
+        if (specifiers.contains(SpecifierType.FIRST)) {
+            valid = false;
+            messager.printMessage(Kind.ERROR, "Method name must not include 'First' keyword", methodElement);
         }
 
         ConditionFragment condition = queryableName.getCondition();

@@ -104,6 +104,36 @@ public class FilmRepositoryTest {
     }
 
     @Test
+    public void testFindFirstByBudgetGreaterThanEqualOrderByBudgetAscReturnFirstResult() {
+        Film film = MarvelFilms.ironMan();
+        Collection<Film> films = Arrays.asList(
+                MarvelFilms.incredibleHulk(),
+                film,
+                MarvelFilms.ironMan2()
+        );
+        insertFilms(films);
+
+        Film foundFilm = filmRepository.findFirstByBudgetGreaterThanEqualOrderByBudgetAsc(film.getBudget());
+        Assertions.assertNotNull(foundFilm);
+        Assertions.assertEquals(film, foundFilm);
+    }
+
+    @Test
+    public void testFindFirstOrderByYearDescReturnFirstResult() {
+        Film film = MarvelFilms.ironMan2();
+        Collection<Film> films = Arrays.asList(
+                MarvelFilms.ironMan(),
+                film
+        );
+        insertFilms(films);
+
+        Optional<Film> foundFilm = filmRepository.findFirstOrderByYearDesc();
+        Assertions.assertNotNull(foundFilm);
+        Assertions.assertTrue(foundFilm.isPresent());
+        Assertions.assertEquals(film, foundFilm.get());
+    }
+
+    @Test
     public void testFindAllMethodReturnAllResults() {
         Collection<Film> films = Arrays.asList(
                 MarvelFilms.ironMan(),

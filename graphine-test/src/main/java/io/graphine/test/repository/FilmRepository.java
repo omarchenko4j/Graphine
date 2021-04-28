@@ -15,6 +15,8 @@ import java.util.Set;
 public interface FilmRepository {
     Film findById(long id);
     Optional<Film> findByImdbId(String imdbId);
+    Film findFirstByBudgetGreaterThanEqualOrderByBudgetAsc(long budget);
+    Optional<Film> findFirstOrderByYearDesc();
     Collection<Film> findAll();
     Collection<Film> findAllByYear(int year);
     Collection<Film> findAllByYearIsNot(int year);
