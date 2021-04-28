@@ -146,8 +146,14 @@ public final class RepositoryFindMethodMetadataValidator extends MethodMetadataV
         }
 
         SortingFragment sorting = queryableName.getSorting();
-        if (!validateSortingParameters(methodElement, sorting)) {
-            valid = false;
+        if (nonNull(sorting)) {
+            if (qualifier.getMethodForm() == SINGULAR) {
+                valid = false;
+                messager.printMessage(Kind.ERROR, "Method name must not include sorting", methodElement);
+            }
+            if (!validateSortingParameters(methodElement, sorting)) {
+                valid = false;
+            }
         }
 
         return valid;
