@@ -13,6 +13,8 @@ import io.graphine.processor.query.registry.RepositoryNativeQueryRegistryStorage
 
 import java.util.*;
 
+import static java.util.Objects.isNull;
+
 /**
  * @author Oleg Marchenko
  */
@@ -35,7 +37,9 @@ public final class RepositoryNativeQueryGenerator {
         List<MethodMetadata> methods = repository.getMethods();
         for (MethodMetadata method : methods) {
             QueryableMethodName queryableName = method.getQueryableName();
+
             QualifierFragment qualifier = queryableName.getQualifier();
+            if (isNull(qualifier)) continue; // Native query generation is skipped! Method is invalid.
 
             NativeQuery query = nativeQueryGenerators
                     .computeIfAbsent(qualifier.getMethodType(),

@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.Map;
 
 import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.MethodType;
+import static java.util.Objects.isNull;
 import static javax.lang.model.element.Modifier.*;
 
 /**
@@ -67,7 +68,10 @@ public final class RepositoryImplementationGenerator {
         List<MethodMetadata> methods = repository.getMethods();
         for (MethodMetadata method : methods) {
             QueryableMethodName queryableName = method.getQueryableName();
+
             QualifierFragment qualifier = queryableName.getQualifier();
+            if (isNull(qualifier)) continue; // Method implementation is skipped because it is invalid!
+
             RepositoryMethodImplementationGenerator methodGenerator = methodGenerators.get(qualifier.getMethodType());
             NativeQuery query = repositoryNativeQueryRegistry.getQuery(method);
             classBuilder.addMethod(methodGenerator.generate(method, query));

@@ -45,8 +45,8 @@ public final class RepositoryMethodNameParser {
         else {
             messager.printMessage(Kind.ERROR,
                                   "Method name could not be recognized. " +
-                                          "The following prefixes are supported: " +
-                                          "find(All)By, countAll(By), save(All), update(All), delete(All)(By)",
+                                  "The following prefixes are supported: " +
+                                  "find(First|All)(By), countAll(By), save(All), update(All), delete(All)(By)",
                                   methodElement);
         }
         return new QueryableMethodName(qualifier, condition, sorting);
