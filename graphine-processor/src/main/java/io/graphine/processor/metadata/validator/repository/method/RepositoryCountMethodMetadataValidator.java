@@ -13,10 +13,7 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import java.util.List;
-import java.util.Set;
 
-import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.MethodForm;
-import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.SpecifierType;
 import static io.graphine.processor.support.EnvironmentContext.messager;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
@@ -31,7 +28,7 @@ public final class RepositoryCountMethodMetadataValidator extends MethodMetadata
     }
 
     @Override
-    protected boolean validateReturnType(ExecutableElement methodElement, MethodForm methodForm) {
+    protected boolean validateReturnType(ExecutableElement methodElement, QualifierFragment qualifier) {
         boolean valid = true;
 
         TypeMirror returnType = methodElement.getReturnType();
@@ -67,16 +64,14 @@ public final class RepositoryCountMethodMetadataValidator extends MethodMetadata
         boolean valid = true;
 
         QualifierFragment qualifier = queryableName.getQualifier();
-        if (qualifier.getMethodForm() == MethodForm.SINGULAR) {
+        if (qualifier.isSingularForm()) {
             messager.printMessage(Kind.WARNING, "Use a semantic prefix (countAll) in the method name", methodElement);
         }
-
-        Set<SpecifierType> specifiers = qualifier.getSpecifiers();
-        if (specifiers.contains(SpecifierType.DISTINCT)) {
+        if (qualifier.hasDistinctSpecifier()) {
             valid = false;
             messager.printMessage(Kind.ERROR, "Method name must not include 'Distinct' keyword", methodElement);
         }
-        if (specifiers.contains(SpecifierType.FIRST)) {
+        if (qualifier.hasFirstSpecifier()) {
             valid = false;
             messager.printMessage(Kind.ERROR, "Method name must not include 'First' keyword", methodElement);
         }

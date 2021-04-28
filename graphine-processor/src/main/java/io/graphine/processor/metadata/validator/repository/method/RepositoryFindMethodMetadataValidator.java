@@ -20,9 +20,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.MethodForm;
-import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.MethodForm.SINGULAR;
-import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.SpecifierType;
 import static io.graphine.processor.support.EnvironmentContext.messager;
 import static io.graphine.processor.support.EnvironmentContext.typeUtils;
 import static java.util.Objects.isNull;
@@ -38,13 +35,13 @@ public final class RepositoryFindMethodMetadataValidator extends MethodMetadataV
     }
 
     @Override
-    protected boolean validateReturnType(ExecutableElement methodElement, MethodForm methodForm) {
+    protected boolean validateReturnType(ExecutableElement methodElement, QualifierFragment qualifier) {
         boolean valid = true;
 
         TypeMirror entityType = entity.getNativeType();
         TypeMirror returnType = methodElement.getReturnType();
 
-        switch (methodForm) {
+        switch (qualifier.getMethodForm()) {
             case SINGULAR:
                 if (returnType.getKind() != TypeKind.DECLARED) {
                     valid = false;
@@ -114,8 +111,8 @@ public final class RepositoryFindMethodMetadataValidator extends MethodMetadataV
         boolean valid = true;
 
         QualifierFragment qualifier = queryableName.getQualifier();
-        if (qualifier.getMethodForm() == SINGULAR) {
-            if (qualifier.getSpecifiers().contains(SpecifierType.DISTINCT)) {
+        if (qualifier.isSingularForm()) {
+            if (qualifier.hasDistinctSpecifier()) {
                 valid = false;
                 messager.printMessage(Kind.ERROR, "Method name must not include 'Distinct' keyword", methodElement);
             }
@@ -123,7 +120,7 @@ public final class RepositoryFindMethodMetadataValidator extends MethodMetadataV
 
         ConditionFragment condition = queryableName.getCondition();
         if (isNull(condition)) {
-            if (qualifier.getMethodForm() == SINGULAR && !qualifier.getSpecifiers().contains(SpecifierType.FIRST)) {
+            if (qualifier.isSingularForm() && !qualifier.hasFirstSpecifier()) {
                 valid = false;
                 messager.printMessage(Kind.ERROR,
                                       "Method name must have condition parameters after 'By' keyword",
@@ -147,7 +144,7 @@ public final class RepositoryFindMethodMetadataValidator extends MethodMetadataV
 
         SortingFragment sorting = queryableName.getSorting();
         if (nonNull(sorting)) {
-            if (qualifier.getMethodForm() == SINGULAR && !qualifier.getSpecifiers().contains(SpecifierType.FIRST)) {
+            if (qualifier.isSingularForm() && !qualifier.hasFirstSpecifier()) {
                 valid = false;
                 messager.printMessage(Kind.ERROR, "Method name must not include sorting", methodElement);
             }
@@ -156,7 +153,7 @@ public final class RepositoryFindMethodMetadataValidator extends MethodMetadataV
             }
         }
         else {
-            if (qualifier.getSpecifiers().contains(SpecifierType.FIRST)) {
+            if (qualifier.hasFirstSpecifier()) {
                 messager.printMessage(Kind.WARNING, "Use explicit sorting in the method name", methodElement);
             }
         }

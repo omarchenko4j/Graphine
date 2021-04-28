@@ -14,7 +14,6 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.VariableElement;
 import java.util.List;
 
-import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.MethodForm;
 import static io.graphine.processor.util.StringUtils.uncapitalize;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -73,7 +72,7 @@ public final class RepositoryDeleteMethodNativeQueryGenerator extends Repository
         ConditionFragment condition = queryableName.getCondition();
         if (isNull(condition)) {
             QualifierFragment qualifier = queryableName.getQualifier();
-            if (qualifier.getMethodForm() == MethodForm.PLURAL) {
+            if (qualifier.isPluralForm()) {
                 // Validation must ensure that only one method parameter is present.
                 VariableElement parameterElement = methodParameters.get(0);
                 return singletonList(Parameter.basedOn(parameterElement));
@@ -100,7 +99,7 @@ public final class RepositoryDeleteMethodNativeQueryGenerator extends Repository
             Parameter parameter = new ComplexParameter(parentParameter, singletonList(childParameter));
 
             QualifierFragment qualifier = queryableName.getQualifier();
-            if (qualifier.getMethodForm() == MethodForm.PLURAL) {
+            if (qualifier.isPluralForm()) {
                 parentParameter = new Parameter(uncapitalize(entity.getName()), entity.getNativeType());
                 parameter = new ComplexParameter(parentParameter, singletonList(childParameter));
                 parameter = new IterableParameter(Parameter.basedOn(parameterElement), parameter);

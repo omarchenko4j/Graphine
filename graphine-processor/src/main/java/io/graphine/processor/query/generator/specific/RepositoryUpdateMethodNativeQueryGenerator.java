@@ -15,7 +15,6 @@ import javax.lang.model.element.VariableElement;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.MethodForm;
 import static io.graphine.processor.util.StringUtils.uncapitalize;
 import static java.util.Collections.singletonList;
 
@@ -65,7 +64,7 @@ public final class RepositoryUpdateMethodNativeQueryGenerator extends Repository
 
         QueryableMethodName queryableName = method.getQueryableName();
         QualifierFragment qualifier = queryableName.getQualifier();
-        if (qualifier.getMethodForm() == MethodForm.PLURAL) {
+        if (qualifier.isPluralForm()) {
             parentParameter = new Parameter(uncapitalize(entity.getName()), entity.getNativeType());
             parameter = new ComplexParameter(parentParameter, childParameters);
             parameter = new IterableParameter(Parameter.basedOn(parameterElement), parameter);

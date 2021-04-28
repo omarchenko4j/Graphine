@@ -29,6 +29,22 @@ public final class QualifierFragment {
         return specifiers;
     }
 
+    public boolean isSingularForm() {
+        return methodForm == MethodForm.SINGULAR;
+    }
+
+    public boolean isPluralForm() {
+        return methodForm == MethodForm.PLURAL;
+    }
+
+    public boolean hasDistinctSpecifier() {
+        return specifiers.contains(SpecifierType.DISTINCT);
+    }
+
+    public boolean hasFirstSpecifier() {
+        return specifiers.contains(SpecifierType.FIRST);
+    }
+
     public enum MethodType {
         FIND("find"),
         COUNT("count"),

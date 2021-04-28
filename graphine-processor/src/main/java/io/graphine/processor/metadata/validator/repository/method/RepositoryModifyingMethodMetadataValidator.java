@@ -17,8 +17,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.MethodForm;
-import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.SpecifierType;
 import static io.graphine.processor.support.EnvironmentContext.messager;
 import static io.graphine.processor.support.EnvironmentContext.typeUtils;
 import static java.util.Objects.nonNull;
@@ -33,7 +31,7 @@ public abstract class RepositoryModifyingMethodMetadataValidator extends MethodM
     }
 
     @Override
-    protected boolean validateReturnType(ExecutableElement methodElement, MethodForm methodForm) {
+    protected boolean validateReturnType(ExecutableElement methodElement, QualifierFragment qualifier) {
         boolean valid = true;
 
         TypeMirror returnType = methodElement.getReturnType();
@@ -50,12 +48,11 @@ public abstract class RepositoryModifyingMethodMetadataValidator extends MethodM
         boolean valid = true;
 
         QualifierFragment qualifier = queryableName.getQualifier();
-        Set<SpecifierType> specifiers = qualifier.getSpecifiers();
-        if (specifiers.contains(SpecifierType.DISTINCT)) {
+        if (qualifier.hasDistinctSpecifier()) {
             valid = false;
             messager.printMessage(Kind.ERROR, "Method name must not include 'Distinct' keyword", methodElement);
         }
-        if (specifiers.contains(SpecifierType.FIRST)) {
+        if (qualifier.hasFirstSpecifier()) {
             valid = false;
             messager.printMessage(Kind.ERROR, "Method name must not include 'First' keyword", methodElement);
         }

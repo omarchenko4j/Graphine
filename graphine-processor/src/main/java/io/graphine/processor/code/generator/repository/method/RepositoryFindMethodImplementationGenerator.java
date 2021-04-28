@@ -18,7 +18,6 @@ import javax.lang.model.type.TypeMirror;
 import java.util.Optional;
 
 import static io.graphine.processor.code.renderer.parameter.result_set.ResultSetParameterRenderer.DEFAULT_RESULT_SET_VARIABLE_NAME;
-import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.SpecifierType;
 
 /**
  * @author Oleg Marchenko
@@ -56,7 +55,7 @@ public final class RepositoryFindMethodImplementationGenerator extends Repositor
 
                                     QueryableMethodName queryableName = method.getQueryableName();
                                     QualifierFragment qualifier = queryableName.getQualifier();
-                                    if (!qualifier.getSpecifiers().contains(SpecifierType.FIRST)) {
+                                    if (!qualifier.hasFirstSpecifier()) {
                                         snippetBuilder
                                                 .beginControlFlow("if ($L.next())", DEFAULT_RESULT_SET_VARIABLE_NAME)
                                                 .addStatement("throw new $T()", NonUniqueResultException.class)

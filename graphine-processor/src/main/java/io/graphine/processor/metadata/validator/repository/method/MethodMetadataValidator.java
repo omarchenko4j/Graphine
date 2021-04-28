@@ -5,6 +5,7 @@ import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.model.repository.method.name.QueryableMethodName;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment;
+import io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
@@ -19,7 +20,6 @@ import java.util.Set;
 
 import static io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment.AndPredicate;
 import static io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment.OperatorType;
-import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.MethodForm;
 import static io.graphine.processor.support.EnvironmentContext.messager;
 import static io.graphine.processor.support.EnvironmentContext.typeUtils;
 import static java.util.Objects.isNull;
@@ -42,7 +42,7 @@ public abstract class MethodMetadataValidator {
 
     private boolean validate(ExecutableElement methodElement, QueryableMethodName queryableName) {
         boolean valid = true;
-        if (!validateReturnType(methodElement, queryableName.getQualifier().getMethodForm())) {
+        if (!validateReturnType(methodElement, queryableName.getQualifier())) {
             valid = false;
         }
         if (!validateSignature(methodElement, queryableName)) {
@@ -51,7 +51,7 @@ public abstract class MethodMetadataValidator {
         return valid;
     }
 
-    protected abstract boolean validateReturnType(ExecutableElement methodElement, MethodForm methodForm);
+    protected abstract boolean validateReturnType(ExecutableElement methodElement, QualifierFragment qualifier);
 
     protected abstract boolean validateSignature(ExecutableElement methodElement, QueryableMethodName queryableName);
 
