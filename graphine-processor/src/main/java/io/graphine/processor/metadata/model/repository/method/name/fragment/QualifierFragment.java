@@ -6,10 +6,12 @@ package io.graphine.processor.metadata.model.repository.method.name.fragment;
 public final class QualifierFragment {
     private final MethodType methodType;
     private final MethodForm methodForm;
+    private final SpecifierType specifierType;
 
     public QualifierFragment(String fragment) {
         this.methodType = MethodType.defineBy(fragment);
         this.methodForm = MethodForm.defineBy(fragment);
+        this.specifierType = SpecifierType.defineBy(fragment);
     }
 
     public MethodType getMethodType() {
@@ -18,6 +20,10 @@ public final class QualifierFragment {
 
     public MethodForm getMethodForm() {
         return methodForm;
+    }
+
+    public SpecifierType getSpecifierType() {
+        return specifierType;
     }
 
     public enum MethodType {
@@ -51,6 +57,17 @@ public final class QualifierFragment {
 
         public static MethodForm defineBy(String value) {
             return value.contains("All") ? PLURAL : SINGULAR;
+        }
+    }
+
+    public enum SpecifierType {
+        DISTINCT;
+
+        public static SpecifierType defineBy(String value) {
+            if (value.contains("Distinct")) {
+                return DISTINCT;
+            }
+            return null;
         }
     }
 }

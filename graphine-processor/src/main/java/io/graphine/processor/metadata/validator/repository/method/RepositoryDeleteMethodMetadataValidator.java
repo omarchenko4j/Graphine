@@ -8,6 +8,7 @@ import io.graphine.processor.metadata.model.repository.method.name.fragment.Sort
 
 import javax.lang.model.element.ExecutableElement;
 
+import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.SpecifierType.DISTINCT;
 import static io.graphine.processor.support.EnvironmentContext.messager;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
@@ -25,14 +26,20 @@ public final class RepositoryDeleteMethodMetadataValidator extends RepositoryMod
     protected boolean validateSignature(ExecutableElement methodElement, QueryableMethodName queryableName) {
         boolean valid = true;
 
-        ConditionFragment condition = queryableName.getCondition();
-        if (!validateConditionParameters(methodElement, condition)) {
+        QualifierFragment qualifier = queryableName.getQualifier();
+        if (DISTINCT.equals(qualifier.getSpecifierType())) {
             valid = false;
+            messager.printMessage(Kind.ERROR, "Method name must not include 'Distinct' keyword", methodElement);
         }
 
+        ConditionFragment condition = queryableName.getCondition();
         if (isNull(condition)) {
-            QualifierFragment qualifier = queryableName.getQualifier();
             if (!validateConsumedParameter(methodElement, qualifier)) {
+                valid = false;
+            }
+        }
+        else {
+            if (!validateConditionParameters(methodElement, condition)) {
                 valid = false;
             }
         }

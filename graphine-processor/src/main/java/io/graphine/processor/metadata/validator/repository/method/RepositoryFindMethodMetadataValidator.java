@@ -22,6 +22,7 @@ import java.util.Set;
 
 import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.MethodForm;
 import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.MethodForm.SINGULAR;
+import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.SpecifierType.DISTINCT;
 import static io.graphine.processor.support.EnvironmentContext.messager;
 import static io.graphine.processor.support.EnvironmentContext.typeUtils;
 import static java.util.Objects.isNull;
@@ -112,16 +113,21 @@ public final class RepositoryFindMethodMetadataValidator extends MethodMetadataV
     protected boolean validateSignature(ExecutableElement methodElement, QueryableMethodName queryableName) {
         boolean valid = true;
 
-        ConditionFragment condition = queryableName.getCondition();
-        if (!validateConditionParameters(methodElement, condition)) {
-            valid = false;
+        QualifierFragment qualifier = queryableName.getQualifier();
+        if (qualifier.getMethodForm() == SINGULAR) {
+            if (DISTINCT.equals(qualifier.getSpecifierType())) {
+                valid = false;
+                messager.printMessage(Kind.ERROR, "Method name must not include 'Distinct' keyword", methodElement);
+            }
         }
 
+        ConditionFragment condition = queryableName.getCondition();
         if (isNull(condition)) {
-            QualifierFragment qualifier = queryableName.getQualifier();
             if (qualifier.getMethodForm() == SINGULAR) {
                 valid = false;
-                messager.printMessage(Kind.ERROR, "Method must have condition parameters after 'By' keyword", methodElement);
+                messager.printMessage(Kind.ERROR,
+                                      "Method name must have condition parameters after 'By' keyword",
+                                      methodElement);
             }
             else {
                 List<? extends VariableElement> parameters = methodElement.getParameters();
@@ -131,6 +137,11 @@ public final class RepositoryFindMethodMetadataValidator extends MethodMetadataV
                                           "Method without condition parameters should not contain method parameters",
                                           methodElement);
                 }
+            }
+        }
+        else {
+            if (!validateConditionParameters(methodElement, condition)) {
+                valid = false;
             }
         }
 

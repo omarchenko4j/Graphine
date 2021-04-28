@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.MethodForm;
+import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.SpecifierType.DISTINCT;
 import static io.graphine.processor.util.StringUtils.uncapitalize;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -32,19 +33,25 @@ public final class RepositoryFindMethodNativeQueryGenerator extends RepositoryMe
 
     @Override
     protected String generateQuery(MethodMetadata method) {
+        StringBuilder queryBuilder = new StringBuilder()
+                .append("SELECT ");
+
+        QueryableMethodName queryableName = method.getQueryableName();
+
+        QualifierFragment qualifier = queryableName.getQualifier();
+        if (DISTINCT.equals(qualifier.getSpecifierType())) {
+            queryBuilder.append("DISTINCT ");
+        }
+
         String joinedColumns =
                 entity.getAttributes()
                       .stream()
                       .map(AttributeMetadata::getColumn)
                       .collect(Collectors.joining(", "));
-
-        StringBuilder queryBuilder = new StringBuilder()
-                .append("SELECT ")
+        queryBuilder
                 .append(joinedColumns)
                 .append(" FROM ")
                 .append(entity.getQualifiedTable());
-
-        QueryableMethodName queryableName = method.getQueryableName();
 
         ConditionFragment condition = queryableName.getCondition();
         if (nonNull(condition)) {

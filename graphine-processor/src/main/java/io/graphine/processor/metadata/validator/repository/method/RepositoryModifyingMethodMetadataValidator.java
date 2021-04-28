@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Set;
 
 import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.MethodForm;
+import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.SpecifierType.DISTINCT;
 import static io.graphine.processor.support.EnvironmentContext.messager;
 import static io.graphine.processor.support.EnvironmentContext.typeUtils;
 import static java.util.Objects.nonNull;
@@ -49,6 +50,11 @@ public abstract class RepositoryModifyingMethodMetadataValidator extends MethodM
         boolean valid = true;
 
         QualifierFragment qualifier = queryableName.getQualifier();
+        if (DISTINCT.equals(qualifier.getSpecifierType())) {
+            valid = false;
+            messager.printMessage(Kind.ERROR, "Method name must not include 'Distinct' keyword", methodElement);
+        }
+
         if (!validateConsumedParameter(methodElement, qualifier)) {
             valid = false;
         }
