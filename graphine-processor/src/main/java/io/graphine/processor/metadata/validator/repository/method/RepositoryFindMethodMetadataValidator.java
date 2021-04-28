@@ -78,9 +78,9 @@ public final class RepositoryFindMethodMetadataValidator extends MethodMetadataV
                         DeclaredType declaredType = (DeclaredType) returnType;
                         String qualifiedName = ((TypeElement) declaredType.asElement()).getQualifiedName().toString();
                         if (qualifiedName.equals(Iterable.class.getName()) ||
-                                qualifiedName.equals(Collection.class.getName()) ||
-                                qualifiedName.equals(List.class.getName()) ||
-                                qualifiedName.equals(Set.class.getName())) {
+                            qualifiedName.equals(Collection.class.getName()) ||
+                            qualifiedName.equals(List.class.getName()) ||
+                            qualifiedName.equals(Set.class.getName())) {
                             returnType = declaredType.getTypeArguments().get(0);
                             if (!typeUtils.isSameType(returnType, entityType)) {
                                 valid = false;
@@ -162,18 +162,16 @@ public final class RepositoryFindMethodMetadataValidator extends MethodMetadataV
     private boolean validateSortingParameters(ExecutableElement methodElement, SortingFragment sorting) {
         boolean valid = true;
 
-        if (nonNull(sorting)) {
-            List<Sort> sorts = sorting.getSorts();
-            for (Sort sort : sorts) {
-                String attributeName = sort.getAttributeName();
+        List<Sort> sorts = sorting.getSorts();
+        for (Sort sort : sorts) {
+            String attributeName = sort.getAttributeName();
 
-                AttributeMetadata attribute = entity.getAttribute(attributeName);
-                if (isNull(attribute)) {
-                    valid = false;
-                    messager.printMessage(Kind.ERROR,
-                                          "Sorting parameter '" + attributeName + "' not found as entity attribute",
-                                          methodElement);
-                }
+            AttributeMetadata attribute = entity.getAttribute(attributeName);
+            if (isNull(attribute)) {
+                valid = false;
+                messager.printMessage(Kind.ERROR,
+                                      "Sorting parameter '" + attributeName + "' not found as entity attribute",
+                                      methodElement);
             }
         }
 
