@@ -17,8 +17,6 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import java.util.Optional;
 
-import static io.graphine.processor.code.renderer.parameter.result_set.ResultSetParameterRenderer.DEFAULT_RESULT_SET_VARIABLE_NAME;
-
 /**
  * @author Oleg Marchenko
  */
@@ -57,7 +55,7 @@ public final class RepositoryFindMethodImplementationGenerator extends Repositor
                                     QualifierFragment qualifier = queryableName.getQualifier();
                                     if (!qualifier.hasFirstSpecifier()) {
                                         snippetBuilder
-                                                .beginControlFlow("if ($L.next())", DEFAULT_RESULT_SET_VARIABLE_NAME)
+                                                .beginControlFlow("if ($L.next())", RESULT_SET_VARIABLE_NAME)
                                                 .addStatement("throw new $T()", NonUniqueResultException.class)
                                                 .endControlFlow();
                                     }

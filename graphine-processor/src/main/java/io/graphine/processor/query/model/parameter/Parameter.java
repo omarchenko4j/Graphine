@@ -37,6 +37,8 @@ public class Parameter {
     }
 
     public static Parameter basedOn(VariableElement element) {
-        return new Parameter(element.getSimpleName().toString(), element.asType());
+        String parameterName = element.getSimpleName().toString();
+        TypeMirror parameterType = element.asType();
+        return new Parameter(parameterName, parameterType);
     }
 }

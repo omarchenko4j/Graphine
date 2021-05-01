@@ -18,6 +18,7 @@ import java.util.UUID;
 import java.util.function.Function;
 
 import static io.graphine.processor.util.AccessorUtils.setter;
+import static io.graphine.processor.util.VariableNameUniqueizer.uniqueize;
 import static javax.lang.model.element.ElementKind.ENUM;
 import static javax.lang.model.type.TypeKind.BYTE;
 
@@ -116,55 +117,66 @@ public final class ResultSetParameterLowLevelRenderer extends ResultSetParameter
                                         .add(snippetMerger.apply(CodeBlock.of("$L.getTimestamp($L)",
                                                                               resultSetVariableName, parameterIndex)))
                                         .build();
-                    case "java.time.Instant":
+                    case "java.time.Instant": {
+                        String variableName = uniqueize(parameterName);
                         return CodeBlock.builder()
                                         .addStatement("$T $L = $L.getTimestamp($L)",
-                                                      Timestamp.class, parameterName, resultSetVariableName, parameterIndex)
-                                        .beginControlFlow("if ($L != null)", parameterName)
-                                        .add(snippetMerger.apply(CodeBlock.of("$L.toInstant()", parameterName)))
+                                                      Timestamp.class, variableName, resultSetVariableName, parameterIndex)
+                                        .beginControlFlow("if ($L != null)", variableName)
+                                        .add(snippetMerger.apply(CodeBlock.of("$L.toInstant()", variableName)))
                                         .endControlFlow()
                                         .build();
-                    case "java.time.LocalDate":
+                    }
+                    case "java.time.LocalDate": {
+                        String variableName = uniqueize(parameterName);
                         return CodeBlock.builder()
                                         .addStatement("$T $L = $L.getDate($L)",
-                                                      Date.class, parameterName, resultSetVariableName, parameterIndex)
-                                        .beginControlFlow("if ($L != null)", parameterName)
-                                        .add(snippetMerger.apply(CodeBlock.of("$L.toLocalDate()", parameterName)))
+                                                      Date.class, variableName, resultSetVariableName, parameterIndex)
+                                        .beginControlFlow("if ($L != null)", variableName)
+                                        .add(snippetMerger.apply(CodeBlock.of("$L.toLocalDate()", variableName)))
                                         .endControlFlow()
                                         .build();
-                    case "java.time.LocalTime":
+                    }
+                    case "java.time.LocalTime": {
+                        String variableName = uniqueize(parameterName);
                         return CodeBlock.builder()
                                         .addStatement("$T $L = $L.getTime($L)",
-                                                      Time.class, parameterName, resultSetVariableName, parameterIndex)
-                                        .beginControlFlow("if ($L != null)", parameterName)
-                                        .add(snippetMerger.apply(CodeBlock.of("$L.toLocalTime()", parameterName)))
+                                                      Time.class, variableName, resultSetVariableName, parameterIndex)
+                                        .beginControlFlow("if ($L != null)", variableName)
+                                        .add(snippetMerger.apply(CodeBlock.of("$L.toLocalTime()", variableName)))
                                         .endControlFlow()
                                         .build();
-                    case "java.time.LocalDateTime":
+                    }
+                    case "java.time.LocalDateTime": {
+                        String variableName = uniqueize(parameterName);
                         return CodeBlock.builder()
                                         .addStatement("$T $L = $L.getTimestamp($L)",
-                                                      Timestamp.class, parameterName, resultSetVariableName, parameterIndex)
-                                        .beginControlFlow("if ($L != null)", parameterName)
-                                        .add(snippetMerger.apply(CodeBlock.of("$L.toLocalDateTime()", parameterName)))
+                                                      Timestamp.class, variableName, resultSetVariableName, parameterIndex)
+                                        .beginControlFlow("if ($L != null)", variableName)
+                                        .add(snippetMerger.apply(CodeBlock.of("$L.toLocalDateTime()", variableName)))
                                         .endControlFlow()
                                         .build();
-                    case "java.util.UUID":
+                    }
+                    case "java.util.UUID": {
+                        String variableName = uniqueize(parameterName);
                         return CodeBlock.builder()
                                         .addStatement("$T $L = $L.getString($L)",
-                                                      String.class, parameterName, resultSetVariableName, parameterIndex)
-                                        .beginControlFlow("if ($L != null)", parameterName)
+                                                      String.class, variableName, resultSetVariableName, parameterIndex)
+                                        .beginControlFlow("if ($L != null)", variableName)
                                         .add(snippetMerger.apply(CodeBlock.of("$T.fromString($L)",
-                                                                              UUID.class, parameterName)))
+                                                                              UUID.class, variableName)))
                                         .endControlFlow()
                                         .build();
+                    }
                     default:
                         if (typeElement.getKind() == ENUM) {
+                            String variableName = uniqueize(parameterName);
                             return CodeBlock.builder()
                                             .addStatement("$T $L = $L.getString($L)",
-                                                          String.class, parameterName, resultSetVariableName, parameterIndex)
-                                            .beginControlFlow("if ($L != null)", parameterName)
+                                                          String.class, variableName, resultSetVariableName, parameterIndex)
+                                            .beginControlFlow("if ($L != null)", variableName)
                                             .add(snippetMerger.apply(CodeBlock.of("$T.valueOf($L)",
-                                                                                  parameterType, parameterName)))
+                                                                                  parameterType, variableName)))
                                             .endControlFlow()
                                             .build();
                         }

@@ -14,7 +14,7 @@ public final class RepositoryUpdateMethodImplementationGenerator extends Reposit
     @Override
     protected CodeBlock renderQuery(NativeQuery query) {
         return CodeBlock.builder()
-                        .addStatement("String query = $S", query.getValue())
+                        .addStatement("String $L = $S", QUERY_VARIABLE_NAME, query.getValue())
                         .build();
     }
 

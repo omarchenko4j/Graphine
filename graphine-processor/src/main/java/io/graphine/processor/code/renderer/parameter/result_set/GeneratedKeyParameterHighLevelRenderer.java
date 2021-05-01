@@ -12,11 +12,14 @@ import javax.lang.model.type.TypeMirror;
 import java.util.Iterator;
 import java.util.function.Function;
 
+import static io.graphine.processor.util.VariableNameUniqueizer.uniqueize;
+
 /**
  * @author Oleg Marchenko
  */
 public final class GeneratedKeyParameterHighLevelRenderer extends ResultSetParameterRenderer {
-    public static final String DEFAULT_GENERATED_KEY_VARIABLE_NAME = "generatedKeys";
+    public static final String GENERATED_KEY_VARIABLE_NAME = uniqueize("generatedKeys");
+    public static final String ITERATOR_VARIABLE_NAME = uniqueize("iterator");
 
     public GeneratedKeyParameterHighLevelRenderer(ParameterIndexProvider parameterIndexProvider) {
         this(Function.identity(), parameterIndexProvider);
@@ -24,7 +27,7 @@ public final class GeneratedKeyParameterHighLevelRenderer extends ResultSetParam
 
     public GeneratedKeyParameterHighLevelRenderer(Function<CodeBlock, CodeBlock> snippetMerger,
                                                   ParameterIndexProvider parameterIndexProvider) {
-        super(snippetMerger, DEFAULT_GENERATED_KEY_VARIABLE_NAME, parameterIndexProvider);
+        super(snippetMerger, GENERATED_KEY_VARIABLE_NAME, parameterIndexProvider);
     }
 
     @Override
@@ -38,7 +41,7 @@ public final class GeneratedKeyParameterHighLevelRenderer extends ResultSetParam
                         .beginControlFlow("if ($L.next())", resultSetVariableName)
                         .add(parameter.accept(
                                 new ResultSetParameterLowLevelRenderer(snippetMerger,
-                                                                       DEFAULT_GENERATED_KEY_VARIABLE_NAME,
+                                                                       GENERATED_KEY_VARIABLE_NAME,
                                                                        parameterIndexProvider)
                         ))
                         .endControlFlow()
@@ -61,7 +64,7 @@ public final class GeneratedKeyParameterHighLevelRenderer extends ResultSetParam
                                       iteratedParameter.getType(), iteratedParameter.getName(), parameter.getName())
                         .add(iteratedParameter.accept(
                                 new ResultSetParameterLowLevelRenderer(snippetMerger,
-                                                                       DEFAULT_GENERATED_KEY_VARIABLE_NAME,
+                                                                       GENERATED_KEY_VARIABLE_NAME,
                                                                        parameterIndexProvider)
                         ))
                         .addStatement("i++")
@@ -76,15 +79,20 @@ public final class GeneratedKeyParameterHighLevelRenderer extends ResultSetParam
                     case "java.util.List":
                     case "java.util.Set":
                         builder
-                                .addStatement("$T<$T> iterator = $L.iterator()",
-                                              Iterator.class, iteratedParameter.getType(), parameter.getName())
-                                .beginControlFlow("while ($L.next() && iterator.hasNext())",
-                                                  resultSetVariableName)
-                                .addStatement("$T $L = iterator.next()",
-                                              iteratedParameter.getType(), iteratedParameter.getName())
+                                .addStatement("$T<$T> $L = $L.iterator()",
+                                              Iterator.class,
+                                              iteratedParameter.getType(),
+                                              ITERATOR_VARIABLE_NAME,
+                                              parameter.getName())
+                                .beginControlFlow("while ($L.next() && $L.hasNext())",
+                                                  resultSetVariableName, ITERATOR_VARIABLE_NAME)
+                                .addStatement("$T $L = $L.next()",
+                                              iteratedParameter.getType(),
+                                              iteratedParameter.getName(),
+                                              ITERATOR_VARIABLE_NAME)
                                 .add(iteratedParameter.accept(
                                         new ResultSetParameterLowLevelRenderer(snippetMerger,
-                                                                               DEFAULT_GENERATED_KEY_VARIABLE_NAME,
+                                                                               GENERATED_KEY_VARIABLE_NAME,
                                                                                parameterIndexProvider)
                                 ))
                                 .endControlFlow();

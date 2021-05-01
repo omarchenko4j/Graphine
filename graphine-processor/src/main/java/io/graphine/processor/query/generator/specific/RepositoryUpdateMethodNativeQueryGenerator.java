@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static io.graphine.processor.util.StringUtils.uncapitalize;
+import static io.graphine.processor.util.VariableNameUniqueizer.uniqueize;
 import static java.util.Collections.singletonList;
 
 /**
@@ -65,7 +66,7 @@ public final class RepositoryUpdateMethodNativeQueryGenerator extends Repository
         QueryableMethodName queryableName = method.getQueryableName();
         QualifierFragment qualifier = queryableName.getQualifier();
         if (qualifier.isPluralForm()) {
-            parentParameter = new Parameter(uncapitalize(entity.getName()), entity.getNativeType());
+            parentParameter = new Parameter(uniqueize(uncapitalize(entity.getName())), entity.getNativeType());
             parameter = new ComplexParameter(parentParameter, childParameters);
             parameter = new IterableParameter(Parameter.basedOn(parameterElement), parameter);
         }

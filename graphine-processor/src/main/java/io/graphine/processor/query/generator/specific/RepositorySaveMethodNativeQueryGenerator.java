@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static io.graphine.processor.util.StringUtils.*;
+import static io.graphine.processor.util.VariableNameUniqueizer.uniqueize;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
@@ -63,7 +64,7 @@ public final class RepositorySaveMethodNativeQueryGenerator extends RepositoryMe
         QueryableMethodName queryableName = method.getQueryableName();
         QualifierFragment qualifier = queryableName.getQualifier();
         if (qualifier.isPluralForm()) {
-            parentParameter = new Parameter(uncapitalize(entity.getName()), entity.getNativeType());
+            parentParameter = new Parameter(uniqueize(uncapitalize(entity.getName())), entity.getNativeType());
             parameter = new ComplexParameter(parentParameter, singletonList(childParameter));
             parameter = new IterableParameter(Parameter.basedOn(parameterElement), parameter);
         }
@@ -88,7 +89,7 @@ public final class RepositorySaveMethodNativeQueryGenerator extends RepositoryMe
         QueryableMethodName queryableName = method.getQueryableName();
         QualifierFragment qualifier = queryableName.getQualifier();
         if (qualifier.isPluralForm()) {
-            parentParameter = new Parameter(uncapitalize(entity.getName()), entity.getNativeType());
+            parentParameter = new Parameter(uniqueize(uncapitalize(entity.getName())), entity.getNativeType());
             parameter = new ComplexParameter(parentParameter, childParameters);
             parameter = new IterableParameter(Parameter.basedOn(parameterElement), parameter);
         }

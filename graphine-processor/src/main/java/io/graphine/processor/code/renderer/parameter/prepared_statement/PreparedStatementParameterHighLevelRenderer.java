@@ -6,6 +6,8 @@ import io.graphine.processor.query.model.parameter.ComplexParameter;
 import io.graphine.processor.query.model.parameter.IterableParameter;
 import io.graphine.processor.query.model.parameter.Parameter;
 
+import static io.graphine.processor.code.generator.repository.method.RepositoryMethodImplementationGenerator.STATEMENT_VARIABLE_NAME;
+
 /**
  * @author Oleg Marchenko
  */
@@ -18,7 +20,7 @@ public final class PreparedStatementParameterHighLevelRenderer extends PreparedS
     public CodeBlock visit(Parameter parameter) {
         return CodeBlock.builder()
                         .add(parameter.accept(new PreparedStatementParameterLowLevelRenderer(parameterIndexProvider)))
-                        .addStatement("$L.executeUpdate()", DEFAULT_STATEMENT_VARIABLE_NAME)
+                        .addStatement("$L.executeUpdate()", STATEMENT_VARIABLE_NAME)
                         .build();
     }
 
@@ -26,7 +28,7 @@ public final class PreparedStatementParameterHighLevelRenderer extends PreparedS
     public CodeBlock visit(ComplexParameter parameter) {
         return CodeBlock.builder()
                         .add(parameter.accept(new PreparedStatementParameterLowLevelRenderer(parameterIndexProvider)))
-                        .addStatement("$L.executeUpdate()", DEFAULT_STATEMENT_VARIABLE_NAME)
+                        .addStatement("$L.executeUpdate()", STATEMENT_VARIABLE_NAME)
                         .build();
     }
 
@@ -38,9 +40,9 @@ public final class PreparedStatementParameterHighLevelRenderer extends PreparedS
                                           iteratedParameter.getType(), iteratedParameter.getName(), parameter.getName())
                         .add(parameter.getIteratedParameter()
                                       .accept(new PreparedStatementParameterLowLevelRenderer(parameterIndexProvider)))
-                        .addStatement("$L.addBatch()", DEFAULT_STATEMENT_VARIABLE_NAME)
+                        .addStatement("$L.addBatch()", STATEMENT_VARIABLE_NAME)
                         .endControlFlow()
-                        .addStatement("$L.executeBatch()", DEFAULT_STATEMENT_VARIABLE_NAME)
+                        .addStatement("$L.executeBatch()", STATEMENT_VARIABLE_NAME)
                         .build();
     }
 }

@@ -13,8 +13,7 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.List;
 
-import static io.graphine.processor.code.renderer.parameter.prepared_statement.PreparedStatementParameterRenderer.DEFAULT_STATEMENT_VARIABLE_NAME;
-import static io.graphine.processor.code.renderer.parameter.result_set.GeneratedKeyParameterHighLevelRenderer.DEFAULT_GENERATED_KEY_VARIABLE_NAME;
+import static io.graphine.processor.code.renderer.parameter.result_set.GeneratedKeyParameterHighLevelRenderer.GENERATED_KEY_VARIABLE_NAME;
 
 /**
  * @author Oleg Marchenko
@@ -23,7 +22,7 @@ public final class RepositorySaveMethodImplementationGenerator extends Repositor
     @Override
     protected CodeBlock renderQuery(NativeQuery query) {
         return CodeBlock.builder()
-                        .addStatement("String query = $S", query.getValue())
+                        .addStatement("String $L = $S", QUERY_VARIABLE_NAME, query.getValue())
                         .build();
     }
 
@@ -33,14 +32,19 @@ public final class RepositorySaveMethodImplementationGenerator extends Repositor
 
         List<Parameter> producedParameters = query.getProducedParameters();
         if (producedParameters.isEmpty()) {
-            builder.beginControlFlow("try ($T $L = connection.prepareStatement(query))",
-                                     PreparedStatement.class, DEFAULT_STATEMENT_VARIABLE_NAME);
+            builder.beginControlFlow("try ($T $L = $L.prepareStatement($L))",
+                                     PreparedStatement.class,
+                                     STATEMENT_VARIABLE_NAME,
+                                     CONNECTION_VARIABLE_NAME,
+                                     QUERY_VARIABLE_NAME);
         }
         else {
-            builder.beginControlFlow(
-                    "try ($T $L = connection.prepareStatement(query, $T.RETURN_GENERATED_KEYS))",
-                    PreparedStatement.class, DEFAULT_STATEMENT_VARIABLE_NAME, Statement.class
-            );
+            builder.beginControlFlow("try ($T $L = $L.prepareStatement($L, $T.RETURN_GENERATED_KEYS))",
+                                     PreparedStatement.class,
+                                     STATEMENT_VARIABLE_NAME,
+                                     CONNECTION_VARIABLE_NAME,
+                                     QUERY_VARIABLE_NAME,
+                                     Statement.class);
         }
 
         return builder.add(renderStatementParameters(method, query))
@@ -68,8 +72,8 @@ public final class RepositorySaveMethodImplementationGenerator extends Repositor
             builder
                     .beginControlFlow("try ($T $L = $L.getGeneratedKeys())",
                                       ResultSet.class,
-                                      DEFAULT_GENERATED_KEY_VARIABLE_NAME,
-                                      DEFAULT_STATEMENT_VARIABLE_NAME)
+                                      GENERATED_KEY_VARIABLE_NAME,
+                                      STATEMENT_VARIABLE_NAME)
                     .add(renderResultSetParameters(method, query))
                     .endControlFlow();
         }

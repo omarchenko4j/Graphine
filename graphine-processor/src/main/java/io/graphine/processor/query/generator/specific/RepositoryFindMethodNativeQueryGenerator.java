@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static io.graphine.processor.util.StringUtils.uncapitalize;
+import static io.graphine.processor.util.VariableNameUniqueizer.uniqueize;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.isNull;
@@ -93,7 +94,7 @@ public final class RepositoryFindMethodNativeQueryGenerator extends RepositoryMe
 
     @Override
     protected List<Parameter> collectProducedParameters(MethodMetadata method) {
-        Parameter parentParameter = new Parameter(uncapitalize(entity.getName()), entity.getNativeType());
+        Parameter parentParameter = new Parameter(uniqueize(uncapitalize(entity.getName())), entity.getNativeType());
         List<Parameter> childParameters =
                 entity.getAttributes()
                       .stream()
@@ -107,7 +108,9 @@ public final class RepositoryFindMethodNativeQueryGenerator extends RepositoryMe
         if (qualifier.isPluralForm()) {
             ExecutableElement methodElement = method.getNativeElement();
 
-            parameter = new IterableParameter(new Parameter("elements", methodElement.getReturnType()), parameter);
+            Parameter iteratedParameter = parameter;
+            parameter = new Parameter(uniqueize("elements"), methodElement.getReturnType());
+            parameter = new IterableParameter(parameter, iteratedParameter);
         }
 
         return singletonList(parameter);

@@ -16,6 +16,7 @@ import java.sql.Timestamp;
 import java.util.List;
 import java.util.function.Function;
 
+import static io.graphine.processor.code.generator.repository.method.RepositoryMethodImplementationGenerator.STATEMENT_VARIABLE_NAME;
 import static io.graphine.processor.util.AccessorUtils.getter;
 import static javax.lang.model.element.ElementKind.ENUM;
 import static javax.lang.model.type.TypeKind.BYTE;
@@ -42,37 +43,37 @@ public final class PreparedStatementParameterLowLevelRenderer extends PreparedSt
             case BOOLEAN:
                 return CodeBlock.builder()
                                 .addStatement("$L.setBoolean($L, $L)",
-                                              DEFAULT_STATEMENT_VARIABLE_NAME, parameterIndex, parameterName)
+                                              STATEMENT_VARIABLE_NAME, parameterIndex, parameterName)
                                 .build();
             case BYTE:
                 return CodeBlock.builder()
                                 .addStatement("$L.setByte($L, $L)",
-                                              DEFAULT_STATEMENT_VARIABLE_NAME, parameterIndex, parameterName)
+                                              STATEMENT_VARIABLE_NAME, parameterIndex, parameterName)
                                 .build();
             case SHORT:
                 return CodeBlock.builder()
                                 .addStatement("$L.setShort($L, $L)",
-                                              DEFAULT_STATEMENT_VARIABLE_NAME, parameterIndex, parameterName)
+                                              STATEMENT_VARIABLE_NAME, parameterIndex, parameterName)
                                 .build();
             case INT:
                 return CodeBlock.builder()
                                 .addStatement("$L.setInt($L, $L)",
-                                              DEFAULT_STATEMENT_VARIABLE_NAME, parameterIndex, parameterName)
+                                              STATEMENT_VARIABLE_NAME, parameterIndex, parameterName)
                                 .build();
             case LONG:
                 return CodeBlock.builder()
                                 .addStatement("$L.setLong($L, $L)",
-                                              DEFAULT_STATEMENT_VARIABLE_NAME, parameterIndex, parameterName)
+                                              STATEMENT_VARIABLE_NAME, parameterIndex, parameterName)
                                 .build();
             case FLOAT:
                 return CodeBlock.builder()
                                 .addStatement("$L.setFloat($L, $L)",
-                                              DEFAULT_STATEMENT_VARIABLE_NAME, parameterIndex, parameterName)
+                                              STATEMENT_VARIABLE_NAME, parameterIndex, parameterName)
                                 .build();
             case DOUBLE:
                 return CodeBlock.builder()
                                 .addStatement("$L.setDouble($L, $L)",
-                                              DEFAULT_STATEMENT_VARIABLE_NAME, parameterIndex, parameterName)
+                                              STATEMENT_VARIABLE_NAME, parameterIndex, parameterName)
                                 .build();
             case ARRAY:
                 ArrayType arrayType = (ArrayType) parameterType;
@@ -80,7 +81,7 @@ public final class PreparedStatementParameterLowLevelRenderer extends PreparedSt
                 if (componentType.getKind() == BYTE) {
                     return CodeBlock.builder()
                                     .addStatement("$L.setBytes($L, $L)",
-                                                  DEFAULT_STATEMENT_VARIABLE_NAME, parameterIndex, parameterName)
+                                                  STATEMENT_VARIABLE_NAME, parameterIndex, parameterName)
                                     .build();
                 }
                 throw new IllegalStateException("Unsupported array type: " + parameterType);
@@ -91,69 +92,69 @@ public final class PreparedStatementParameterLowLevelRenderer extends PreparedSt
                     case "java.lang.String":
                         return CodeBlock.builder()
                                         .addStatement("$L.setString($L, $L)",
-                                                      DEFAULT_STATEMENT_VARIABLE_NAME, parameterIndex, parameterName)
+                                                      STATEMENT_VARIABLE_NAME, parameterIndex, parameterName)
                                         .build();
                     case "java.math.BigDecimal":
                         return CodeBlock.builder()
                                         .addStatement("$L.setBigDecimal($L, $L)",
-                                                      DEFAULT_STATEMENT_VARIABLE_NAME, parameterIndex, parameterName)
+                                                      STATEMENT_VARIABLE_NAME, parameterIndex, parameterName)
                                         .build();
                     case "java.sql.Date":
                         return CodeBlock.builder()
                                         .addStatement("$L.setDate($L, $L)",
-                                                      DEFAULT_STATEMENT_VARIABLE_NAME, parameterIndex, parameterName)
+                                                      STATEMENT_VARIABLE_NAME, parameterIndex, parameterName)
                                         .build();
                     case "java.sql.Time":
                         return CodeBlock.builder()
                                         .addStatement("$L.setTime($L, $L)",
-                                                      DEFAULT_STATEMENT_VARIABLE_NAME, parameterIndex, parameterName)
+                                                      STATEMENT_VARIABLE_NAME, parameterIndex, parameterName)
                                         .build();
                     case "java.sql.Timestamp":
                         return CodeBlock.builder()
                                         .addStatement("$L.setTimestamp($L, $L)",
-                                                      DEFAULT_STATEMENT_VARIABLE_NAME, parameterIndex, parameterName)
+                                                      STATEMENT_VARIABLE_NAME, parameterIndex, parameterName)
                                         .build();
                     case "java.time.Instant":
                         return CodeBlock.builder()
                                         .addStatement("$L.setTimestamp($L, $L != null ? $T.from($L) : null)",
-                                                      DEFAULT_STATEMENT_VARIABLE_NAME,
+                                                      STATEMENT_VARIABLE_NAME,
                                                       parameterIndex, parameterName, Timestamp.class, parameterName)
                                         .build();
                     case "java.time.LocalDate":
                         return CodeBlock.builder()
                                         .addStatement("$L.setDate($L, $L != null ? $T.valueOf($L) : null)",
-                                                      DEFAULT_STATEMENT_VARIABLE_NAME,
+                                                      STATEMENT_VARIABLE_NAME,
                                                       parameterIndex, parameterName, Date.class, parameterName)
                                         .build();
                     case "java.time.LocalTime":
                         return CodeBlock.builder()
                                         .addStatement("$L.setTime($L, $L != null ? $T.valueOf($L) : null)",
-                                                      DEFAULT_STATEMENT_VARIABLE_NAME,
+                                                      STATEMENT_VARIABLE_NAME,
                                                       parameterIndex, parameterName, Time.class, parameterName)
                                         .build();
                     case "java.time.LocalDateTime":
                         return CodeBlock.builder()
                                         .addStatement("$L.setTimestamp($L, $L != null ? $T.valueOf($L) : null)",
-                                                      DEFAULT_STATEMENT_VARIABLE_NAME,
+                                                      STATEMENT_VARIABLE_NAME,
                                                       parameterIndex, parameterName, Timestamp.class, parameterName)
                                         .build();
                     case "java.util.UUID":
                         return CodeBlock.builder()
                                         .addStatement("$L.setString($L, $L != null ? $L.toString() : null)",
-                                                      DEFAULT_STATEMENT_VARIABLE_NAME,
+                                                      STATEMENT_VARIABLE_NAME,
                                                       parameterIndex, parameterName, parameterName)
                                         .build();
                     default:
                         if (typeElement.getKind() == ENUM) {
                             return CodeBlock.builder()
                                             .addStatement("$L.setString($L, $L != null ? $L.name() : null)",
-                                                          DEFAULT_STATEMENT_VARIABLE_NAME,
+                                                          STATEMENT_VARIABLE_NAME,
                                                           parameterIndex, parameterName, parameterName)
                                             .build();
                         }
                         return CodeBlock.builder()
                                         .addStatement("$L.setObject($L, $L)",
-                                                      DEFAULT_STATEMENT_VARIABLE_NAME, parameterIndex, parameterName)
+                                                      STATEMENT_VARIABLE_NAME, parameterIndex, parameterName)
                                         .build();
                 }
             default:

@@ -11,8 +11,6 @@ import java.util.function.Function;
  * @author Oleg Marchenko
  */
 public abstract class PreparedStatementParameterRenderer implements ParameterVisitor<CodeBlock> {
-    public static final String DEFAULT_STATEMENT_VARIABLE_NAME = "statement";
-
     protected final ParameterIndexProvider parameterIndexProvider;
     protected final Function<Parameter, CodeBlock> parameterNameMapper;
 

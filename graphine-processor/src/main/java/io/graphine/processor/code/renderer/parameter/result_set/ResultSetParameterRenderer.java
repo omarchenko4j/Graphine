@@ -6,19 +6,19 @@ import io.graphine.processor.query.model.parameter.ParameterVisitor;
 
 import java.util.function.Function;
 
+import static io.graphine.processor.code.generator.repository.method.RepositoryMethodImplementationGenerator.RESULT_SET_VARIABLE_NAME;
+
 /**
  * @author Oleg Marchenko
  */
 public abstract class ResultSetParameterRenderer implements ParameterVisitor<CodeBlock> {
-    public static final String DEFAULT_RESULT_SET_VARIABLE_NAME = "resultSet";
-
     protected final Function<CodeBlock, CodeBlock> snippetMerger;
     protected final String resultSetVariableName;
     protected final ParameterIndexProvider parameterIndexProvider;
 
     public ResultSetParameterRenderer(Function<CodeBlock, CodeBlock> snippetMerger,
                                       ParameterIndexProvider parameterIndexProvider) {
-        this(snippetMerger, DEFAULT_RESULT_SET_VARIABLE_NAME, parameterIndexProvider);
+        this(snippetMerger, RESULT_SET_VARIABLE_NAME, parameterIndexProvider);
     }
 
     protected ResultSetParameterRenderer(Function<CodeBlock, CodeBlock> snippetMerger,

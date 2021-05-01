@@ -22,13 +22,18 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static io.graphine.processor.code.renderer.parameter.prepared_statement.PreparedStatementParameterRenderer.DEFAULT_STATEMENT_VARIABLE_NAME;
-import static io.graphine.processor.code.renderer.parameter.result_set.ResultSetParameterRenderer.DEFAULT_RESULT_SET_VARIABLE_NAME;
+import static io.graphine.processor.code.renderer.parameter.index_provider.IncrementalParameterIndexProvider.INDEX_VARIABLE_NAME;
+import static io.graphine.processor.util.VariableNameUniqueizer.uniqueize;
 
 /**
  * @author Oleg Marchenko
  */
 public abstract class RepositoryMethodImplementationGenerator {
+    public static final String CONNECTION_VARIABLE_NAME = uniqueize("connection");
+    public static final String QUERY_VARIABLE_NAME = uniqueize("query");
+    public static final String STATEMENT_VARIABLE_NAME = uniqueize("statement");
+    public static final String RESULT_SET_VARIABLE_NAME = uniqueize("resultSet");
+
     public final MethodSpec generate(MethodMetadata method, NativeQuery query) {
         return MethodSpec.overriding(method.getNativeElement())
                          .addCode(renderConnection(method, query))
@@ -37,7 +42,8 @@ public abstract class RepositoryMethodImplementationGenerator {
 
     protected CodeBlock renderConnection(MethodMetadata method, NativeQuery query) {
         return CodeBlock.builder()
-                        .beginControlFlow("try ($T connection = dataSource.getConnection())", Connection.class)
+                        .beginControlFlow("try ($T $L = dataSource.getConnection())",
+                                          Connection.class, CONNECTION_VARIABLE_NAME)
                         .add(renderQuery(query))
                         .add(renderStatement(method, query))
                         .endControlFlow()
@@ -51,7 +57,7 @@ public abstract class RepositoryMethodImplementationGenerator {
         List<Parameter> deferredParameters = query.getDeferredParameters();
         if (deferredParameters.isEmpty()) {
             return CodeBlock.builder()
-                            .addStatement("$T query = $S", String.class, query.getValue())
+                            .addStatement("$T $L = $S", String.class, QUERY_VARIABLE_NAME, query.getValue())
                             .build();
         }
         else {
@@ -83,8 +89,8 @@ public abstract class RepositoryMethodImplementationGenerator {
                 }
             }
             return CodeBlock.builder()
-                            .addStatement("$T query = $T.format($S, $L)",
-                                          String.class, String.class, query.getValue(),
+                            .addStatement("$T $L = $T.format($S, $L)",
+                                          String.class, QUERY_VARIABLE_NAME, String.class, query.getValue(),
                                           CodeBlock.join(unnamedParameterSnippets, ", "))
                             .build();
         }
@@ -92,8 +98,11 @@ public abstract class RepositoryMethodImplementationGenerator {
 
     protected CodeBlock renderStatement(MethodMetadata method, NativeQuery query) {
         return CodeBlock.builder()
-                        .beginControlFlow("try ($T $L = connection.prepareStatement(query))",
-                                          PreparedStatement.class, DEFAULT_STATEMENT_VARIABLE_NAME)
+                        .beginControlFlow("try ($T $L = $L.prepareStatement($L))",
+                                          PreparedStatement.class,
+                                          STATEMENT_VARIABLE_NAME,
+                                          CONNECTION_VARIABLE_NAME,
+                                          QUERY_VARIABLE_NAME)
                         .add(renderStatementParameters(method, query))
                         .add(renderResultSet(method, query))
                         .endControlFlow()
@@ -112,8 +121,8 @@ public abstract class RepositoryMethodImplementationGenerator {
                 parameterIndexProvider = new NumericParameterIndexProvider();
             }
             else {
-                builder.addStatement("int index = 1");
-                parameterIndexProvider = new IncrementalParameterIndexProvider("index");
+                builder.addStatement("int $L = 1", INDEX_VARIABLE_NAME);
+                parameterIndexProvider = new IncrementalParameterIndexProvider(INDEX_VARIABLE_NAME);
             }
 
             for (Parameter parameter : consumedParameters) {
@@ -128,8 +137,8 @@ public abstract class RepositoryMethodImplementationGenerator {
         return CodeBlock.builder()
                         .beginControlFlow("try ($T $L = $L.executeQuery())",
                                           ResultSet.class,
-                                          DEFAULT_RESULT_SET_VARIABLE_NAME,
-                                          DEFAULT_STATEMENT_VARIABLE_NAME)
+                                          RESULT_SET_VARIABLE_NAME,
+                                          STATEMENT_VARIABLE_NAME)
                         .add(renderResultSetParameters(method, query))
                         .endControlFlow()
                         .build();
