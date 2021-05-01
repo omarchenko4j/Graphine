@@ -45,6 +45,7 @@ public final class RepositoryFindMethodImplementationGenerator extends Repositor
                                 case "java.util.Collection":
                                 case "java.util.List":
                                 case "java.util.Set":
+                                case "java.util.stream.Stream":
                                     return CodeBlock.builder()
                                                     .addStatement("$L.add($L)", producedParameter.getName(), snippet)
                                                     .build();
@@ -95,6 +96,9 @@ public final class RepositoryFindMethodImplementationGenerator extends Repositor
                     case "java.util.List":
                     case "java.util.Set":
                         builder.addStatement("return $L", producedParameter.getName());
+                        break;
+                    case "java.util.stream.Stream":
+                        builder.addStatement("return $L.stream()", producedParameter.getName());
                         break;
                     default:
                         builder.addStatement("return null");

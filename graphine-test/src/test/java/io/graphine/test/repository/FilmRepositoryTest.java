@@ -11,6 +11,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.*;
+import java.util.stream.Stream;
 
 import static io.graphine.test.util.DataSourceProvider.DATA_SOURCE;
 import static io.graphine.test.util.DataSourceProvider.PROXY_DATA_SOURCE;
@@ -525,6 +526,29 @@ public class FilmRepositoryTest {
         Assertions.assertNotNull(foundFilms);
         Assertions.assertEquals(films.size(), foundFilms.size());
         Assertions.assertTrue(films.containsAll(foundFilms));
+    }
+
+    @Test
+    public void testFindAllByWasReleasedIsTrueAndGrossGreaterThanEqualMethodReturnResults() {
+        List<Film> films = Arrays.asList(
+                MarvelFilms.ironMan2(),
+                MarvelFilms.ironMan3()
+        );
+        insertFilms(films);
+
+        Stream<Film> foundFilms = filmRepository.findAllByWasReleasedIsTrueAndGrossGreaterThanEqual(200_000_000);
+        Assertions.assertNotNull(foundFilms);
+
+        List<Film> foundFilmList = foundFilms.collect(toList());
+        Assertions.assertEquals(films.size(), foundFilmList.size());
+        Assertions.assertTrue(films.containsAll(foundFilmList));
+    }
+
+    @Test
+    public void testFindAllByWasReleasedIsTrueAndGrossGreaterThanEqualMethodEmptyResult() {
+        Stream<Film> films = filmRepository.findAllByWasReleasedIsTrueAndGrossGreaterThanEqual(1_000_000_000);
+        Assertions.assertNotNull(films);
+        Assertions.assertEquals(0, films.count());
     }
 
     @Test

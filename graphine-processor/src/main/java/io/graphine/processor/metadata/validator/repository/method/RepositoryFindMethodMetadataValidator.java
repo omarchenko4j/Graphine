@@ -19,6 +19,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static io.graphine.processor.support.EnvironmentContext.messager;
 import static io.graphine.processor.support.EnvironmentContext.typeUtils;
@@ -77,7 +78,8 @@ public final class RepositoryFindMethodMetadataValidator extends MethodMetadataV
                         if (qualifiedName.equals(Iterable.class.getName()) ||
                             qualifiedName.equals(Collection.class.getName()) ||
                             qualifiedName.equals(List.class.getName()) ||
-                            qualifiedName.equals(Set.class.getName())) {
+                            qualifiedName.equals(Set.class.getName()) ||
+                            qualifiedName.equals(Stream.class.getName())) {
                             returnType = declaredType.getTypeArguments().get(0);
                             if (!typeUtils.isSameType(returnType, entityType)) {
                                 valid = false;

@@ -7,6 +7,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 
 /**
  * @author Oleg Marchenko
@@ -42,6 +43,7 @@ public interface FilmRepository {
     Set<Film> findAllByYearNotIn(int... years);
     Set<Film> findAllByBudgetGreaterThanEqualAndGrossGreaterThan(long budget, long gross);
     Set<Film> findAllByBudgetBetweenOrGrossBetween(long budget1, long budget2, long gross1, long gross2);
+    Stream<Film> findAllByWasReleasedIsTrueAndGrossGreaterThanEqual(long gross);
     List<Film> findAllByYearBetweenOrderByYear(int year1, int year2);
     List<Film> findAllByYearLessThanEqualOrderByYearAsc(int year);
     List<Film> findAllByYearGreaterThanAndTaglineIsNotEmptyOrderByYearDesc(int year);

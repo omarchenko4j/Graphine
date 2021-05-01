@@ -70,6 +70,7 @@ public final class ResultSetParameterHighLevelRenderer extends ResultSetParamete
                 TypeElement typeElement = (TypeElement) declaredType.asElement();
                 switch (typeElement.getQualifiedName().toString()) {
                     case "java.lang.Iterable":
+                    case "java.util.stream.Stream":
                         TypeMirror genericType = declaredType.getTypeArguments().get(0);
                         builder.addStatement("$T $L = new $T<>()",
                                              ParameterizedTypeName.get(ClassName.get(Collection.class),
