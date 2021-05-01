@@ -1,9 +1,7 @@
-package io.graphine.test;
+package io.graphine.test.repository;
 
 import io.graphine.core.NonUniqueResultException;
 import io.graphine.test.model.Film;
-import io.graphine.test.repository.FilmRepository;
-import io.graphine.test.repository.GraphineFilmRepository;
 import lombok.Cleanup;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.*;
@@ -16,6 +14,8 @@ import java.util.*;
 
 import static io.graphine.test.util.DataSourceProvider.DATA_SOURCE;
 import static io.graphine.test.util.DataSourceProvider.PROXY_DATA_SOURCE;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.StreamSupport.stream;
 
 /**
  * @author Oleg Marchenko
@@ -73,7 +73,7 @@ public class FilmRepositoryTest {
     }
 
     @Test
-    public void testFindByImdbIdMethodReturnNonEmptyOptional() {
+    public void testFindByImdbIdMethodReturnNonEmptyResult() {
         Film film = MarvelFilms.ironMan();
         insertFilm(film);
 
@@ -84,7 +84,7 @@ public class FilmRepositoryTest {
     }
 
     @Test
-    public void testFindByImdbIdMethodReturnEmptyOptional() {
+    public void testFindByImdbIdMethodReturnEmptyResult() {
         Optional<Film> film = filmRepository.findByImdbId("tt9999999");
         Assertions.assertNotNull(film);
         Assertions.assertFalse(film.isPresent());
@@ -100,11 +100,12 @@ public class FilmRepositoryTest {
 
         insertFilms(Arrays.asList(film1, film2));
 
-        Assertions.assertThrows(NonUniqueResultException.class, () -> filmRepository.findByImdbId("tt0000000"));
+        Assertions.assertThrows(NonUniqueResultException.class,
+                                () -> filmRepository.findByImdbId("tt0000000"));
     }
 
     @Test
-    public void testFindFirstByBudgetGreaterThanEqualOrderByBudgetAscReturnFirstResult() {
+    public void testFindFirstByBudgetGreaterThanEqualOrderByBudgetAscMethodReturnFirstResult() {
         Film film = MarvelFilms.ironMan();
         Collection<Film> films = Arrays.asList(
                 MarvelFilms.incredibleHulk(),
@@ -119,7 +120,13 @@ public class FilmRepositoryTest {
     }
 
     @Test
-    public void testFindFirstOrderByYearDescReturnFirstResult() {
+    public void testFindFirstByBudgetGreaterThanEqualOrderByBudgetAscMethodReturnNull() {
+        Film film = filmRepository.findFirstByBudgetGreaterThanEqualOrderByBudgetAsc(1_000_000_000);
+        Assertions.assertNull(film);
+    }
+
+    @Test
+    public void testFindFirstOrderByYearDescMethodReturnFirstResult() {
         Film film = MarvelFilms.ironMan2();
         Collection<Film> films = Arrays.asList(
                 MarvelFilms.ironMan(),
@@ -134,6 +141,13 @@ public class FilmRepositoryTest {
     }
 
     @Test
+    public void testFindFirstOrderByYearDescMethodReturnEmptyResult() {
+        Optional<Film> film = filmRepository.findFirstOrderByYearDesc();
+        Assertions.assertNotNull(film);
+        Assertions.assertFalse(film.isPresent());
+    }
+
+    @Test
     public void testFindAllMethodReturnAllResults() {
         Collection<Film> films = Arrays.asList(
                 MarvelFilms.ironMan(),
@@ -142,17 +156,17 @@ public class FilmRepositoryTest {
         );
         insertFilms(films);
 
-        Collection<Film> foundFilms = filmRepository.findAll();
+        Iterable<Film> foundFilms = filmRepository.findAll();
         Assertions.assertNotNull(foundFilms);
-        Assertions.assertEquals(films.size(), foundFilms.size());
-        Assertions.assertTrue(films.containsAll(foundFilms));
+        Assertions.assertEquals(films.size(), stream(foundFilms.spliterator(), false).count());
+        Assertions.assertTrue(films.containsAll(stream(foundFilms.spliterator(), false).collect(toList())));
     }
 
     @Test
     public void testFindAllMethodReturnEmptyResult() {
-        Collection<Film> films = filmRepository.findAll();
+        Iterable<Film> films = filmRepository.findAll();
         Assertions.assertNotNull(films);
-        Assertions.assertEquals(0, films.size());
+        Assertions.assertEquals(0, stream(films.spliterator(), false).count());
     }
 
     @Test
@@ -588,13 +602,34 @@ public class FilmRepositoryTest {
         );
         insertFilms(films);
 
-        int numberOfFilms = filmRepository.countAllByYear(2008);
+        long numberOfFilms = filmRepository.countAllByYear(2008);
         Assertions.assertEquals(films.size(), numberOfFilms);
     }
 
     @Test
     public void testCountAllByYearMethodReturnZero() {
-        int numberOfFilms = filmRepository.countAllByYear(2000);
+        long numberOfFilms = filmRepository.countAllByYear(2000);
+        Assertions.assertEquals(0, numberOfFilms);
+    }
+
+    @Test
+    public void testCountAllByGrossGreaterThanEqualMethodReturnNonZero() {
+        List<Film> films = Arrays.asList(
+                MarvelFilms.ironMan(),
+                MarvelFilms.ironMan2(),
+                MarvelFilms.ironMan3()
+        );
+        insertFilms(films);
+
+        Long numberOfFilms = filmRepository.countAllByGrossGreaterThanEqual(500_000_000);
+        Assertions.assertNotNull(numberOfFilms);
+        Assertions.assertEquals(films.size(), numberOfFilms);
+    }
+
+    @Test
+    public void testCountAllByGrossGreaterThanEqualMethodReturnZero() {
+        Long numberOfFilms = filmRepository.countAllByGrossGreaterThanEqual(1_000_000_000);
+        Assertions.assertNotNull(numberOfFilms);
         Assertions.assertEquals(0, numberOfFilms);
     }
 
@@ -615,7 +650,7 @@ public class FilmRepositoryTest {
     }
 
     @Test
-    public void testSaveAllMethod() {
+    public void testSaveAllMethodConsumesVarArgsParameter() {
         Film film1 = Film.builder()
                          .imdbId("tt9419884")
                          .title("Doctor Strange in the Multiverse of Madness")
@@ -629,6 +664,106 @@ public class FilmRepositoryTest {
                          .wasReleased(false)
                          .build();
         filmRepository.saveAll(film1, film2);
+
+        Assertions.assertNotNull(film1.getId());
+        Assertions.assertNotNull(film2.getId());
+
+        Film foundFilm1 = selectFilmById(film1.getId());
+        Film foundFilm2 = selectFilmById(film2.getId());
+        Assertions.assertEquals(film1, foundFilm1);
+        Assertions.assertEquals(film2, foundFilm2);
+    }
+
+    @Test
+    public void testSaveAllMethodConsumesIterableParameter() {
+        Film film1 = Film.builder()
+                         .imdbId("tt9419884")
+                         .title("Doctor Strange in the Multiverse of Madness")
+                         .year(2022)
+                         .wasReleased(false)
+                         .build();
+        Film film2 = Film.builder()
+                         .imdbId("tt10648342")
+                         .title("Thor: Love and Thunder")
+                         .year(2022)
+                         .wasReleased(false)
+                         .build();
+        filmRepository.saveAll((Iterable<Film>) Arrays.asList(film1, film2));
+
+        Assertions.assertNotNull(film1.getId());
+        Assertions.assertNotNull(film2.getId());
+
+        Film foundFilm1 = selectFilmById(film1.getId());
+        Film foundFilm2 = selectFilmById(film2.getId());
+        Assertions.assertEquals(film1, foundFilm1);
+        Assertions.assertEquals(film2, foundFilm2);
+    }
+
+    @Test
+    public void testSaveAllMethodConsumesCollectionParameter() {
+        Film film1 = Film.builder()
+                         .imdbId("tt9419884")
+                         .title("Doctor Strange in the Multiverse of Madness")
+                         .year(2022)
+                         .wasReleased(false)
+                         .build();
+        Film film2 = Film.builder()
+                         .imdbId("tt10648342")
+                         .title("Thor: Love and Thunder")
+                         .year(2022)
+                         .wasReleased(false)
+                         .build();
+        filmRepository.saveAll((Collection<Film>) Arrays.asList(film1, film2));
+
+        Assertions.assertNotNull(film1.getId());
+        Assertions.assertNotNull(film2.getId());
+
+        Film foundFilm1 = selectFilmById(film1.getId());
+        Film foundFilm2 = selectFilmById(film2.getId());
+        Assertions.assertEquals(film1, foundFilm1);
+        Assertions.assertEquals(film2, foundFilm2);
+    }
+
+    @Test
+    public void testSaveAllMethodConsumesListParameter() {
+        Film film1 = Film.builder()
+                         .imdbId("tt9419884")
+                         .title("Doctor Strange in the Multiverse of Madness")
+                         .year(2022)
+                         .wasReleased(false)
+                         .build();
+        Film film2 = Film.builder()
+                         .imdbId("tt10648342")
+                         .title("Thor: Love and Thunder")
+                         .year(2022)
+                         .wasReleased(false)
+                         .build();
+        filmRepository.saveAll((List<Film>) Arrays.asList(film1, film2));
+
+        Assertions.assertNotNull(film1.getId());
+        Assertions.assertNotNull(film2.getId());
+
+        Film foundFilm1 = selectFilmById(film1.getId());
+        Film foundFilm2 = selectFilmById(film2.getId());
+        Assertions.assertEquals(film1, foundFilm1);
+        Assertions.assertEquals(film2, foundFilm2);
+    }
+
+    @Test
+    public void testSaveAllMethodConsumesSetParameter() {
+        Film film1 = Film.builder()
+                         .imdbId("tt9419884")
+                         .title("Doctor Strange in the Multiverse of Madness")
+                         .year(2022)
+                         .wasReleased(false)
+                         .build();
+        Film film2 = Film.builder()
+                         .imdbId("tt10648342")
+                         .title("Thor: Love and Thunder")
+                         .year(2022)
+                         .wasReleased(false)
+                         .build();
+        filmRepository.saveAll(new HashSet<>(Arrays.asList(film1, film2)));
 
         Assertions.assertNotNull(film1.getId());
         Assertions.assertNotNull(film2.getId());
@@ -657,7 +792,7 @@ public class FilmRepositoryTest {
     }
 
     @Test
-    public void testUpdateAllMethod() {
+    public void testUpdateAllMethodConsumesVarArgsParameter() {
         Film film1 = MarvelFilms.ironMan();
         Film film2 = MarvelFilms.ironMan2();
         insertFilms(Arrays.asList(film1, film2));
@@ -677,6 +812,118 @@ public class FilmRepositoryTest {
         film2.setTagline("In heroes we trust.");
 
         filmRepository.updateAll(film1, film2);
+
+        Film foundFilm1 = selectFilmById(film1.getId());
+        Film foundFilm2 = selectFilmById(film2.getId());
+        Assertions.assertEquals(film1, foundFilm1);
+        Assertions.assertEquals(film2, foundFilm2);
+    }
+
+    @Test
+    public void testUpdateAllMethodConsumesIterableParameter() {
+        Film film1 = MarvelFilms.ironMan();
+        Film film2 = MarvelFilms.ironMan2();
+        insertFilms(Arrays.asList(film1, film2));
+
+        film1.setImdbId("tt0458339");
+        film1.setTitle("Captain America: The First Avenger");
+        film1.setYear(2011);
+        film1.setBudget(140_000_000L);
+        film1.setGross(370_000_000L);
+        film1.setTagline("When patriots become heroes");
+
+        film2.setImdbId("tt1843866");
+        film2.setTitle("Captain America: The Winter Soldier");
+        film2.setYear(2014);
+        film2.setBudget(170_000_000L);
+        film2.setGross(714_000_000L);
+        film2.setTagline("In heroes we trust.");
+
+        filmRepository.updateAll((Iterable<Film>) Arrays.asList(film1, film2));
+
+        Film foundFilm1 = selectFilmById(film1.getId());
+        Film foundFilm2 = selectFilmById(film2.getId());
+        Assertions.assertEquals(film1, foundFilm1);
+        Assertions.assertEquals(film2, foundFilm2);
+    }
+
+    @Test
+    public void testUpdateAllMethodConsumesCollectionParameter() {
+        Film film1 = MarvelFilms.ironMan();
+        Film film2 = MarvelFilms.ironMan2();
+        insertFilms(Arrays.asList(film1, film2));
+
+        film1.setImdbId("tt0458339");
+        film1.setTitle("Captain America: The First Avenger");
+        film1.setYear(2011);
+        film1.setBudget(140_000_000L);
+        film1.setGross(370_000_000L);
+        film1.setTagline("When patriots become heroes");
+
+        film2.setImdbId("tt1843866");
+        film2.setTitle("Captain America: The Winter Soldier");
+        film2.setYear(2014);
+        film2.setBudget(170_000_000L);
+        film2.setGross(714_000_000L);
+        film2.setTagline("In heroes we trust.");
+
+        filmRepository.updateAll((Collection<Film>) Arrays.asList(film1, film2));
+
+        Film foundFilm1 = selectFilmById(film1.getId());
+        Film foundFilm2 = selectFilmById(film2.getId());
+        Assertions.assertEquals(film1, foundFilm1);
+        Assertions.assertEquals(film2, foundFilm2);
+    }
+
+    @Test
+    public void testUpdateAllMethodConsumesListParameter() {
+        Film film1 = MarvelFilms.ironMan();
+        Film film2 = MarvelFilms.ironMan2();
+        insertFilms(Arrays.asList(film1, film2));
+
+        film1.setImdbId("tt0458339");
+        film1.setTitle("Captain America: The First Avenger");
+        film1.setYear(2011);
+        film1.setBudget(140_000_000L);
+        film1.setGross(370_000_000L);
+        film1.setTagline("When patriots become heroes");
+
+        film2.setImdbId("tt1843866");
+        film2.setTitle("Captain America: The Winter Soldier");
+        film2.setYear(2014);
+        film2.setBudget(170_000_000L);
+        film2.setGross(714_000_000L);
+        film2.setTagline("In heroes we trust.");
+
+        filmRepository.updateAll((List<Film>) Arrays.asList(film1, film2));
+
+        Film foundFilm1 = selectFilmById(film1.getId());
+        Film foundFilm2 = selectFilmById(film2.getId());
+        Assertions.assertEquals(film1, foundFilm1);
+        Assertions.assertEquals(film2, foundFilm2);
+    }
+
+    @Test
+    public void testUpdateAllMethodConsumesSetParameter() {
+        Film film1 = MarvelFilms.ironMan();
+        Film film2 = MarvelFilms.ironMan2();
+        insertFilms(Arrays.asList(film1, film2));
+
+        film1.setImdbId("tt0458339");
+        film1.setTitle("Captain America: The First Avenger");
+        film1.setYear(2011);
+        film1.setBudget(140_000_000L);
+        film1.setGross(370_000_000L);
+        film1.setTagline("When patriots become heroes");
+
+        film2.setImdbId("tt1843866");
+        film2.setTitle("Captain America: The Winter Soldier");
+        film2.setYear(2014);
+        film2.setBudget(170_000_000L);
+        film2.setGross(714_000_000L);
+        film2.setTagline("In heroes we trust.");
+
+        filmRepository.updateAll(new HashSet<>(Arrays.asList(film1, film2)));
 
         Film foundFilm1 = selectFilmById(film1.getId());
         Film foundFilm2 = selectFilmById(film2.getId());
@@ -707,7 +954,60 @@ public class FilmRepositoryTest {
     }
 
     @Test
-    public void testDeleteAllMethod() {
+    public void testDeleteAllMethodConsumesVarArgsParameter() {
+        Film film1 = MarvelFilms.ironMan();
+        Film film2 = MarvelFilms.ironMan2();
+        Film film3 = MarvelFilms.ironMan3();
+        insertFilms(Arrays.asList(film1, film2, film3));
+
+        filmRepository.deleteAll(film1, film2, film3);
+
+        Film foundFilm1 = selectFilmById(film1.getId());
+        Assertions.assertNull(foundFilm1);
+
+        Film foundFilm2 = selectFilmById(film2.getId());
+        Assertions.assertNull(foundFilm2);
+
+        Film foundFilm3 = selectFilmById(film3.getId());
+        Assertions.assertNull(foundFilm3);
+    }
+
+    @Test
+    public void testDeleteAllMethodConsumesIterableParameter() {
+        Iterable<Film> films = Arrays.asList(
+                MarvelFilms.ironMan(),
+                MarvelFilms.ironMan2(),
+                MarvelFilms.ironMan3()
+        );
+        insertFilms(films);
+
+        filmRepository.deleteAll(films);
+
+        films.forEach(film -> {
+            Film foundFilm = selectFilmById(film.getId());
+            Assertions.assertNull(foundFilm);
+        });
+    }
+
+    @Test
+    public void testDeleteAllMethodConsumesCollectionParameter() {
+        Collection<Film> films = Arrays.asList(
+                MarvelFilms.ironMan(),
+                MarvelFilms.ironMan2(),
+                MarvelFilms.ironMan3()
+        );
+        insertFilms(films);
+
+        filmRepository.deleteAll(films);
+
+        films.forEach(film -> {
+            Film foundFilm = selectFilmById(film.getId());
+            Assertions.assertNull(foundFilm);
+        });
+    }
+
+    @Test
+    public void testDeleteAllMethodConsumesListParameter() {
         List<Film> films = Arrays.asList(
                 MarvelFilms.ironMan(),
                 MarvelFilms.ironMan2(),
@@ -715,7 +1015,24 @@ public class FilmRepositoryTest {
         );
         insertFilms(films);
 
-        filmRepository.deleteAll(films.toArray(new Film[0]));
+        filmRepository.deleteAll(films);
+
+        films.forEach(film -> {
+            Film foundFilm = selectFilmById(film.getId());
+            Assertions.assertNull(foundFilm);
+        });
+    }
+
+    @Test
+    public void testDeleteAllMethodConsumesSetParameter() {
+        Set<Film> films = new HashSet<>(Arrays.asList(
+                MarvelFilms.ironMan(),
+                MarvelFilms.ironMan2(),
+                MarvelFilms.ironMan3()
+        ));
+        insertFilms(films);
+
+        filmRepository.deleteAll(films);
 
         films.forEach(film -> {
             Film foundFilm = selectFilmById(film.getId());
@@ -759,7 +1076,7 @@ public class FilmRepositoryTest {
     }
 
     @SneakyThrows
-    public static void insertFilms(Collection<Film> films) {
+    public static void insertFilms(Iterable<Film> films) {
         @Cleanup Connection connection = DATA_SOURCE.getConnection();
         @Cleanup PreparedStatement statement =
                 connection.prepareStatement("INSERT INTO public.films(id, imdb_id, title, year, budget, gross, tagline, was_released) " +

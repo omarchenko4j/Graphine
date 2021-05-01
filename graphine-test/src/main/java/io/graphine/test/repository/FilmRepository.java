@@ -17,7 +17,7 @@ public interface FilmRepository {
     Optional<Film> findByImdbId(String imdbId);
     Film findFirstByBudgetGreaterThanEqualOrderByBudgetAsc(long budget);
     Optional<Film> findFirstOrderByYearDesc();
-    Collection<Film> findAll();
+    Iterable<Film> findAll();
     Collection<Film> findAllByYear(int year);
     Collection<Film> findAllByYearIsNot(int year);
     Collection<Film> findAllByBudgetBetween(long budget1, long budget2);
@@ -45,14 +45,27 @@ public interface FilmRepository {
     List<Film> findAllByYearBetweenOrderByYear(int year1, int year2);
     List<Film> findAllByYearLessThanEqualOrderByYearAsc(int year);
     List<Film> findAllByYearGreaterThanAndTaglineIsNotEmptyOrderByYearDesc(int year);
-    long countAll();
-    int countAllByYear(int year);
+    int countAll();
+    long countAllByYear(int year);
+    Long countAllByGrossGreaterThanEqual(long gross);
     void save(Film film);
     void saveAll(Film... films);
+    void saveAll(Iterable<Film> films);
+    void saveAll(Collection<Film> films);
+    void saveAll(List<Film> films);
+    void saveAll(Set<Film> films);
     void update(Film film);
     void updateAll(Film... films);
+    void updateAll(Iterable<Film> films);
+    void updateAll(Collection<Film> films);
+    void updateAll(List<Film> films);
+    void updateAll(Set<Film> films);
     void delete(Film film);
     void deleteById(long id);
     void deleteAll(Film... films);
+    void deleteAll(Iterable<Film> films);
+    void deleteAll(Collection<Film> films);
+    void deleteAll(List<Film> films);
+    void deleteAll(Set<Film> films);
     void deleteAllByYearIn(Set<Integer> years);
 }
