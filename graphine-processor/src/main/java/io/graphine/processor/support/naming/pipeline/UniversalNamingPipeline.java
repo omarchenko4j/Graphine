@@ -10,9 +10,6 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static io.graphine.processor.util.StringUtils.EMPTY;
-import static io.graphine.processor.util.StringUtils.isEmpty;
-
 /**
  * @author Oleg Marchenko
  */
@@ -26,7 +23,7 @@ public abstract class UniversalNamingPipeline {
     }
 
     public String transform(String name) {
-        if (pipes.isEmpty() || isEmpty(name)) return EMPTY;
+        if (pipes.isEmpty()) return name;
 
         String transformedName = name;
         for (TransformPipe pipe : pipes) {

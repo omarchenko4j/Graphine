@@ -13,7 +13,8 @@ import static io.graphine.processor.util.StringUtils.EMPTY;
  */
 public enum SupportedOptions {
     DEFAULT_SCHEME("graphine.default_schema"),
-    TABLE_NAMING_PIPELINE("graphine.table_naming_pipeline");
+    TABLE_NAMING_PIPELINE("graphine.table_naming_pipeline"),
+    COLUMN_NAMING_PIPELINE("graphine.column_naming_pipeline");
 
     private final String name;
 
