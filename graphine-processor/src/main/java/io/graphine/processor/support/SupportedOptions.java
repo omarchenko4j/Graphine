@@ -2,6 +2,7 @@ package io.graphine.processor.support;
 
 import java.util.Arrays;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static io.graphine.processor.support.EnvironmentContext.options;
@@ -11,7 +12,8 @@ import static io.graphine.processor.util.StringUtils.EMPTY;
  * @author Oleg Marchenko
  */
 public enum SupportedOptions {
-    DEFAULT_SCHEME("graphine.default_schema");
+    DEFAULT_SCHEME("graphine.default_schema"),
+    TABLE_NAMING_PIPELINE("graphine.table_naming_pipeline");
 
     private final String name;
 
@@ -21,6 +23,11 @@ public enum SupportedOptions {
 
     public String value() {
         return options.getOrDefault(name, EMPTY);
+    }
+
+    public <R> R value(Function<String, R> mapper) {
+        String value = value();
+        return mapper.apply(value);
     }
 
     public static Set<String> names() {

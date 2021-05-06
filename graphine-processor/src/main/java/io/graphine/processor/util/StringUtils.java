@@ -26,9 +26,17 @@ public final class StringUtils {
         return Character.toLowerCase(str.charAt(0)) + str.substring(1);
     }
 
-    public static String join(Collection<?> collection, String delimiter, String prefix, String suffix) {
+    public static String join(Object[] elements, String delimiter) {
+        StringJoiner joiner = new StringJoiner(delimiter);
+        for (Object element : elements) {
+            joiner.add(element.toString());
+        }
+        return joiner.toString();
+    }
+
+    public static String join(Collection<?> elements, String delimiter, String prefix, String suffix) {
         StringJoiner joiner = new StringJoiner(delimiter, prefix, suffix);
-        for (Object element : collection) {
+        for (Object element : elements) {
             joiner.add(element.toString());
         }
         return joiner.toString();

@@ -22,6 +22,7 @@ import io.graphine.processor.query.registry.RepositoryNativeQueryRegistry;
 import io.graphine.processor.query.registry.RepositoryNativeQueryRegistryStorage;
 import io.graphine.processor.support.EnvironmentContext;
 import io.graphine.processor.support.SupportedOptions;
+import io.graphine.processor.support.naming.pipeline.TableNamingPipeline;
 
 import javax.annotation.processing.*;
 import javax.lang.model.element.TypeElement;
@@ -92,10 +93,12 @@ public class GraphineRepositoryProcessor extends AbstractProcessor {
     }
 
     private EntityMetadataRegistry collectEntityMetadata(RoundEnvironment roundEnv) {
+        TableNamingPipeline tableNamingPipeline =
+                new TableNamingPipeline();
         AttributeMetadataFactory attributeMetadataFactory =
                 new AttributeMetadataFactory();
         EntityMetadataFactory entityMetadataFactory =
-                new EntityMetadataFactory(attributeMetadataFactory);
+                new EntityMetadataFactory(tableNamingPipeline, attributeMetadataFactory);
         EntityMetadataCollector entityMetadataCollector =
                 new EntityMetadataCollector(entityMetadataFactory);
         return entityMetadataCollector.collect(roundEnv);

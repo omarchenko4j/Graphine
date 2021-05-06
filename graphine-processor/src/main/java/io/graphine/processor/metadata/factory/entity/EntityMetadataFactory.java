@@ -4,6 +4,7 @@ import io.graphine.core.annotation.Entity;
 import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.IdentifierMetadata;
+import io.graphine.processor.support.naming.pipeline.TableNamingPipeline;
 
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
@@ -11,7 +12,6 @@ import java.util.List;
 
 import static io.graphine.processor.support.SupportedOptions.DEFAULT_SCHEME;
 import static io.graphine.processor.util.StringUtils.isEmpty;
-import static io.graphine.processor.util.StringUtils.uncapitalize;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 
@@ -19,9 +19,12 @@ import static javax.lang.model.util.ElementFilter.fieldsIn;
  * @author Oleg Marchenko
  */
 public final class EntityMetadataFactory {
+    private final TableNamingPipeline tableNamingPipeline;
     private final AttributeMetadataFactory attributeMetadataFactory;
 
-    public EntityMetadataFactory(AttributeMetadataFactory attributeMetadataFactory) {
+    public EntityMetadataFactory(TableNamingPipeline tableNamingPipeline,
+                                 AttributeMetadataFactory attributeMetadataFactory) {
+        this.tableNamingPipeline = tableNamingPipeline;
         this.attributeMetadataFactory = attributeMetadataFactory;
     }
 
@@ -35,8 +38,8 @@ public final class EntityMetadataFactory {
 
         String table = entity.table();
         if (isEmpty(table)) {
-            // TODO: use table naming strategy
-            table = uncapitalize(element.getSimpleName().toString());
+            String entityName = element.getSimpleName().toString();
+            table = tableNamingPipeline.transform(entityName);
         }
 
         List<VariableElement> fields = fieldsIn(element.getEnclosedElements());
