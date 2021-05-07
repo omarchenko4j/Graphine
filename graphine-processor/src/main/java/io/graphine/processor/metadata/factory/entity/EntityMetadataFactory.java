@@ -4,15 +4,17 @@ import io.graphine.core.annotation.Entity;
 import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.IdentifierMetadata;
+import io.graphine.processor.support.AttributeDetectionStrategy;
 import io.graphine.processor.support.naming.pipeline.TableNamingPipeline;
 
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static io.graphine.processor.support.SupportedOptions.DEFAULT_SCHEME;
 import static io.graphine.processor.util.StringUtils.isEmpty;
-import static java.util.stream.Collectors.toList;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 
 /**
@@ -28,8 +30,8 @@ public final class EntityMetadataFactory {
         this.attributeMetadataFactory = attributeMetadataFactory;
     }
 
-    public EntityMetadata createEntity(TypeElement element) {
-        Entity entity = element.getAnnotation(Entity.class);
+    public EntityMetadata createEntity(TypeElement entityElement) {
+        Entity entity = entityElement.getAnnotation(Entity.class);
 
         String schema = entity.schema();
         if (isEmpty(schema)) {
@@ -38,29 +40,27 @@ public final class EntityMetadataFactory {
 
         String table = entity.table();
         if (isEmpty(table)) {
-            String entityName = element.getSimpleName().toString();
+            String entityName = entityElement.getSimpleName().toString();
             table = tableNamingPipeline.transform(entityName);
         }
 
-        List<VariableElement> fields = fieldsIn(element.getEnclosedElements());
+        Stream<VariableElement> fields = fieldsIn(entityElement.getEnclosedElements()).stream();
+
+        if (AttributeDetectionStrategy.onlyAnnotatedFields()) {
+            fields = fields.filter(AttributeMetadata::isAttribute);
+        }
 
         List<AttributeMetadata> attributes = fields
-                .stream()
-                .filter(AttributeMetadata::isAttribute)
-                .map(field -> {
-                    if (IdentifierMetadata.isIdentifier(field)) {
-                        return attributeMetadataFactory.createIdentifier(field);
-                    }
-                    return attributeMetadataFactory.createAttribute(field);
-                })
-                .collect(toList());
+                .map(attributeMetadataFactory::createAttribute)
+                .collect(Collectors.toList());
 
-        IdentifierMetadata identifier = (IdentifierMetadata) attributes
+        IdentifierMetadata identifier = attributes
                 .stream()
                 .filter(attribute -> attribute instanceof IdentifierMetadata)
+                .map(attribute -> (IdentifierMetadata) attribute)
                 .findFirst()
                 .orElse(null);
 
-        return new EntityMetadata(element, schema, table, identifier, attributes);
+        return new EntityMetadata(entityElement, schema, table, identifier, attributes);
     }
 }
