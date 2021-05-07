@@ -3,9 +3,11 @@ package io.graphine.processor.support.naming.pipeline;
 import io.graphine.processor.support.SupportedOptions;
 import io.graphine.processor.support.naming.pipeline.pipe.GeneralTransformPipes;
 import io.graphine.processor.support.naming.pipeline.pipe.TransformPipe;
+import io.graphine.processor.util.EnumUtils;
 import io.graphine.processor.util.StringUtils;
 
 import java.util.Collection;
+import java.util.Objects;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -36,7 +38,8 @@ public abstract class UniversalNamingPipeline {
         return Stream.of(PIPELINE_PATTERN.split(value))
                      .map(String::trim)
                      .filter(StringUtils::isNotEmpty)
-                     .map(GeneralTransformPipes::valueOf)
+                     .map(pipeName -> EnumUtils.valueOf(GeneralTransformPipes.class, pipeName))
+                     .filter(Objects::nonNull)
                      .sorted()
                      .collect(Collectors.toList());
     }

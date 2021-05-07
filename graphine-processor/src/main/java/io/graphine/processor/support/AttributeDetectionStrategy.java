@@ -1,5 +1,7 @@
 package io.graphine.processor.support;
 
+import io.graphine.processor.util.EnumUtils;
+
 import static io.graphine.processor.support.SupportedOptions.ATTRIBUTE_DETECTION_STRATEGY;
 import static java.util.Objects.isNull;
 
@@ -10,18 +12,9 @@ public enum AttributeDetectionStrategy {
     ALL_FIELDS,
     ANNOTATED_FIELDS;
 
-    public static AttributeDetectionStrategy safetyValueOf(String name) {
-        try {
-            return AttributeDetectionStrategy.valueOf(name);
-        }
-        catch (Exception e) {
-            return null;
-        }
-    }
-
     public static boolean onlyAnnotatedFields() {
         AttributeDetectionStrategy attributeDetectionStrategy =
-                ATTRIBUTE_DETECTION_STRATEGY.value(AttributeDetectionStrategy::safetyValueOf);
+                ATTRIBUTE_DETECTION_STRATEGY.value(value -> EnumUtils.valueOf(value, ALL_FIELDS));
         return isNull(attributeDetectionStrategy) || ANNOTATED_FIELDS.equals(attributeDetectionStrategy);
     }
 }
