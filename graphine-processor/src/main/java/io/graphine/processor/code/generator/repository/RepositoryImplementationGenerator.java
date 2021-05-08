@@ -54,7 +54,7 @@ public final class RepositoryImplementationGenerator {
                 // It positively affects on incremental build!
                 .addOriginatingElement(entity.getNativeElement())
                 .addAnnotation(AnnotationSpec.builder(Generated.class)
-                                             .addMember("value", "$S", "io.graphine.processor.GraphineRepositoryProcessor")
+                                             .addMember("value", "$S", "io.graphine.processor.GraphineProcessor")
                                              .build())
                 .addModifiers(PUBLIC)
                 .addSuperinterface(repository.getNativeType())

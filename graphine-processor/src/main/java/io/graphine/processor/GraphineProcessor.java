@@ -42,7 +42,7 @@ import static javax.tools.Diagnostic.Kind;
  */
 @SupportedAnnotationTypes("io.graphine.core.annotation.Repository")
 @SupportedSourceVersion(RELEASE_11)
-public class GraphineRepositoryProcessor extends AbstractProcessor {
+public class GraphineProcessor extends AbstractProcessor {
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
