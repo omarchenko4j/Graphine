@@ -3,6 +3,7 @@ package io.graphine.processor;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.TypeSpec;
 import io.graphine.core.util.UnnamedParameterRepeater;
+import io.graphine.processor.code.collector.OriginatingElementDependencyCollector;
 import io.graphine.processor.code.generator.repository.RepositoryImplementationGenerator;
 import io.graphine.processor.metadata.collector.EntityMetadataCollector;
 import io.graphine.processor.metadata.collector.RepositoryMetadataCollector;
@@ -135,11 +136,14 @@ public class GraphineProcessor extends AbstractProcessor {
     }
 
     private void generateRepositoryImplementation(List<RepositoryNativeQueryRegistry> nativeQueryRegistries) {
+        OriginatingElementDependencyCollector originatingElementDependencyCollector =
+                new OriginatingElementDependencyCollector();
+
         for (RepositoryNativeQueryRegistry nativeQueryRegistry : nativeQueryRegistries) {
             RepositoryMetadata repository = nativeQueryRegistry.getRepository();
 
             RepositoryImplementationGenerator repositoryImplementationGenerator =
-                    new RepositoryImplementationGenerator(nativeQueryRegistry);
+                    new RepositoryImplementationGenerator(originatingElementDependencyCollector, nativeQueryRegistry);
             TypeSpec typeSpec = repositoryImplementationGenerator.generate(repository);
 
             JavaFile javaFile = JavaFile.builder(repository.getPackageName(), typeSpec)

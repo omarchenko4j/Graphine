@@ -4,8 +4,8 @@ import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
+import io.graphine.processor.code.collector.OriginatingElementDependencyCollector;
 import io.graphine.processor.code.generator.repository.method.*;
-import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.model.repository.RepositoryMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.model.repository.method.name.QueryableMethodName;
@@ -14,7 +14,9 @@ import io.graphine.processor.query.model.NativeQuery;
 import io.graphine.processor.query.registry.RepositoryNativeQueryRegistry;
 
 import javax.annotation.processing.Generated;
+import javax.lang.model.element.Element;
 import javax.sql.DataSource;
+import java.util.Collection;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -29,10 +31,14 @@ import static javax.lang.model.element.Modifier.*;
 public final class RepositoryImplementationGenerator {
     public static final String CLASS_NAME_PREFIX = "Graphine";
 
+    private final OriginatingElementDependencyCollector originatingElementDependencyCollector;
     private final RepositoryNativeQueryRegistry repositoryNativeQueryRegistry;
     private final Map<MethodType, RepositoryMethodImplementationGenerator> methodGenerators;
 
-    public RepositoryImplementationGenerator(RepositoryNativeQueryRegistry repositoryNativeQueryRegistry) {
+    public RepositoryImplementationGenerator(
+            OriginatingElementDependencyCollector originatingElementDependencyCollector,
+            RepositoryNativeQueryRegistry repositoryNativeQueryRegistry) {
+        this.originatingElementDependencyCollector = originatingElementDependencyCollector;
         this.repositoryNativeQueryRegistry = repositoryNativeQueryRegistry;
 
         this.methodGenerators = new EnumMap<>(MethodType.class);
@@ -44,15 +50,9 @@ public final class RepositoryImplementationGenerator {
     }
 
     public TypeSpec generate(RepositoryMetadata repository) {
-        EntityMetadata entity = repository.getEntity();
-
         TypeSpec.Builder classBuilder = TypeSpec
                 .classBuilder(ClassName.get(repository.getPackageName(), CLASS_NAME_PREFIX + repository.getName()))
-                // TODO: transfer responsibility to the originating element dependency collector
                 .addOriginatingElement(repository.getNativeElement())
-                // Entity is a dependency of the repository implementation.
-                // It positively affects on incremental build!
-                .addOriginatingElement(entity.getNativeElement())
                 .addAnnotation(AnnotationSpec.builder(Generated.class)
                                              .addMember("value", "$S", "io.graphine.processor.GraphineProcessor")
                                              .build())
@@ -64,6 +64,9 @@ public final class RepositoryImplementationGenerator {
                                      .addParameter(DataSource.class, "dataSource")
                                      .addStatement("this.dataSource = dataSource")
                                      .build());
+
+        Collection<Element> originatingElements = originatingElementDependencyCollector.collect(repository);
+        originatingElements.forEach(classBuilder::addOriginatingElement);
 
         List<MethodMetadata> methods = repository.getMethods();
         for (MethodMetadata method : methods) {
