@@ -1,4 +1,4 @@
-package io.graphine.processor.support;
+package io.graphine.processor;
 
 import java.util.Arrays;
 import java.util.Set;

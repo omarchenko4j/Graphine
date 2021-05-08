@@ -21,7 +21,6 @@ import io.graphine.processor.query.generator.RepositoryNativeQueryGenerator;
 import io.graphine.processor.query.registry.RepositoryNativeQueryRegistry;
 import io.graphine.processor.query.registry.RepositoryNativeQueryRegistryStorage;
 import io.graphine.processor.support.EnvironmentContext;
-import io.graphine.processor.support.GraphineOptions;
 import io.graphine.processor.support.naming.pipeline.ColumnNamingPipeline;
 import io.graphine.processor.support.naming.pipeline.TableNamingPipeline;
 

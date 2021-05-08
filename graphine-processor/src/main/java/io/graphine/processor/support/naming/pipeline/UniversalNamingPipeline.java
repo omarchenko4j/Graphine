@@ -1,6 +1,6 @@
 package io.graphine.processor.support.naming.pipeline;
 
-import io.graphine.processor.support.GraphineOptions;
+import io.graphine.processor.GraphineOptions;
 import io.graphine.processor.support.naming.pipeline.pipe.GeneralTransformPipes;
 import io.graphine.processor.support.naming.pipeline.pipe.TransformPipe;
 import io.graphine.processor.util.EnumUtils;
