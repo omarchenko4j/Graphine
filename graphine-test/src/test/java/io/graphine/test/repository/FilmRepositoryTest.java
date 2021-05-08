@@ -28,7 +28,7 @@ public class FilmRepositoryTest {
     public static void createTable() {
         @Cleanup Connection connection = DATA_SOURCE.getConnection();
         @Cleanup Statement statement = connection.createStatement();
-        statement.executeQuery("CREATE TABLE public.films(" +
+        statement.executeQuery("CREATE TABLE public.film(" +
                                "id BIGSERIAL PRIMARY KEY, " +
                                "imdb_id TEXT NOT NULL, " +
                                "title TEXT NOT NULL, " +
@@ -44,7 +44,7 @@ public class FilmRepositoryTest {
     public void cleanTable() {
         @Cleanup Connection connection = DATA_SOURCE.getConnection();
         @Cleanup Statement statement = connection.createStatement();
-        statement.executeQuery("TRUNCATE TABLE public.films");
+        statement.executeQuery("TRUNCATE TABLE public.film");
     }
 
     @AfterAll
@@ -52,7 +52,7 @@ public class FilmRepositoryTest {
     public static void dropTable() {
         @Cleanup Connection connection = DATA_SOURCE.getConnection();
         @Cleanup Statement statement = connection.createStatement();
-        statement.executeQuery("DROP TABLE public.films");
+        statement.executeQuery("DROP TABLE public.film");
     }
 
     private final FilmRepository filmRepository = new GraphineFilmRepository(PROXY_DATA_SOURCE);
@@ -1085,7 +1085,7 @@ public class FilmRepositoryTest {
     public static void insertFilm(Film film) {
         @Cleanup Connection connection = DATA_SOURCE.getConnection();
         @Cleanup PreparedStatement statement =
-                connection.prepareStatement("INSERT INTO public.films(id, imdb_id, title, year, budget, gross, tagline, was_released) " +
+                connection.prepareStatement("INSERT INTO public.film(id, imdb_id, title, year, budget, gross, tagline, was_released) " +
                                             "VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
         int index = 1;
         statement.setLong(index++, film.getId());
@@ -1103,7 +1103,7 @@ public class FilmRepositoryTest {
     public static void insertFilms(Iterable<Film> films) {
         @Cleanup Connection connection = DATA_SOURCE.getConnection();
         @Cleanup PreparedStatement statement =
-                connection.prepareStatement("INSERT INTO public.films(id, imdb_id, title, year, budget, gross, tagline, was_released) " +
+                connection.prepareStatement("INSERT INTO public.film(id, imdb_id, title, year, budget, gross, tagline, was_released) " +
                                             "VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
         for (Film film : films) {
             int index = 1;
@@ -1125,7 +1125,7 @@ public class FilmRepositoryTest {
         @Cleanup Connection connection = DATA_SOURCE.getConnection();
         @Cleanup PreparedStatement statement =
                 connection.prepareStatement("SELECT id, imdb_id, title, year, budget, gross, tagline, was_released " +
-                                            "FROM public.films " +
+                                            "FROM public.film " +
                                             "WHERE id = ?");
         statement.setLong(1, id);
         @Cleanup ResultSet resultSet = statement.executeQuery();

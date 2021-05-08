@@ -25,7 +25,7 @@ public class GenreRepositoryTest {
     public static void createTable() {
         @Cleanup Connection connection = DATA_SOURCE.getConnection();
         @Cleanup Statement statement = connection.createStatement();
-        statement.executeQuery("CREATE TABLE public.genres(id TEXT PRIMARY KEY, name TEXT NOT NULL)");
+        statement.executeQuery("CREATE TABLE public.genre(id TEXT PRIMARY KEY, name TEXT NOT NULL)");
     }
 
     @AfterEach
@@ -33,7 +33,7 @@ public class GenreRepositoryTest {
     public void cleanTable() {
         @Cleanup Connection connection = DATA_SOURCE.getConnection();
         @Cleanup Statement statement = connection.createStatement();
-        statement.executeQuery("TRUNCATE TABLE public.genres");
+        statement.executeQuery("TRUNCATE TABLE public.genre");
     }
 
     @AfterAll
@@ -41,7 +41,7 @@ public class GenreRepositoryTest {
     public static void dropTable() {
         @Cleanup Connection connection = DATA_SOURCE.getConnection();
         @Cleanup Statement statement = connection.createStatement();
-        statement.executeQuery("DROP TABLE public.genres");
+        statement.executeQuery("DROP TABLE public.genre");
     }
 
     private final GenreRepository genreRepository = new GraphineGenreRepository(PROXY_DATA_SOURCE);
@@ -88,7 +88,7 @@ public class GenreRepositoryTest {
     public static Genre selectGenreById(UUID id) {
         @Cleanup Connection connection = DATA_SOURCE.getConnection();
         @Cleanup PreparedStatement statement =
-                connection.prepareStatement("SELECT id, name FROM public.genres WHERE id = ?");
+                connection.prepareStatement("SELECT id, name FROM public.genre WHERE id = ?");
         statement.setString(1, id.toString());
         @Cleanup ResultSet resultSet = statement.executeQuery();
         if (resultSet.next()) {
