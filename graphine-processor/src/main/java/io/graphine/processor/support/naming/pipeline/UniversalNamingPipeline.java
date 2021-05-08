@@ -16,7 +16,8 @@ import java.util.stream.Stream;
  * @author Oleg Marchenko
  */
 public abstract class UniversalNamingPipeline {
-    private static final Pattern PIPELINE_PATTERN = Pattern.compile("\\s*\\|\\s*");
+    protected static final String PIPE_SEPARATOR = " | ";
+    private static final Pattern PIPELINE_PATTERN = Pattern.compile("\\s*" + PIPE_SEPARATOR + "\\s*");
 
     protected final Collection<TransformPipe> pipes;
 

@@ -5,26 +5,31 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static io.graphine.processor.support.AttributeDetectionStrategy.DEFAULT_ATTRIBUTE_DETECTION_STRATEGY;
 import static io.graphine.processor.support.EnvironmentContext.options;
+import static io.graphine.processor.support.naming.pipeline.ColumnNamingPipeline.DEFAULT_COLUMN_NAMING_PIPELINE;
+import static io.graphine.processor.support.naming.pipeline.TableNamingPipeline.DEFAULT_TABLE_NAMING_PIPELINE;
 import static io.graphine.processor.util.StringUtils.EMPTY;
 
 /**
  * @author Oleg Marchenko
  */
 public enum GraphineOptions {
-    DEFAULT_SCHEME("graphine.default_schema"),
-    TABLE_NAMING_PIPELINE("graphine.table_naming_pipeline"),
-    COLUMN_NAMING_PIPELINE("graphine.column_naming_pipeline"),
-    ATTRIBUTE_DETECTION_STRATEGY("graphine.attribute_detection_strategy");
+    DEFAULT_SCHEME("graphine.default_schema", EMPTY),
+    TABLE_NAMING_PIPELINE("graphine.table_naming_pipeline", DEFAULT_TABLE_NAMING_PIPELINE),
+    COLUMN_NAMING_PIPELINE("graphine.column_naming_pipeline", DEFAULT_COLUMN_NAMING_PIPELINE),
+    ATTRIBUTE_DETECTION_STRATEGY("graphine.attribute_detection_strategy", DEFAULT_ATTRIBUTE_DETECTION_STRATEGY);
 
     private final String name;
+    private final String defaultValue;
 
-    GraphineOptions(String name) {
+    GraphineOptions(String name, String defaultValue) {
         this.name = name;
+        this.defaultValue = defaultValue;
     }
 
     public String value() {
-        return options.getOrDefault(name, EMPTY);
+        return options.getOrDefault(name, defaultValue);
     }
 
     public <R> R value(Function<String, R> mapper) {

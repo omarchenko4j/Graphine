@@ -12,9 +12,11 @@ public enum AttributeDetectionStrategy {
     ALL_FIELDS,
     ANNOTATED_FIELDS;
 
+    public static final String DEFAULT_ATTRIBUTE_DETECTION_STRATEGY = ALL_FIELDS.name();
+
     public static boolean onlyAnnotatedFields() {
         AttributeDetectionStrategy attributeDetectionStrategy =
-                ATTRIBUTE_DETECTION_STRATEGY.value(value -> EnumUtils.valueOf(value, ALL_FIELDS));
+                ATTRIBUTE_DETECTION_STRATEGY.value(value -> EnumUtils.valueOf(AttributeDetectionStrategy.class, value));
         return isNull(attributeDetectionStrategy) || ANNOTATED_FIELDS.equals(attributeDetectionStrategy);
     }
 }

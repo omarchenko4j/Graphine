@@ -1,7 +1,5 @@
 package io.graphine.processor.util;
 
-import static java.util.Objects.isNull;
-
 /**
  * @author Oleg Marchenko
  */
@@ -14,14 +12,6 @@ public final class EnumUtils {
         catch (IllegalArgumentException e) {
             return null;
         }
-    }
-
-    public static <E extends Enum<E>> E valueOf(String name, E defaultValue) {
-        E value = valueOf(defaultValue.getDeclaringClass(), name);
-        if (isNull(value)) {
-            return defaultValue;
-        }
-        return value;
     }
 
     private EnumUtils() {
