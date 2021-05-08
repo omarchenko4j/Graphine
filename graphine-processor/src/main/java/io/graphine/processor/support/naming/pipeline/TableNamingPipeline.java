@@ -1,6 +1,6 @@
 package io.graphine.processor.support.naming.pipeline;
 
-import static io.graphine.processor.support.SupportedOptions.TABLE_NAMING_PIPELINE;
+import static io.graphine.processor.support.GraphineOptions.TABLE_NAMING_PIPELINE;
 
 /**
  * @author Oleg Marchenko

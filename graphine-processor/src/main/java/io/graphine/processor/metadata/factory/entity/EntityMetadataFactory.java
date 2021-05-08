@@ -13,7 +13,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static io.graphine.processor.support.SupportedOptions.DEFAULT_SCHEME;
+import static io.graphine.processor.support.GraphineOptions.DEFAULT_SCHEME;
 import static io.graphine.processor.util.StringUtils.isEmpty;
 import static javax.lang.model.util.ElementFilter.fieldsIn;
 

@@ -11,7 +11,7 @@ import static io.graphine.processor.util.StringUtils.EMPTY;
 /**
  * @author Oleg Marchenko
  */
-public enum SupportedOptions {
+public enum GraphineOptions {
     DEFAULT_SCHEME("graphine.default_schema"),
     TABLE_NAMING_PIPELINE("graphine.table_naming_pipeline"),
     COLUMN_NAMING_PIPELINE("graphine.column_naming_pipeline"),
@@ -19,7 +19,7 @@ public enum SupportedOptions {
 
     private final String name;
 
-    SupportedOptions(String name) {
+    GraphineOptions(String name) {
         this.name = name;
     }
 

@@ -21,7 +21,7 @@ import io.graphine.processor.query.generator.RepositoryNativeQueryGenerator;
 import io.graphine.processor.query.registry.RepositoryNativeQueryRegistry;
 import io.graphine.processor.query.registry.RepositoryNativeQueryRegistryStorage;
 import io.graphine.processor.support.EnvironmentContext;
-import io.graphine.processor.support.SupportedOptions;
+import io.graphine.processor.support.GraphineOptions;
 import io.graphine.processor.support.naming.pipeline.ColumnNamingPipeline;
 import io.graphine.processor.support.naming.pipeline.TableNamingPipeline;
 
@@ -51,7 +51,7 @@ public class GraphineRepositoryProcessor extends AbstractProcessor {
 
     @Override
     public Set<String> getSupportedOptions() {
-        return SupportedOptions.names();
+        return GraphineOptions.names();
     }
 
     @Override

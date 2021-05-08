@@ -1,6 +1,6 @@
 package io.graphine.processor.support.naming.pipeline;
 
-import io.graphine.processor.support.SupportedOptions;
+import io.graphine.processor.support.GraphineOptions;
 import io.graphine.processor.support.naming.pipeline.pipe.GeneralTransformPipes;
 import io.graphine.processor.support.naming.pipeline.pipe.TransformPipe;
 import io.graphine.processor.util.EnumUtils;
@@ -20,7 +20,7 @@ public abstract class UniversalNamingPipeline {
 
     protected final Collection<TransformPipe> pipes;
 
-    protected UniversalNamingPipeline(SupportedOptions option) {
+    protected UniversalNamingPipeline(GraphineOptions option) {
         this.pipes = option.value(this::toPipes);
     }
 

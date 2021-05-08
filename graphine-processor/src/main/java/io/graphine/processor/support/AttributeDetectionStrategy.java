@@ -2,7 +2,7 @@ package io.graphine.processor.support;
 
 import io.graphine.processor.util.EnumUtils;
 
-import static io.graphine.processor.support.SupportedOptions.ATTRIBUTE_DETECTION_STRATEGY;
+import static io.graphine.processor.support.GraphineOptions.ATTRIBUTE_DETECTION_STRATEGY;
 import static java.util.Objects.isNull;
 
 /**
