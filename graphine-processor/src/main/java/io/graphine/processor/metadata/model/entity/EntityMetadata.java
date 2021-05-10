@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Map;
 
 import static io.graphine.processor.util.StringUtils.getIfNotEmpty;
-import static io.graphine.processor.util.StringUtils.nullToEmpty;
 import static java.util.Collections.unmodifiableCollection;
 import static java.util.function.Function.identity;
 import static java.util.stream.Collectors.toMap;
@@ -35,7 +34,7 @@ public class EntityMetadata extends NativeTypeElement {
         super(element);
         this.schema = schema;
         this.table = table;
-        this.qualifiedTable = getIfNotEmpty(nullToEmpty(schema), () -> schema + '.') + table;
+        this.qualifiedTable = getIfNotEmpty(schema, () -> schema + '.') + table;
         this.identifier = identifier;
         this.attributes = attributes
                 .stream()

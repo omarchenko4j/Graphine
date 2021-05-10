@@ -5,6 +5,7 @@ import io.graphine.processor.metadata.model.repository.RepositoryMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.model.repository.method.name.QueryableMethodName;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment;
+import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 import io.graphine.processor.metadata.validator.repository.method.*;
 
 import javax.lang.model.element.TypeElement;
@@ -24,6 +25,12 @@ import static javax.tools.Diagnostic.Kind;
  * @author Oleg Marchenko
  */
 public final class RepositoryMetadataValidator {
+    private final EntityMetadataRegistry entityMetadataRegistry;
+
+    public RepositoryMetadataValidator(EntityMetadataRegistry entityMetadataRegistry) {
+        this.entityMetadataRegistry = entityMetadataRegistry;
+    }
+
     public boolean validate(Collection<RepositoryMetadata> repositories) {
         boolean valid = true;
         for (RepositoryMetadata repository : repositories) {
@@ -47,7 +54,7 @@ public final class RepositoryMetadataValidator {
             messager.printMessage(Kind.ERROR, "Repository interface must be public", repositoryElement);
         }
 
-        EntityMetadata entity = repository.getEntity();
+        EntityMetadata entity = entityMetadataRegistry.getEntity(repository.getEntityQualifiedName());
         if (isNull(entity)) {
             messager.printMessage(Kind.ERROR, "Repository interface should extend GraphineRepository interface", repositoryElement);
             return false;

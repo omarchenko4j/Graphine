@@ -68,18 +68,18 @@ public class GraphineProcessor extends AbstractProcessor {
                               .forEach(entity -> messager.printMessage(Kind.NOTE, "Found entity: " + entity));
 
         // Step 3. Collecting repository metadata
-        RepositoryMetadataRegistry repositoryMetadataRegistry =
-                collectRepositoryMetadata(roundEnv, entityMetadataRegistry);
+        RepositoryMetadataRegistry repositoryMetadataRegistry = collectRepositoryMetadata(roundEnv);
 
         // Step 4. Validating repository metadata
-        if (!validateRepositoryMetadata(repositoryMetadataRegistry.getRepositories())) return true;
+        if (!validateRepositoryMetadata(repositoryMetadataRegistry.getRepositories(), entityMetadataRegistry))
+            return true;
 
         repositoryMetadataRegistry.getRepositories()
                                   .forEach(repository -> messager.printMessage(Kind.NOTE, "Found repository: " + repository));
 
         // Step 5. Generating repository native queries
         RepositoryNativeQueryRegistryStorage nativeQueryRegistryStorage =
-                generateNativeQueries(repositoryMetadataRegistry.getRepositories());
+                generateNativeQueries(repositoryMetadataRegistry.getRepositories(), entityMetadataRegistry);
 
         nativeQueryRegistryStorage.getRegistries()
                                   .stream()
@@ -88,7 +88,7 @@ public class GraphineProcessor extends AbstractProcessor {
                                                                           "Generated query: " + query.getValue()));
 
         // Step 6. Generating repository implementations
-        generateRepositoryImplementation(nativeQueryRegistryStorage.getRegistries());
+        generateRepositoryImplementation(nativeQueryRegistryStorage.getRegistries(), entityMetadataRegistry);
 
         return true;
     }
@@ -112,32 +112,36 @@ public class GraphineProcessor extends AbstractProcessor {
         return entityMetadataValidator.validate(entities);
     }
 
-    private RepositoryMetadataRegistry collectRepositoryMetadata(RoundEnvironment roundEnv,
-                                                                 EntityMetadataRegistry entityMetadataRegistry) {
+    private RepositoryMetadataRegistry collectRepositoryMetadata(RoundEnvironment roundEnv) {
         RepositoryMethodNameParser repositoryMethodNameParser =
                 new RepositoryMethodNameParser();
         MethodMetadataFactory methodMetadataFactory =
                 new MethodMetadataFactory(repositoryMethodNameParser);
         RepositoryMetadataFactory repositoryMetadataFactory =
-                new RepositoryMetadataFactory(entityMetadataRegistry, methodMetadataFactory);
+                new RepositoryMetadataFactory(methodMetadataFactory);
         RepositoryMetadataCollector repositoryMetadataCollector =
                 new RepositoryMetadataCollector(repositoryMetadataFactory);
         return repositoryMetadataCollector.collect(roundEnv);
     }
 
-    private boolean validateRepositoryMetadata(Collection<RepositoryMetadata> repositories) {
-        RepositoryMetadataValidator repositoryMetadataValidator = new RepositoryMetadataValidator();
+    private boolean validateRepositoryMetadata(Collection<RepositoryMetadata> repositories,
+                                               EntityMetadataRegistry entityMetadataRegistry) {
+        RepositoryMetadataValidator repositoryMetadataValidator =
+                new RepositoryMetadataValidator(entityMetadataRegistry);
         return repositoryMetadataValidator.validate(repositories);
     }
 
-    private RepositoryNativeQueryRegistryStorage generateNativeQueries(Collection<RepositoryMetadata> repositories) {
-        RepositoryNativeQueryGenerator repositoryNativeQueryGenerator = new RepositoryNativeQueryGenerator();
+    private RepositoryNativeQueryRegistryStorage generateNativeQueries(Collection<RepositoryMetadata> repositories,
+                                                                       EntityMetadataRegistry entityMetadataRegistry) {
+        RepositoryNativeQueryGenerator repositoryNativeQueryGenerator =
+                new RepositoryNativeQueryGenerator(entityMetadataRegistry);
         return repositoryNativeQueryGenerator.generate(repositories);
     }
 
-    private void generateRepositoryImplementation(List<RepositoryNativeQueryRegistry> nativeQueryRegistries) {
+    private void generateRepositoryImplementation(List<RepositoryNativeQueryRegistry> nativeQueryRegistries,
+                                                  EntityMetadataRegistry entityMetadataRegistry) {
         OriginatingElementDependencyCollector originatingElementDependencyCollector =
-                new OriginatingElementDependencyCollector();
+                new OriginatingElementDependencyCollector(entityMetadataRegistry);
 
         for (RepositoryNativeQueryRegistry nativeQueryRegistry : nativeQueryRegistries) {
             RepositoryMetadata repository = nativeQueryRegistry.getRepository();

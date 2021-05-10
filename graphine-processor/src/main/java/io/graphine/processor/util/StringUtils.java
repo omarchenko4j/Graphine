@@ -50,12 +50,8 @@ public final class StringUtils {
         return joiner.toString();
     }
 
-    public static String nullToEmpty(String str) {
-        return str == null ? EMPTY : str;
-    }
-
-    public static String getIfNotEmpty(String str, Supplier<String> defaultSupplier) {
-        return isNotEmpty(str) ? defaultSupplier.get() : str;
+    public static String getIfNotEmpty(String str, Supplier<String> supplier) {
+        return isNotEmpty(str) ? supplier.get() : EMPTY;
     }
 
     private StringUtils() {

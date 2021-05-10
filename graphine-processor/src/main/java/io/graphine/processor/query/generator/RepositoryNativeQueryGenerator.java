@@ -6,6 +6,7 @@ import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.model.repository.method.name.QueryableMethodName;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.MethodType;
+import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 import io.graphine.processor.query.generator.specific.*;
 import io.graphine.processor.query.model.NativeQuery;
 import io.graphine.processor.query.registry.RepositoryNativeQueryRegistry;
@@ -19,6 +20,12 @@ import static java.util.Objects.isNull;
  * @author Oleg Marchenko
  */
 public final class RepositoryNativeQueryGenerator {
+    private final EntityMetadataRegistry entityMetadataRegistry;
+
+    public RepositoryNativeQueryGenerator(EntityMetadataRegistry entityMetadataRegistry) {
+        this.entityMetadataRegistry = entityMetadataRegistry;
+    }
+
     public RepositoryNativeQueryRegistryStorage generate(Collection<RepositoryMetadata> repositories) {
         List<RepositoryNativeQueryRegistry> registries = new ArrayList<>(repositories.size());
         for (RepositoryMetadata repository : repositories) {
@@ -28,7 +35,7 @@ public final class RepositoryNativeQueryGenerator {
     }
 
     public RepositoryNativeQueryRegistry generate(RepositoryMetadata repository) {
-        EntityMetadata entity = repository.getEntity();
+        EntityMetadata entity = entityMetadataRegistry.getEntity(repository.getEntityQualifiedName());
 
         RepositoryNativeQueryRegistry repositoryNativeQueryRegistry = new RepositoryNativeQueryRegistry(repository);
 
