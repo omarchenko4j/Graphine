@@ -43,6 +43,8 @@ import static javax.tools.Diagnostic.Kind;
 @SupportedAnnotationTypes("io.graphine.core.annotation.Repository")
 @SupportedSourceVersion(RELEASE_11)
 public class GraphineProcessor extends AbstractProcessor {
+    private static final boolean ANNOTATIONS_CLAIMED = true;
+
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
@@ -56,13 +58,17 @@ public class GraphineProcessor extends AbstractProcessor {
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-        if (roundEnv.processingOver() || annotations.isEmpty()) return false;
+        if (roundEnv.processingOver() || annotations.isEmpty()) {
+            return ANNOTATIONS_CLAIMED;
+        }
 
         // Step 1. Collecting entity metadata
         EntityMetadataRegistry entityMetadataRegistry = collectEntityMetadata(roundEnv);
 
         // Step 2. Validating entity metadata
-        if (!validateEntityMetadata(entityMetadataRegistry.getEntities())) return true;
+        if (!validateEntityMetadata(entityMetadataRegistry.getEntities())) {
+            return ANNOTATIONS_CLAIMED;
+        }
 
         entityMetadataRegistry.getEntities()
                               .forEach(entity -> messager.printMessage(Kind.NOTE, "Found entity: " + entity));
@@ -71,8 +77,9 @@ public class GraphineProcessor extends AbstractProcessor {
         RepositoryMetadataRegistry repositoryMetadataRegistry = collectRepositoryMetadata(roundEnv);
 
         // Step 4. Validating repository metadata
-        if (!validateRepositoryMetadata(repositoryMetadataRegistry.getRepositories(), entityMetadataRegistry))
-            return true;
+        if (!validateRepositoryMetadata(repositoryMetadataRegistry.getRepositories(), entityMetadataRegistry)) {
+            return ANNOTATIONS_CLAIMED;
+        }
 
         repositoryMetadataRegistry.getRepositories()
                                   .forEach(repository -> messager.printMessage(Kind.NOTE, "Found repository: " + repository));
@@ -90,7 +97,7 @@ public class GraphineProcessor extends AbstractProcessor {
         // Step 6. Generating repository implementations
         generateRepositoryImplementation(nativeQueryRegistryStorage.getRegistries(), entityMetadataRegistry);
 
-        return true;
+        return ANNOTATIONS_CLAIMED;
     }
 
     private EntityMetadataRegistry collectEntityMetadata(RoundEnvironment roundEnv) {
