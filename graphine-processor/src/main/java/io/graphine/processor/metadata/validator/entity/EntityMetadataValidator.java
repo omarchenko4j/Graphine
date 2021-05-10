@@ -16,9 +16,7 @@ import java.util.Set;
 
 import static io.graphine.processor.support.EnvironmentContext.messager;
 import static io.graphine.processor.support.EnvironmentContext.typeUtils;
-import static java.util.Objects.isNull;
 import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 import static javax.lang.model.element.ElementKind.CLASS;
 import static javax.lang.model.element.Modifier.*;
@@ -59,27 +57,28 @@ public final class EntityMetadataValidator {
         }
 
         List<VariableElement> fields = fieldsIn(entityElement.getEnclosedElements());
-        List<VariableElement> identifiers = fields
+
+        long numberOfIdentifiers = fields
                 .stream()
                 .filter(IdentifierMetadata::isIdentifier)
-                .collect(toList());
-        if (identifiers.isEmpty()) {
+                .count();
+        if (numberOfIdentifiers == 0) {
             valid = false;
             messager.printMessage(Kind.ERROR, "Entity class must have identifier", entityElement);
         }
-        else if (identifiers.size() > 1) {
+        else if (numberOfIdentifiers > 1) {
             valid = false;
             messager.printMessage(Kind.ERROR, "Entity class must have one identifier", entityElement);
         }
 
         List<ExecutableElement> constructors = constructorsIn(entityElement.getEnclosedElements());
-        ExecutableElement basicConstructor = constructors
+
+        long numberOfDefaultConstructors = constructors
                 .stream()
                 .filter(constructor -> constructor.getModifiers().contains(PUBLIC))
                 .filter(constructor -> constructor.getParameters().isEmpty())
-                .findFirst()
-                .orElse(null);
-        if (isNull(basicConstructor)) {
+                .count();
+        if (numberOfDefaultConstructors == 0) {
             valid = false;
             messager.printMessage(Kind.ERROR, "Entity class must have a public constructor without parameters", entityElement);
         }
