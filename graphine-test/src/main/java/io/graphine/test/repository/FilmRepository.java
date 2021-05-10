@@ -1,5 +1,6 @@
 package io.graphine.test.repository;
 
+import io.graphine.core.GraphineRepository;
 import io.graphine.core.annotation.Repository;
 import io.graphine.test.model.Film;
 
@@ -12,8 +13,8 @@ import java.util.stream.Stream;
 /**
  * @author Oleg Marchenko
  */
-@Repository(Film.class)
-public interface FilmRepository {
+@Repository
+public interface FilmRepository extends GraphineRepository<Film> {
     Film findById(long id);
     Optional<Film> findByImdbId(String imdbId);
     Film findFirstByBudgetGreaterThanEqualOrderByBudgetAsc(long budget);

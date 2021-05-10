@@ -7,8 +7,6 @@ import io.graphine.processor.metadata.model.repository.method.name.QueryableMeth
 import io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment;
 import io.graphine.processor.metadata.validator.repository.method.*;
 
-import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.TypeElement;
 import java.util.Collection;
 import java.util.EnumMap;
@@ -17,8 +15,6 @@ import java.util.Map;
 
 import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.MethodType;
 import static io.graphine.processor.support.EnvironmentContext.messager;
-import static io.graphine.processor.util.RepositoryAnnotationUtils.getRepositoryAnnotation;
-import static io.graphine.processor.util.RepositoryAnnotationUtils.getRepositoryAnnotationValue;
 import static java.util.Objects.isNull;
 import static javax.lang.model.element.ElementKind.INTERFACE;
 import static javax.lang.model.element.Modifier.PUBLIC;
@@ -53,10 +49,7 @@ public final class RepositoryMetadataValidator {
 
         EntityMetadata entity = repository.getEntity();
         if (isNull(entity)) {
-            AnnotationMirror annotation = getRepositoryAnnotation(repositoryElement);
-            AnnotationValue annotationValue = getRepositoryAnnotationValue(repositoryElement);
-            messager.printMessage(Kind.ERROR, "Repository annotation contains a non-entity class",
-                                  repositoryElement, annotation, annotationValue);
+            messager.printMessage(Kind.ERROR, "Repository interface should extend GraphineRepository interface", repositoryElement);
             return false;
         }
 

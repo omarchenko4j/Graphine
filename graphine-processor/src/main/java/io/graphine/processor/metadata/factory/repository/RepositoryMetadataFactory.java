@@ -1,14 +1,15 @@
 package io.graphine.processor.metadata.factory.repository;
 
+import io.graphine.core.GraphineRepository;
 import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.model.repository.RepositoryMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.DeclaredType;
 import java.util.List;
 
-import static io.graphine.processor.util.RepositoryAnnotationUtils.getEntityElementFromRepositoryAnnotation;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 
@@ -26,8 +27,7 @@ public final class RepositoryMetadataFactory {
     }
 
     public RepositoryMetadata createRepository(TypeElement repositoryElement) {
-        TypeElement entityElement = getEntityElementFromRepositoryAnnotation(repositoryElement);
-        EntityMetadata entity = entityMetadataRegistry.getEntity(entityElement.getQualifiedName().toString());
+        EntityMetadata entity = getEntity(repositoryElement);
 
         List<MethodMetadata> methods = methodsIn(repositoryElement.getEnclosedElements())
                 .stream()
@@ -35,5 +35,20 @@ public final class RepositoryMetadataFactory {
                 .map(methodMetadataFactory::createMethod)
                 .collect(toList());
         return new RepositoryMetadata(repositoryElement, entity, methods);
+    }
+
+    private EntityMetadata getEntity(TypeElement repositoryElement) {
+        return repositoryElement.getInterfaces()
+                                .stream()
+                                .map(interfaceType -> (DeclaredType) interfaceType)
+                                .filter(interfaceType -> ((TypeElement) interfaceType.asElement())
+                                        .getQualifiedName().contentEquals(GraphineRepository.class.getName()))
+                                .flatMap(interfaceType -> interfaceType.getTypeArguments()
+                                                                       .stream()
+                                                                       .map(typeArgument -> (DeclaredType) typeArgument))
+                                .map(typeArgument -> ((TypeElement) typeArgument.asElement()).getQualifiedName().toString())
+                                .findFirst()
+                                .map(entityMetadataRegistry::getEntity)
+                                .orElse(null);
     }
 }
