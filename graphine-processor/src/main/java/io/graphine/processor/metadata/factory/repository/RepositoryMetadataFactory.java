@@ -7,8 +7,8 @@ import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import static java.util.stream.Collectors.toList;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 
 /**
@@ -26,7 +26,7 @@ public final class RepositoryMetadataFactory {
                 .stream()
                 .filter(methodElement -> !methodElement.isDefault()) // Default methods will not be implemented!
                 .map(methodMetadataFactory::createMethod)
-                .collect(toList());
+                .collect(Collectors.toList());
         return new RepositoryMetadata(repositoryElement, getEntityQualifiedName(repositoryElement), methods);
     }
 
@@ -34,14 +34,17 @@ public final class RepositoryMetadataFactory {
         return repositoryElement.getInterfaces()
                                 .stream()
                                 .map(interfaceType -> (DeclaredType) interfaceType)
-                                .filter(interfaceType ->
-                                                ((TypeElement) interfaceType.asElement()).getQualifiedName()
-                                                                                         .contentEquals(GraphineRepository.class.getName()))
+                                .filter(interfaceType -> {
+                                    TypeElement interfaceElement = (TypeElement) interfaceType.asElement();
+                                    return interfaceElement.getQualifiedName()
+                                                           .contentEquals(GraphineRepository.class.getName());
+                                })
                                 .flatMap(interfaceType -> interfaceType.getTypeArguments()
                                                                        .stream()
-                                                                       .map(typeArgument -> (DeclaredType) typeArgument))
-                                .map(typeArgument -> ((TypeElement) typeArgument.asElement()).getQualifiedName().toString())
+                                                                       .map(genericType -> (DeclaredType) genericType))
                                 .findFirst()
+                                .map(genericType -> (TypeElement) genericType.asElement())
+                                .map(genericElement -> genericElement.getQualifiedName().toString())
                                 .orElse(null);
     }
 }

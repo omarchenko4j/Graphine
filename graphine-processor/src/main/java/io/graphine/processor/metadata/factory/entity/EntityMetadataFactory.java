@@ -54,10 +54,9 @@ public final class EntityMetadataFactory {
                 .map(attributeMetadataFactory::createAttribute)
                 .collect(Collectors.toList());
 
-        IdentifierMetadata identifier = attributes
+        IdentifierMetadata identifier = (IdentifierMetadata) attributes
                 .stream()
                 .filter(attribute -> attribute instanceof IdentifierMetadata)
-                .map(attribute -> (IdentifierMetadata) attribute)
                 .findFirst()
                 .orElse(null);
 

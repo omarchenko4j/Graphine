@@ -4,8 +4,6 @@ import io.graphine.processor.metadata.model.BasicMetadata;
 
 import java.util.Collection;
 import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static java.util.Collections.unmodifiableCollection;
 
@@ -15,9 +13,8 @@ import static java.util.Collections.unmodifiableCollection;
 public abstract class BasicMetadataRegistry<M extends BasicMetadata> {
     protected final Map<String, M> registry;
 
-    protected BasicMetadataRegistry(Collection<M> elements) {
-        this.registry = elements.stream()
-                                .collect(Collectors.toMap(BasicMetadata::getQualifiedName, Function.identity()));
+    protected BasicMetadataRegistry(Map<String, M> registry) {
+        this.registry = registry;
     }
 
     public Collection<M> getAll() {
@@ -26,5 +23,9 @@ public abstract class BasicMetadataRegistry<M extends BasicMetadata> {
 
     public M get(String qualifiedName) {
         return registry.get(qualifiedName);
+    }
+
+    public boolean exists(String qualifiedName) {
+        return registry.containsKey(qualifiedName);
     }
 }

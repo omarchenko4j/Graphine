@@ -8,7 +8,6 @@ import io.graphine.processor.metadata.model.repository.method.name.fragment.Qual
 import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 import io.graphine.processor.metadata.validator.repository.method.*;
 
-import javax.lang.model.element.TypeElement;
 import java.util.Collection;
 import java.util.EnumMap;
 import java.util.List;
@@ -17,8 +16,6 @@ import java.util.Map;
 import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.MethodType;
 import static io.graphine.processor.support.EnvironmentContext.messager;
 import static java.util.Objects.isNull;
-import static javax.lang.model.element.ElementKind.INTERFACE;
-import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.tools.Diagnostic.Kind;
 
 /**
@@ -42,23 +39,16 @@ public final class RepositoryMetadataValidator {
     }
 
     public boolean validate(RepositoryMetadata repository) {
-        boolean valid = true;
-
-        TypeElement repositoryElement = repository.getNativeElement();
-        if (repositoryElement.getKind() != INTERFACE) {
-            valid = false;
-            messager.printMessage(Kind.ERROR, "Repository must be an interface", repositoryElement);
-        }
-        if (!repositoryElement.getModifiers().contains(PUBLIC)) {
-            valid = false;
-            messager.printMessage(Kind.ERROR, "Repository interface must be public", repositoryElement);
-        }
-
-        EntityMetadata entity = entityMetadataRegistry.get(repository.getEntityQualifiedName());
-        if (isNull(entity)) {
-            messager.printMessage(Kind.ERROR, "Repository interface should extend GraphineRepository interface", repositoryElement);
+        String entityQualifiedName = repository.getEntityQualifiedName();
+        if (!entityMetadataRegistry.exists(entityQualifiedName)) {
+            messager.printMessage(Kind.ERROR, "Entity class not found", repository.getNativeElement());
             return false;
         }
+
+        boolean valid = true;
+
+        EntityMetadata entity = entityMetadataRegistry.get(entityQualifiedName);
+        if (isNull(entity)) return false; // Abort validation if the entity has no metadata.
 
         Map<MethodType, MethodMetadataValidator> methodValidators = new EnumMap<>(MethodType.class);
 

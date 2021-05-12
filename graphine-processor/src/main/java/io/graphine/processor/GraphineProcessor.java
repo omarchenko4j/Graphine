@@ -11,12 +11,12 @@ import io.graphine.processor.metadata.factory.entity.AttributeMetadataFactory;
 import io.graphine.processor.metadata.factory.entity.EntityMetadataFactory;
 import io.graphine.processor.metadata.factory.repository.MethodMetadataFactory;
 import io.graphine.processor.metadata.factory.repository.RepositoryMetadataFactory;
-import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.model.repository.RepositoryMetadata;
 import io.graphine.processor.metadata.parser.RepositoryMethodNameParser;
 import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 import io.graphine.processor.metadata.registry.RepositoryMetadataRegistry;
-import io.graphine.processor.metadata.validator.entity.EntityMetadataValidator;
+import io.graphine.processor.metadata.validator.entity.EntityElementValidator;
+import io.graphine.processor.metadata.validator.repository.RepositoryElementValidator;
 import io.graphine.processor.metadata.validator.repository.RepositoryMetadataValidator;
 import io.graphine.processor.query.generator.RepositoryNativeQueryGenerator;
 import io.graphine.processor.query.registry.RepositoryNativeQueryRegistry;
@@ -64,19 +64,13 @@ public class GraphineProcessor extends AbstractProcessor {
 
         // Step 1. Collecting entity metadata
         EntityMetadataRegistry entityMetadataRegistry = collectEntityMetadata(roundEnv);
-
-        // Step 2. Validating entity metadata
-        if (!validateEntityMetadata(entityMetadataRegistry.getAll())) {
-            return ANNOTATIONS_CLAIMED;
-        }
-
         entityMetadataRegistry.getAll()
                               .forEach(entity -> messager.printMessage(Kind.NOTE, "Found entity: " + entity));
 
-        // Step 3. Collecting repository metadata
+        // Step 2. Collecting repository metadata
         RepositoryMetadataRegistry repositoryMetadataRegistry = collectRepositoryMetadata(roundEnv);
 
-        // Step 4. Validating repository metadata
+        // Step 3. Validating repository metadata
         if (!validateRepositoryMetadata(repositoryMetadataRegistry.getAll(), entityMetadataRegistry)) {
             return ANNOTATIONS_CLAIMED;
         }
@@ -84,7 +78,7 @@ public class GraphineProcessor extends AbstractProcessor {
         repositoryMetadataRegistry.getAll()
                                   .forEach(repository -> messager.printMessage(Kind.NOTE, "Found repository: " + repository));
 
-        // Step 5. Generating repository native queries
+        // Step 4. Generating repository native queries
         RepositoryNativeQueryRegistryStorage nativeQueryRegistryStorage =
                 generateNativeQueries(repositoryMetadataRegistry.getAll(), entityMetadataRegistry);
 
@@ -94,7 +88,7 @@ public class GraphineProcessor extends AbstractProcessor {
                                   .forEach(query -> messager.printMessage(Kind.NOTE,
                                                                           "Generated query: " + query.getValue()));
 
-        // Step 6. Generating repository implementations
+        // Step 5. Generating repository implementations
         generateRepositoryImplementation(nativeQueryRegistryStorage.getRegistries(), entityMetadataRegistry);
 
         return ANNOTATIONS_CLAIMED;
@@ -109,14 +103,11 @@ public class GraphineProcessor extends AbstractProcessor {
                 new TableNamingPipeline();
         EntityMetadataFactory entityMetadataFactory =
                 new EntityMetadataFactory(tableNamingPipeline, attributeMetadataFactory);
+        EntityElementValidator entityElementValidator =
+                new EntityElementValidator();
         EntityMetadataCollector entityMetadataCollector =
-                new EntityMetadataCollector(entityMetadataFactory);
+                new EntityMetadataCollector(entityElementValidator, entityMetadataFactory);
         return entityMetadataCollector.collect(roundEnv);
-    }
-
-    private boolean validateEntityMetadata(Collection<EntityMetadata> entities) {
-        EntityMetadataValidator entityMetadataValidator = new EntityMetadataValidator();
-        return entityMetadataValidator.validate(entities);
     }
 
     private RepositoryMetadataRegistry collectRepositoryMetadata(RoundEnvironment roundEnv) {
@@ -126,8 +117,10 @@ public class GraphineProcessor extends AbstractProcessor {
                 new MethodMetadataFactory(repositoryMethodNameParser);
         RepositoryMetadataFactory repositoryMetadataFactory =
                 new RepositoryMetadataFactory(methodMetadataFactory);
+        RepositoryElementValidator repositoryElementValidator =
+                new RepositoryElementValidator();
         RepositoryMetadataCollector repositoryMetadataCollector =
-                new RepositoryMetadataCollector(repositoryMetadataFactory);
+                new RepositoryMetadataCollector(repositoryElementValidator, repositoryMetadataFactory);
         return repositoryMetadataCollector.collect(roundEnv);
     }
 
