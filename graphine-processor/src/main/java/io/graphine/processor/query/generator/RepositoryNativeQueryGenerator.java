@@ -35,7 +35,7 @@ public final class RepositoryNativeQueryGenerator {
     }
 
     public RepositoryNativeQueryRegistry generate(RepositoryMetadata repository) {
-        EntityMetadata entity = entityMetadataRegistry.getEntity(repository.getEntityQualifiedName());
+        EntityMetadata entity = entityMetadataRegistry.get(repository.getEntityQualifiedName());
 
         RepositoryNativeQueryRegistry repositoryNativeQueryRegistry = new RepositoryNativeQueryRegistry(repository);
 

@@ -54,7 +54,7 @@ public final class RepositoryMetadataValidator {
             messager.printMessage(Kind.ERROR, "Repository interface must be public", repositoryElement);
         }
 
-        EntityMetadata entity = entityMetadataRegistry.getEntity(repository.getEntityQualifiedName());
+        EntityMetadata entity = entityMetadataRegistry.get(repository.getEntityQualifiedName());
         if (isNull(entity)) {
             messager.printMessage(Kind.ERROR, "Repository interface should extend GraphineRepository interface", repositoryElement);
             return false;

@@ -1,7 +1,7 @@
 package io.graphine.processor.metadata.model.repository;
 
+import io.graphine.processor.metadata.model.BasicMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
-import io.graphine.processor.support.element.NativeTypeElement;
 
 import javax.lang.model.element.TypeElement;
 import java.util.List;
@@ -12,7 +12,7 @@ import static java.util.Collections.unmodifiableList;
 /**
  * @author Oleg Marchenko
  */
-public class RepositoryMetadata extends NativeTypeElement {
+public class RepositoryMetadata extends BasicMetadata {
     private final String entityQualifiedName;
     private final List<MethodMetadata> methods;
 
