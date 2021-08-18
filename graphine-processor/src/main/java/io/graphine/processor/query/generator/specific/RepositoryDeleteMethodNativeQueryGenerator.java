@@ -15,7 +15,6 @@ import java.util.List;
 
 import static io.graphine.processor.util.StringUtils.uncapitalize;
 import static io.graphine.processor.util.VariableNameUniqueizer.uniqueize;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.isNull;
 
@@ -60,27 +59,6 @@ public final class RepositoryDeleteMethodNativeQueryGenerator extends Repository
         }
 
         return queryBuilder.toString();
-    }
-
-    @Override
-    protected List<Parameter> collectDeferredParameters(MethodMetadata method) {
-        List<ParameterMetadata> methodParameters = method.getParameters();
-
-        QueryableMethodName queryableName = method.getQueryableName();
-
-        ConditionFragment condition = queryableName.getCondition();
-        if (isNull(condition)) {
-            QualifierFragment qualifier = queryableName.getQualifier();
-            if (qualifier.isPluralForm()) {
-                // Validation must ensure that only one method parameter is present.
-                ParameterMetadata parameterElement = methodParameters.get(0);
-                return singletonList(Parameter.basedOn(parameterElement));
-            }
-        }
-        else {
-            return collectDeferredParameters(condition, methodParameters);
-        }
-        return emptyList();
     }
 
     @Override

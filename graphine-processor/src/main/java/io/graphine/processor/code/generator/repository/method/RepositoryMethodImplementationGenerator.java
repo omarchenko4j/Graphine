@@ -9,6 +9,7 @@ import io.graphine.processor.code.renderer.parameter.index_provider.NumericParam
 import io.graphine.processor.code.renderer.parameter.index_provider.ParameterIndexProvider;
 import io.graphine.processor.code.renderer.parameter.prepared_statement.PreparedStatementParameterLowLevelRenderer;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
+import io.graphine.processor.metadata.model.repository.method.parameter.ParameterMetadata;
 import io.graphine.processor.query.model.NativeQuery;
 import io.graphine.processor.query.model.parameter.Parameter;
 
@@ -44,7 +45,7 @@ public abstract class RepositoryMethodImplementationGenerator {
         return CodeBlock.builder()
                         .beginControlFlow("try ($T $L = dataSource.getConnection())",
                                           Connection.class, CONNECTION_VARIABLE_NAME)
-                        .add(renderQuery(query))
+                        .add(renderQuery(method, query))
                         .add(renderStatement(method, query))
                         .endControlFlow()
                         .beginControlFlow("catch ($T e)", SQLException.class)
@@ -53,8 +54,8 @@ public abstract class RepositoryMethodImplementationGenerator {
                         .build();
     }
 
-    protected CodeBlock renderQuery(NativeQuery query) {
-        List<Parameter> deferredParameters = query.getDeferredParameters();
+    protected CodeBlock renderQuery(MethodMetadata method, NativeQuery query) {
+        List<ParameterMetadata> deferredParameters = method.getDeferredParameters();
         if (deferredParameters.isEmpty()) {
             return CodeBlock.builder()
                             .addStatement("$T $L = $S", String.class, QUERY_VARIABLE_NAME, query.getValue())
@@ -62,9 +63,9 @@ public abstract class RepositoryMethodImplementationGenerator {
         }
         else {
             List<CodeBlock> unnamedParameterSnippets = new ArrayList<>(deferredParameters.size());
-            for (Parameter parameter : deferredParameters) {
+            for (ParameterMetadata parameter : deferredParameters) {
                 String parameterName = parameter.getName();
-                TypeMirror parameterType = parameter.getType();
+                TypeMirror parameterType = parameter.getNativeType();
                 switch (parameterType.getKind()) {
                     case ARRAY:
                         unnamedParameterSnippets.add(CodeBlock.of("$T.repeat($L.length)",
@@ -116,7 +117,7 @@ public abstract class RepositoryMethodImplementationGenerator {
         if (!consumedParameters.isEmpty()) {
             ParameterIndexProvider parameterIndexProvider;
 
-            List<Parameter> deferredParameters = query.getDeferredParameters();
+            List<ParameterMetadata> deferredParameters = method.getDeferredParameters();
             if (deferredParameters.isEmpty()) {
                 parameterIndexProvider = new NumericParameterIndexProvider();
             }

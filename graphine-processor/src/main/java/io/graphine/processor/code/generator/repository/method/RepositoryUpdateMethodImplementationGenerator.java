@@ -12,7 +12,7 @@ import io.graphine.processor.query.model.parameter.Parameter;
  */
 public final class RepositoryUpdateMethodImplementationGenerator extends RepositoryMethodImplementationGenerator {
     @Override
-    protected CodeBlock renderQuery(NativeQuery query) {
+    protected CodeBlock renderQuery(MethodMetadata method, NativeQuery query) {
         return CodeBlock.builder()
                         .addStatement("String $L = $S", QUERY_VARIABLE_NAME, query.getValue())
                         .build();

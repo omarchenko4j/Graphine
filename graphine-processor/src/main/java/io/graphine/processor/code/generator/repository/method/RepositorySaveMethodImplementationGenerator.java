@@ -20,7 +20,7 @@ import static io.graphine.processor.code.renderer.parameter.result_set.Generated
  */
 public final class RepositorySaveMethodImplementationGenerator extends RepositoryMethodImplementationGenerator {
     @Override
-    protected CodeBlock renderQuery(NativeQuery query) {
+    protected CodeBlock renderQuery(MethodMetadata method, NativeQuery query) {
         return CodeBlock.builder()
                         .addStatement("String $L = $S", QUERY_VARIABLE_NAME, query.getValue())
                         .build();

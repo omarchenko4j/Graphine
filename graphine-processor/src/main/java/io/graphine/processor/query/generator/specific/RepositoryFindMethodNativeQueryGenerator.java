@@ -81,17 +81,6 @@ public final class RepositoryFindMethodNativeQueryGenerator extends RepositoryMe
     }
 
     @Override
-    protected List<Parameter> collectDeferredParameters(MethodMetadata method) {
-        QueryableMethodName queryableName = method.getQueryableName();
-
-        ConditionFragment condition = queryableName.getCondition();
-        if (nonNull(condition)) {
-            return collectDeferredParameters(condition, method.getParameters());
-        }
-        return emptyList();
-    }
-
-    @Override
     protected List<Parameter> collectProducedParameters(MethodMetadata method) {
         Parameter parentParameter = new Parameter(uniqueize(uncapitalize(entity.getName())), entity.getNativeType());
         List<Parameter> childParameters =

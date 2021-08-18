@@ -35,16 +35,11 @@ public abstract class RepositoryMethodNativeQueryGenerator {
 
     public final NativeQuery generate(MethodMetadata method) {
         return new NativeQuery(generateQuery(method),
-                               collectDeferredParameters(method),
                                collectProducedParameters(method),
                                collectConsumedParameters(method));
     }
 
     protected abstract String generateQuery(MethodMetadata method);
-
-    protected List<Parameter> collectDeferredParameters(MethodMetadata method) {
-        return emptyList();
-    }
 
     protected List<Parameter> collectProducedParameters(MethodMetadata method) {
         return emptyList();
@@ -203,26 +198,5 @@ public abstract class RepositoryMethodNativeQueryGenerator {
         }
 
         return conditionParameters;
-    }
-
-    protected final List<Parameter> collectDeferredParameters(ConditionFragment condition,
-                                                              List<ParameterMetadata> methodParameters) {
-        List<Parameter> deferredParameters = new ArrayList<>(methodParameters.size());
-
-        int parameterIndex = 0;
-        List<OrPredicate> orPredicates = condition.getOrPredicates();
-        for (OrPredicate orPredicate : orPredicates) {
-            List<AndPredicate> andPredicates = orPredicate.getAndPredicates();
-            for (AndPredicate andPredicate : andPredicates) {
-                OperatorType operator = andPredicate.getOperator();
-                if (operator == IN || operator == NOT_IN) {
-                    ParameterMetadata methodParameter = methodParameters.get(parameterIndex);
-                    deferredParameters.add(Parameter.basedOn(methodParameter));
-                }
-                parameterIndex += operator.getParameterCount();
-            }
-        }
-
-        return deferredParameters;
     }
 }
