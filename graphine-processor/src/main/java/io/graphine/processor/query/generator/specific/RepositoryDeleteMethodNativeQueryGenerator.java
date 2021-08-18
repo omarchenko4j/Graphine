@@ -6,12 +6,11 @@ import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.model.repository.method.name.QueryableMethodName;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment;
+import io.graphine.processor.metadata.model.repository.method.parameter.ParameterMetadata;
 import io.graphine.processor.query.model.parameter.ComplexParameter;
 import io.graphine.processor.query.model.parameter.IterableParameter;
 import io.graphine.processor.query.model.parameter.Parameter;
 
-import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.VariableElement;
 import java.util.List;
 
 import static io.graphine.processor.util.StringUtils.uncapitalize;
@@ -65,8 +64,7 @@ public final class RepositoryDeleteMethodNativeQueryGenerator extends Repository
 
     @Override
     protected List<Parameter> collectDeferredParameters(MethodMetadata method) {
-        ExecutableElement methodElement = method.getNativeElement();
-        List<? extends VariableElement> methodParameters = methodElement.getParameters();
+        List<ParameterMetadata> methodParameters = method.getParameters();
 
         QueryableMethodName queryableName = method.getQueryableName();
 
@@ -75,7 +73,7 @@ public final class RepositoryDeleteMethodNativeQueryGenerator extends Repository
             QualifierFragment qualifier = queryableName.getQualifier();
             if (qualifier.isPluralForm()) {
                 // Validation must ensure that only one method parameter is present.
-                VariableElement parameterElement = methodParameters.get(0);
+                ParameterMetadata parameterElement = methodParameters.get(0);
                 return singletonList(Parameter.basedOn(parameterElement));
             }
         }
@@ -91,25 +89,23 @@ public final class RepositoryDeleteMethodNativeQueryGenerator extends Repository
 
         ConditionFragment condition = queryableName.getCondition();
         if (isNull(condition)) {
-            ExecutableElement methodElement = method.getNativeElement();
             // Validation must ensure that only one method parameter is present.
-            VariableElement parameterElement = methodElement.getParameters().get(0);
+            ParameterMetadata methodParameter = method.getParameters().get(0);
 
-            Parameter parentParameter = Parameter.basedOn(parameterElement);
-            Parameter childParameter = Parameter.basedOn(entity.getIdentifier().getNativeElement());
+            Parameter parentParameter = Parameter.basedOn(methodParameter);
+            Parameter childParameter = Parameter.basedOn(entity.getIdentifier());
             Parameter parameter = new ComplexParameter(parentParameter, singletonList(childParameter));
 
             QualifierFragment qualifier = queryableName.getQualifier();
             if (qualifier.isPluralForm()) {
                 parentParameter = new Parameter(uniqueize(uncapitalize(entity.getName())), entity.getNativeType());
                 parameter = new ComplexParameter(parentParameter, singletonList(childParameter));
-                parameter = new IterableParameter(Parameter.basedOn(parameterElement), parameter);
+                parameter = new IterableParameter(Parameter.basedOn(methodParameter), parameter);
             }
             return singletonList(parameter);
         }
         else {
-            ExecutableElement methodElement = method.getNativeElement();
-            return collectConditionParameters(condition, methodElement.getParameters());
+            return collectConditionParameters(condition, method.getParameters());
         }
     }
 }

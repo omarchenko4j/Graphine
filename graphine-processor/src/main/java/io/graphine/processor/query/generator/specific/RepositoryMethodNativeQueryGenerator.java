@@ -4,13 +4,13 @@ import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment;
+import io.graphine.processor.metadata.model.repository.method.parameter.ParameterMetadata;
 import io.graphine.processor.query.model.NativeQuery;
 import io.graphine.processor.query.model.parameter.ComputableParameter;
 import io.graphine.processor.query.model.parameter.IterableParameter;
 import io.graphine.processor.query.model.parameter.Parameter;
 
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
@@ -135,7 +135,7 @@ public abstract class RepositoryMethodNativeQueryGenerator {
     }
 
     protected final List<Parameter> collectConditionParameters(ConditionFragment condition,
-                                                               List<? extends VariableElement> methodParameters) {
+                                                               List<ParameterMetadata> methodParameters) {
         List<Parameter> conditionParameters = new ArrayList<>(methodParameters.size());
 
         int parameterIndex = 0;
@@ -148,9 +148,9 @@ public abstract class RepositoryMethodNativeQueryGenerator {
 
                 int parameterCount = operator.getParameterCount();
                 for (int i = parameterIndex; i < (parameterIndex + parameterCount); i++) {
-                    VariableElement parameterElement = methodParameters.get(i);
+                    ParameterMetadata methodParameter = methodParameters.get(i);
 
-                    Parameter parameter = Parameter.basedOn(parameterElement);
+                    Parameter parameter = Parameter.basedOn(methodParameter);
                     if (operator == STARTING_WITH) {
                         Function<Parameter, Parameter> computedFunction =
                                 targetParameter -> new Parameter(targetParameter.getName() + " + \"%\"",
@@ -165,12 +165,13 @@ public abstract class RepositoryMethodNativeQueryGenerator {
                     }
                     else if (operator == CONTAINING || operator == NOT_CONTAINING) {
                         Function<Parameter, Parameter> computedFunction =
-                                targetParameter -> new Parameter("\"%\" + " + targetParameter.getName() + " + \"%\"",
-                                                                 targetParameter.getType());
+                                targetParameter ->
+                                        new Parameter("\"%\" + " + targetParameter.getName() + " + \"%\"",
+                                                      targetParameter.getType());
                         parameter = new ComputableParameter(parameter, computedFunction);
                     }
                     else if (operator == IN || operator == NOT_IN) {
-                        TypeMirror parameterType = parameterElement.asType();
+                        TypeMirror parameterType = methodParameter.getNativeType();
                         switch (parameterType.getKind()) {
                             case ARRAY:
                                 ArrayType arrayType = (ArrayType) parameterType;
@@ -205,7 +206,7 @@ public abstract class RepositoryMethodNativeQueryGenerator {
     }
 
     protected final List<Parameter> collectDeferredParameters(ConditionFragment condition,
-                                                              List<? extends VariableElement> methodParameters) {
+                                                              List<ParameterMetadata> methodParameters) {
         List<Parameter> deferredParameters = new ArrayList<>(methodParameters.size());
 
         int parameterIndex = 0;
@@ -215,8 +216,8 @@ public abstract class RepositoryMethodNativeQueryGenerator {
             for (AndPredicate andPredicate : andPredicates) {
                 OperatorType operator = andPredicate.getOperator();
                 if (operator == IN || operator == NOT_IN) {
-                    VariableElement parameterElement = methodParameters.get(parameterIndex);
-                    deferredParameters.add(Parameter.basedOn(parameterElement));
+                    ParameterMetadata methodParameter = methodParameters.get(parameterIndex);
+                    deferredParameters.add(Parameter.basedOn(methodParameter));
                 }
                 parameterIndex += operator.getParameterCount();
             }

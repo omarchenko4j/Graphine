@@ -19,7 +19,6 @@ import static io.graphine.processor.util.StringUtils.uncapitalize;
 import static io.graphine.processor.util.VariableNameUniqueizer.uniqueize;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
 /**
@@ -86,10 +85,10 @@ public final class RepositoryFindMethodNativeQueryGenerator extends RepositoryMe
         QueryableMethodName queryableName = method.getQueryableName();
 
         ConditionFragment condition = queryableName.getCondition();
-        if (isNull(condition)) return emptyList();
-
-        ExecutableElement methodElement = method.getNativeElement();
-        return collectDeferredParameters(condition, methodElement.getParameters());
+        if (nonNull(condition)) {
+            return collectDeferredParameters(condition, method.getParameters());
+        }
+        return emptyList();
     }
 
     @Override
@@ -98,7 +97,6 @@ public final class RepositoryFindMethodNativeQueryGenerator extends RepositoryMe
         List<Parameter> childParameters =
                 entity.getAttributes()
                       .stream()
-                      .map(AttributeMetadata::getNativeElement)
                       .map(Parameter::basedOn)
                       .collect(Collectors.toList());
         Parameter parameter = new ComplexParameter(parentParameter, childParameters);
@@ -122,8 +120,7 @@ public final class RepositoryFindMethodNativeQueryGenerator extends RepositoryMe
 
         ConditionFragment condition = queryableName.getCondition();
         if (nonNull(condition)) {
-            ExecutableElement methodElement = method.getNativeElement();
-            return collectConditionParameters(condition, methodElement.getParameters());
+            return collectConditionParameters(condition, method.getParameters());
         }
         return emptyList();
     }

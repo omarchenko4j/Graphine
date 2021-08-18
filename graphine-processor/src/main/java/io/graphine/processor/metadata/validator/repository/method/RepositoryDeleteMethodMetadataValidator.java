@@ -1,12 +1,11 @@
 package io.graphine.processor.metadata.validator.repository.method;
 
 import io.graphine.processor.metadata.model.entity.EntityMetadata;
+import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.model.repository.method.name.QueryableMethodName;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.SortingFragment;
-
-import javax.lang.model.element.ExecutableElement;
 
 import static io.graphine.processor.support.EnvironmentContext.messager;
 import static java.util.Objects.isNull;
@@ -22,27 +21,29 @@ public final class RepositoryDeleteMethodMetadataValidator extends RepositoryMod
     }
 
     @Override
-    protected boolean validateSignature(ExecutableElement methodElement, QueryableMethodName queryableName) {
+    protected boolean validateSignature(MethodMetadata method) {
         boolean valid = true;
+
+        QueryableMethodName queryableName = method.getQueryableName();
 
         QualifierFragment qualifier = queryableName.getQualifier();
         if (qualifier.hasDistinctSpecifier()) {
             valid = false;
-            messager.printMessage(Kind.ERROR, "Method name must not include 'Distinct' keyword", methodElement);
+            messager.printMessage(Kind.ERROR, "Method name must not include 'Distinct' keyword", method.getNativeElement());
         }
         if (qualifier.hasFirstSpecifier()) {
             valid = false;
-            messager.printMessage(Kind.ERROR, "Method name must not include 'First' keyword", methodElement);
+            messager.printMessage(Kind.ERROR, "Method name must not include 'First' keyword", method.getNativeElement());
         }
 
         ConditionFragment condition = queryableName.getCondition();
         if (isNull(condition)) {
-            if (!validateConsumedParameter(methodElement, qualifier)) {
+            if (!validateConsumedParameter(method)) {
                 valid = false;
             }
         }
         else {
-            if (!validateConditionParameters(methodElement, condition)) {
+            if (!validateConditionParameters(method)) {
                 valid = false;
             }
         }
@@ -50,7 +51,7 @@ public final class RepositoryDeleteMethodMetadataValidator extends RepositoryMod
         SortingFragment sorting = queryableName.getSorting();
         if (nonNull(sorting)) {
             valid = false;
-            messager.printMessage(Kind.ERROR, "Method name must not include sorting", methodElement);
+            messager.printMessage(Kind.ERROR, "Method name must not include sorting", method.getNativeElement());
         }
 
         return valid;

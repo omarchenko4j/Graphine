@@ -1,14 +1,15 @@
 package io.graphine.processor.metadata.validator.repository.method;
 
 import io.graphine.processor.metadata.model.entity.EntityMetadata;
+import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.model.repository.method.name.QueryableMethodName;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.SortingFragment;
+import io.graphine.processor.metadata.model.repository.method.parameter.ParameterMetadata;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
@@ -25,14 +26,16 @@ import static javax.tools.Diagnostic.Kind;
 /**
  * @author Oleg Marchenko
  */
-public abstract class RepositoryModifyingMethodMetadataValidator extends MethodMetadataValidator {
+public abstract class RepositoryModifyingMethodMetadataValidator extends RepositoryMethodMetadataValidator {
     protected RepositoryModifyingMethodMetadataValidator(EntityMetadata entity) {
         super(entity);
     }
 
     @Override
-    protected boolean validateReturnType(ExecutableElement methodElement, QualifierFragment qualifier) {
+    protected boolean validateReturnType(MethodMetadata method) {
         boolean valid = true;
+
+        ExecutableElement methodElement = method.getNativeElement();
 
         TypeMirror returnType = methodElement.getReturnType();
         if (returnType.getKind() != TypeKind.VOID) {
@@ -44,59 +47,64 @@ public abstract class RepositoryModifyingMethodMetadataValidator extends MethodM
     }
 
     @Override
-    protected boolean validateSignature(ExecutableElement methodElement, QueryableMethodName queryableName) {
+    protected boolean validateSignature(MethodMetadata method) {
         boolean valid = true;
+
+        QueryableMethodName queryableName = method.getQueryableName();
 
         QualifierFragment qualifier = queryableName.getQualifier();
         if (qualifier.hasDistinctSpecifier()) {
             valid = false;
-            messager.printMessage(Kind.ERROR, "Method name must not include 'Distinct' keyword", methodElement);
+            messager.printMessage(Kind.ERROR, "Method name must not include 'Distinct' keyword", method.getNativeElement());
         }
         if (qualifier.hasFirstSpecifier()) {
             valid = false;
-            messager.printMessage(Kind.ERROR, "Method name must not include 'First' keyword", methodElement);
+            messager.printMessage(Kind.ERROR, "Method name must not include 'First' keyword", method.getNativeElement());
         }
 
-        if (!validateConsumedParameter(methodElement, qualifier)) {
+        if (!validateConsumedParameter(method)) {
             valid = false;
         }
 
         ConditionFragment condition = queryableName.getCondition();
         if (nonNull(condition)) {
             valid = false;
-            messager.printMessage(Kind.ERROR, "Method name must not include conditions", methodElement);
+            messager.printMessage(Kind.ERROR, "Method name must not include conditions", method.getNativeElement());
         }
 
         SortingFragment sorting = queryableName.getSorting();
         if (nonNull(sorting)) {
             valid = false;
-            messager.printMessage(Kind.ERROR, "Method name must not include sorting", methodElement);
+            messager.printMessage(Kind.ERROR, "Method name must not include sorting", method.getNativeElement());
         }
 
         return valid;
     }
 
-    protected boolean validateConsumedParameter(ExecutableElement methodElement, QualifierFragment qualifier) {
+    protected boolean validateConsumedParameter(MethodMetadata method) {
         boolean valid = true;
 
-        List<? extends VariableElement> parameters = methodElement.getParameters();
-        if (parameters.size() != 1) {
+        List<ParameterMetadata> methodParameters = method.getParameters();
+        if (methodParameters.size() != 1) {
             valid = false;
-            messager.printMessage(Kind.ERROR, "Method must consume one parameter", methodElement);
+            messager.printMessage(Kind.ERROR, "Method must consume one parameter", method.getNativeElement());
         }
         else {
             TypeMirror entityType = entity.getNativeType();
 
-            VariableElement parameterElement = parameters.get(0);
-            TypeMirror parameterType = parameterElement.asType();
+            ParameterMetadata methodParameter = methodParameters.get(0);
+            TypeMirror parameterType = methodParameter.getNativeType();
 
+            QueryableMethodName queryableName = method.getQueryableName();
+
+            QualifierFragment qualifier = queryableName.getQualifier();
             switch (qualifier.getMethodForm()) {
                 case SINGULAR:
                     if (!typeUtils.isSameType(parameterType, entityType)) {
                         valid = false;
                         messager.printMessage(Kind.ERROR,
                                               "Method must consume the entity class as a parameter",
-                                              parameterElement);
+                                              methodParameter.getNativeElement());
                     }
                     break;
                 case PLURAL:
@@ -108,7 +116,7 @@ public abstract class RepositoryModifyingMethodMetadataValidator extends MethodM
                                 valid = false;
                                 messager.printMessage(Kind.ERROR,
                                                       "Method must consume entity class as array type",
-                                                      parameterElement);
+                                                      methodParameter.getNativeElement());
                             }
                             break;
                         case DECLARED:
@@ -123,21 +131,21 @@ public abstract class RepositoryModifyingMethodMetadataValidator extends MethodM
                                     valid = false;
                                     messager.printMessage(Kind.ERROR,
                                                           "Method must consume entity class as argument type in collection",
-                                                          parameterElement);
+                                                          methodParameter.getNativeElement());
                                 }
                             }
                             else {
                                 valid = false;
                                 messager.printMessage(Kind.ERROR,
                                                       "Method must consume an array or collection of entity classes as a parameter",
-                                                      parameterElement);
+                                                      methodParameter.getNativeElement());
                             }
                             break;
                         default:
                             valid = false;
                             messager.printMessage(Kind.ERROR,
                                                   "Method must consume an array or collection of entity classes as a parameter",
-                                                  parameterElement);
+                                                  methodParameter.getNativeElement());
                             break;
                     }
                     break;

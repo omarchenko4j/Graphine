@@ -50,7 +50,7 @@ public final class RepositoryMetadataValidator {
         EntityMetadata entity = entityMetadataRegistry.get(entityQualifiedName);
         if (isNull(entity)) return false; // Abort validation if the entity has no metadata.
 
-        Map<MethodType, MethodMetadataValidator> methodValidators = new EnumMap<>(MethodType.class);
+        Map<MethodType, RepositoryMethodMetadataValidator> methodValidators = new EnumMap<>(MethodType.class);
 
         List<MethodMetadata> methods = repository.getMethods();
         for (MethodMetadata method : methods) {
@@ -59,17 +59,17 @@ public final class RepositoryMetadataValidator {
             QualifierFragment qualifier = queryableName.getQualifier();
             if (isNull(qualifier)) continue; // Method validation is skipped! Error will be thrown in the parser.
 
-            MethodMetadataValidator methodMetadataValidator =
+            RepositoryMethodMetadataValidator repositoryMethodMetadataValidator =
                     methodValidators.computeIfAbsent(qualifier.getMethodType(),
                                                      methodType -> createMethodValidator(methodType, entity));
-            if (!methodMetadataValidator.validate(method)) {
+            if (!repositoryMethodMetadataValidator.validate(method)) {
                 valid = false;
             }
         }
         return valid;
     }
 
-    private MethodMetadataValidator createMethodValidator(MethodType methodType, EntityMetadata entity) {
+    private RepositoryMethodMetadataValidator createMethodValidator(MethodType methodType, EntityMetadata entity) {
         switch (methodType) {
             case FIND:
                 return new RepositoryFindMethodMetadataValidator(entity);

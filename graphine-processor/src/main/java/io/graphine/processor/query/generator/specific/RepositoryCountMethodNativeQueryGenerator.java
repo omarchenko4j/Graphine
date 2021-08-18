@@ -12,7 +12,6 @@ import java.util.List;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
-import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
 /**
@@ -49,10 +48,10 @@ public final class RepositoryCountMethodNativeQueryGenerator extends RepositoryM
         QueryableMethodName queryableName = method.getQueryableName();
 
         ConditionFragment condition = queryableName.getCondition();
-        if (isNull(condition)) return emptyList();
-
-        ExecutableElement methodElement = method.getNativeElement();
-        return collectDeferredParameters(condition, methodElement.getParameters());
+        if (nonNull(condition)) {
+            return collectDeferredParameters(condition, method.getParameters());
+        }
+        return emptyList();
     }
 
     @Override
@@ -67,8 +66,7 @@ public final class RepositoryCountMethodNativeQueryGenerator extends RepositoryM
 
         ConditionFragment condition = queryableName.getCondition();
         if (nonNull(condition)) {
-            ExecutableElement methodElement = method.getNativeElement();
-            return collectConditionParameters(condition, methodElement.getParameters());
+            return collectConditionParameters(condition, method.getParameters());
         }
         return emptyList();
     }

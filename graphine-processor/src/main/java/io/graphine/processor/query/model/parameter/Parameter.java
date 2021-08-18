@@ -1,6 +1,8 @@
 package io.graphine.processor.query.model.parameter;
 
-import javax.lang.model.element.VariableElement;
+import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
+import io.graphine.processor.metadata.model.repository.method.parameter.ParameterMetadata;
+
 import javax.lang.model.type.TypeMirror;
 
 /**
@@ -36,9 +38,15 @@ public class Parameter {
         return name;
     }
 
-    public static Parameter basedOn(VariableElement element) {
-        String parameterName = element.getSimpleName().toString();
-        TypeMirror parameterType = element.asType();
+    public static Parameter basedOn(AttributeMetadata attribute) {
+        String attributeName = attribute.getName();
+        TypeMirror attributeType = attribute.getNativeType();
+        return new Parameter(attributeName, attributeType);
+    }
+
+    public static Parameter basedOn(ParameterMetadata parameter) {
+        String parameterName = parameter.getName();
+        TypeMirror parameterType = parameter.getNativeType();
         return new Parameter(parameterName, parameterType);
     }
 }
