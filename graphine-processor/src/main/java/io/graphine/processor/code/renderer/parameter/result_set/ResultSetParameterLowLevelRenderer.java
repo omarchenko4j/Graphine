@@ -40,48 +40,32 @@ public final class ResultSetParameterLowLevelRenderer extends ResultSetParameter
         TypeMirror parameterType = parameter.getType();
         switch (parameterType.getKind()) {
             case BOOLEAN:
-                return CodeBlock.builder()
-                                .add(snippetMerger.apply(CodeBlock.of("$L.getBoolean($L)",
-                                                                      resultSetVariableName, parameterIndex)))
-                                .build();
+                return snippetMerger.apply(CodeBlock.of("$L.getBoolean($L)",
+                                                        resultSetVariableName, parameterIndex));
             case BYTE:
-                return CodeBlock.builder()
-                                .add(snippetMerger.apply(CodeBlock.of("$L.getByte($L)",
-                                                                      resultSetVariableName, parameterIndex)))
-                                .build();
+                return snippetMerger.apply(CodeBlock.of("$L.getByte($L)",
+                                                        resultSetVariableName, parameterIndex));
             case SHORT:
-                return CodeBlock.builder()
-                                .add(snippetMerger.apply(CodeBlock.of("$L.getShort($L)",
-                                                                      resultSetVariableName, parameterIndex)))
-                                .build();
+                return snippetMerger.apply(CodeBlock.of("$L.getShort($L)",
+                                                        resultSetVariableName, parameterIndex));
             case INT:
-                return CodeBlock.builder()
-                                .add(snippetMerger.apply(CodeBlock.of("$L.getInt($L)",
-                                                                      resultSetVariableName, parameterIndex)))
-                                .build();
+                return snippetMerger.apply(CodeBlock.of("$L.getInt($L)",
+                                                        resultSetVariableName, parameterIndex));
             case LONG:
-                return CodeBlock.builder()
-                                .add(snippetMerger.apply(CodeBlock.of("$L.getLong($L)",
-                                                                      resultSetVariableName, parameterIndex)))
-                                .build();
+                return snippetMerger.apply(CodeBlock.of("$L.getLong($L)",
+                                                        resultSetVariableName, parameterIndex));
             case FLOAT:
-                return CodeBlock.builder()
-                                .add(snippetMerger.apply(CodeBlock.of("$L.getFloat($L)",
-                                                                      resultSetVariableName, parameterIndex)))
-                                .build();
+                return snippetMerger.apply(CodeBlock.of("$L.getFloat($L)",
+                                                        resultSetVariableName, parameterIndex));
             case DOUBLE:
-                return CodeBlock.builder()
-                                .add(snippetMerger.apply(CodeBlock.of("$L.getDouble($L)",
-                                                                      resultSetVariableName, parameterIndex)))
-                                .build();
+                return snippetMerger.apply(CodeBlock.of("$L.getDouble($L)",
+                                                        resultSetVariableName, parameterIndex));
             case ARRAY:
                 ArrayType arrayType = (ArrayType) parameterType;
                 TypeMirror componentType = arrayType.getComponentType();
                 if (componentType.getKind() == BYTE) {
-                    return CodeBlock.builder()
-                                    .add(snippetMerger.apply(CodeBlock.of("$L.getBytes($L)",
-                                                                          resultSetVariableName, parameterIndex)))
-                                    .build();
+                    return snippetMerger.apply(CodeBlock.of("$L.getBytes($L)",
+                                                            resultSetVariableName, parameterIndex));
                 }
                 throw new IllegalStateException("Unsupported array type: " + parameterType);
             case DECLARED:
@@ -89,87 +73,58 @@ public final class ResultSetParameterLowLevelRenderer extends ResultSetParameter
                 TypeElement typeElement = (TypeElement) declaredType.asElement();
                 switch (typeElement.getQualifiedName().toString()) {
                     case "java.lang.String":
-                        return CodeBlock.builder()
-                                        .add(snippetMerger.apply(CodeBlock.of("$L.getString($L)",
-                                                                              resultSetVariableName, parameterIndex)))
-                                        .build();
+                        return snippetMerger.apply(CodeBlock.of("$L.getString($L)",
+                                                                resultSetVariableName, parameterIndex));
                     case "java.math.BigDecimal":
-                        return CodeBlock.builder()
-                                        .add(snippetMerger.apply(CodeBlock.of("$L.getBigDecimal($L)",
-                                                                              resultSetVariableName, parameterIndex)))
-                                        .build();
+                        return snippetMerger.apply(CodeBlock.of("$L.getBigDecimal($L)",
+                                                                resultSetVariableName, parameterIndex));
                     case "java.sql.Date":
-                        return CodeBlock.builder()
-                                        .add(snippetMerger.apply(CodeBlock.of("$L.getDate($L)",
-                                                                              resultSetVariableName, parameterIndex)))
-                                        .build();
+                        return snippetMerger.apply(CodeBlock.of("$L.getDate($L)",
+                                                                resultSetVariableName, parameterIndex));
                     case "java.sql.Time":
-                        return CodeBlock.builder()
-                                        .add(snippetMerger.apply(CodeBlock.of("$L.getTime($L)",
-                                                                              resultSetVariableName, parameterIndex)))
-                                        .build();
+                        return snippetMerger.apply(CodeBlock.of("$L.getTime($L)",
+                                                                resultSetVariableName, parameterIndex));
                     case "java.sql.Timestamp":
-                        return CodeBlock.builder()
-                                        .add(snippetMerger.apply(CodeBlock.of("$L.getTimestamp($L)",
-                                                                              resultSetVariableName, parameterIndex)))
-                                        .build();
-                    case "java.time.Instant": {
-                        return CodeBlock.builder()
-                                        .add(snippetMerger.apply(CodeBlock.of("$L.wasNull() ? null : $L.getTimestamp($L).toInstant()",
-                                                                              resultSetVariableName,
-                                                                              resultSetVariableName,
-                                                                              parameterIndex)))
-                                        .build();
-                    }
-                    case "java.time.LocalDate": {
-                        return CodeBlock.builder()
-                                        .add(snippetMerger.apply(CodeBlock.of("$L.wasNull() ? null : $L.getDate($L).toLocalDate()",
-                                                                              resultSetVariableName,
-                                                                              resultSetVariableName,
-                                                                              parameterIndex)))
-                                        .build();
-                    }
-                    case "java.time.LocalTime": {
-                        return CodeBlock.builder()
-                                        .add(snippetMerger.apply(CodeBlock.of("$L.wasNull() ? null : $L.getTime($L).toLocalTime()",
-                                                                              resultSetVariableName,
-                                                                              resultSetVariableName,
-                                                                              parameterIndex)))
-                                        .build();
-                    }
-                    case "java.time.LocalDateTime": {
-                        return CodeBlock.builder()
-                                        .add(snippetMerger.apply(CodeBlock.of("$L.wasNull() ? null : $L.getTimestamp($L).toLocalDateTime()",
-                                                                              resultSetVariableName,
-                                                                              resultSetVariableName,
-                                                                              parameterIndex)))
-                                        .build();
-                    }
-                    case "java.util.UUID": {
-                        return CodeBlock.builder()
-                                        .add(snippetMerger.apply(CodeBlock.of("$L.wasNull() ? null : $T.fromString($L.getString($L))",
-                                                                              resultSetVariableName,
-                                                                              UUID.class,
-                                                                              resultSetVariableName,
-                                                                              parameterIndex)))
-                                        .build();
-                    }
+                        return snippetMerger.apply(CodeBlock.of("$L.getTimestamp($L)",
+                                                                resultSetVariableName, parameterIndex));
+                    case "java.time.Instant":
+                        return snippetMerger.apply(CodeBlock.of("$L.wasNull() ? null : $L.getTimestamp($L).toInstant()",
+                                                                resultSetVariableName,
+                                                                resultSetVariableName,
+                                                                parameterIndex));
+                    case "java.time.LocalDate":
+                        return snippetMerger.apply(CodeBlock.of("$L.wasNull() ? null : $L.getDate($L).toLocalDate()",
+                                                                resultSetVariableName,
+                                                                resultSetVariableName,
+                                                                parameterIndex));
+                    case "java.time.LocalTime":
+                        return snippetMerger.apply(CodeBlock.of("$L.wasNull() ? null : $L.getTime($L).toLocalTime()",
+                                                                resultSetVariableName,
+                                                                resultSetVariableName,
+                                                                parameterIndex));
+                    case "java.time.LocalDateTime":
+                        return snippetMerger.apply(CodeBlock.of("$L.wasNull() ? null : $L.getTimestamp($L).toLocalDateTime()",
+                                                                resultSetVariableName,
+                                                                resultSetVariableName,
+                                                                parameterIndex));
+                    case "java.util.UUID":
+                        return snippetMerger.apply(CodeBlock.of("$L.wasNull() ? null : $T.fromString($L.getString($L))",
+                                                                resultSetVariableName,
+                                                                UUID.class,
+                                                                resultSetVariableName,
+                                                                parameterIndex));
                     default:
                         if (typeElement.getKind() == ENUM) {
-                            return CodeBlock.builder()
-                                            .add(snippetMerger.apply(CodeBlock.of("$L.wasNull() ? null : $T.valueOf($L.getString($L))",
-                                                                                  resultSetVariableName,
-                                                                                  parameterType,
-                                                                                  resultSetVariableName,
-                                                                                  parameterIndex)))
-                                            .build();
+                            return snippetMerger.apply(CodeBlock.of("$L.wasNull() ? null : $T.valueOf($L.getString($L))",
+                                                                    resultSetVariableName,
+                                                                    parameterType,
+                                                                    resultSetVariableName,
+                                                                    parameterIndex));
                         }
-                        return CodeBlock.builder()
-                                        .add(snippetMerger.apply(CodeBlock.of("($T) $L.getObject($L)",
-                                                                              parameterType,
-                                                                              resultSetVariableName,
-                                                                              parameterIndex)))
-                                        .build();
+                        return snippetMerger.apply(CodeBlock.of("($T) $L.getObject($L)",
+                                                                parameterType,
+                                                                resultSetVariableName,
+                                                                parameterIndex));
                 }
             default:
                 throw new IllegalStateException("Unsupported parameter type: " + parameterType);
