@@ -4,23 +4,14 @@ import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment;
-import io.graphine.processor.metadata.model.repository.method.parameter.ParameterMetadata;
 import io.graphine.processor.query.model.NativeQuery;
-import io.graphine.processor.query.model.parameter.ComputableParameter;
-import io.graphine.processor.query.model.parameter.IterableParameter;
 import io.graphine.processor.query.model.parameter.Parameter;
 
-import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.ArrayType;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeMirror;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.StringJoiner;
-import java.util.function.Function;
 
-import static io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment.*;
-import static io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment.OperatorType.*;
+import static io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment.AndPredicate;
+import static io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment.OrPredicate;
 import static java.util.Collections.emptyList;
 
 /**
@@ -35,17 +26,12 @@ public abstract class RepositoryMethodNativeQueryGenerator {
 
     public final NativeQuery generate(MethodMetadata method) {
         return new NativeQuery(generateQuery(method),
-                               collectProducedParameters(method),
-                               collectConsumedParameters(method));
+                               collectProducedParameters(method));
     }
 
     protected abstract String generateQuery(MethodMetadata method);
 
     protected List<Parameter> collectProducedParameters(MethodMetadata method) {
-        return emptyList();
-    }
-
-    protected List<Parameter> collectConsumedParameters(MethodMetadata method) {
         return emptyList();
     }
 
@@ -127,76 +113,5 @@ public abstract class RepositoryMethodNativeQueryGenerator {
         }
 
         return " WHERE " + orPredicateJoiner.toString();
-    }
-
-    protected final List<Parameter> collectConditionParameters(ConditionFragment condition,
-                                                               List<ParameterMetadata> methodParameters) {
-        List<Parameter> conditionParameters = new ArrayList<>(methodParameters.size());
-
-        int parameterIndex = 0;
-
-        List<OrPredicate> orPredicates = condition.getOrPredicates();
-        for (OrPredicate orPredicate : orPredicates) {
-            List<AndPredicate> andPredicates = orPredicate.getAndPredicates();
-            for (AndPredicate andPredicate : andPredicates) {
-                OperatorType operator = andPredicate.getOperator();
-
-                int parameterCount = operator.getParameterCount();
-                for (int i = parameterIndex; i < (parameterIndex + parameterCount); i++) {
-                    ParameterMetadata methodParameter = methodParameters.get(i);
-
-                    Parameter parameter = Parameter.basedOn(methodParameter);
-                    if (operator == STARTING_WITH) {
-                        Function<Parameter, Parameter> computedFunction =
-                                targetParameter -> new Parameter(targetParameter.getName() + " + \"%\"",
-                                                                 targetParameter.getType());
-                        parameter = new ComputableParameter(parameter, computedFunction);
-                    }
-                    else if (operator == ENDING_WITH) {
-                        Function<Parameter, Parameter> computedFunction =
-                                targetParameter -> new Parameter("\"%\" + " + targetParameter.getName(),
-                                                                 targetParameter.getType());
-                        parameter = new ComputableParameter(parameter, computedFunction);
-                    }
-                    else if (operator == CONTAINING || operator == NOT_CONTAINING) {
-                        Function<Parameter, Parameter> computedFunction =
-                                targetParameter ->
-                                        new Parameter("\"%\" + " + targetParameter.getName() + " + \"%\"",
-                                                      targetParameter.getType());
-                        parameter = new ComputableParameter(parameter, computedFunction);
-                    }
-                    else if (operator == IN || operator == NOT_IN) {
-                        TypeMirror parameterType = methodParameter.getNativeType();
-                        switch (parameterType.getKind()) {
-                            case ARRAY:
-                                ArrayType arrayType = (ArrayType) parameterType;
-                                TypeMirror componentType = arrayType.getComponentType();
-                                parameter = new IterableParameter(parameter,
-                                                                  new Parameter("element", componentType));
-                                break;
-                            case DECLARED:
-                                DeclaredType declaredType = (DeclaredType) parameterType;
-                                TypeElement typeElement = (TypeElement) declaredType.asElement();
-                                switch (typeElement.getQualifiedName().toString()) {
-                                    case "java.lang.Iterable":
-                                    case "java.util.Collection":
-                                    case "java.util.List":
-                                    case "java.util.Set":
-                                        TypeMirror genericType = declaredType.getTypeArguments().get(0);
-                                        parameter = new IterableParameter(parameter,
-                                                                          new Parameter("element", genericType));
-                                        break;
-                                }
-                                break;
-                        }
-                    }
-                    conditionParameters.add(parameter);
-                }
-
-                parameterIndex += parameterCount;
-            }
-        }
-
-        return conditionParameters;
     }
 }

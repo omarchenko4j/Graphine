@@ -4,14 +4,12 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import io.graphine.core.GraphineException;
 import io.graphine.core.util.UnnamedParameterRepeater;
-import io.graphine.processor.code.renderer.parameter.index_provider.IncrementalParameterIndexProvider;
-import io.graphine.processor.code.renderer.parameter.index_provider.NumericParameterIndexProvider;
-import io.graphine.processor.code.renderer.parameter.index_provider.ParameterIndexProvider;
-import io.graphine.processor.code.renderer.parameter.prepared_statement.PreparedStatementParameterLowLevelRenderer;
+import io.graphine.processor.code.renderer.PreparedStatementMethodMappingRenderer;
+import io.graphine.processor.code.renderer.RepositoryMethodParameterMappingRenderer;
+import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.model.repository.method.parameter.ParameterMetadata;
 import io.graphine.processor.query.model.NativeQuery;
-import io.graphine.processor.query.model.parameter.Parameter;
 
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
@@ -23,7 +21,6 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
-import static io.graphine.processor.code.renderer.parameter.index_provider.IncrementalParameterIndexProvider.INDEX_VARIABLE_NAME;
 import static io.graphine.processor.util.VariableNameUniqueizer.uniqueize;
 
 /**
@@ -35,18 +32,28 @@ public abstract class RepositoryMethodImplementationGenerator {
     public static final String STATEMENT_VARIABLE_NAME = uniqueize("statement");
     public static final String RESULT_SET_VARIABLE_NAME = uniqueize("resultSet");
 
-    public final MethodSpec generate(MethodMetadata method, NativeQuery query) {
+    protected final PreparedStatementMethodMappingRenderer preparedStatementMethodMappingRenderer;
+    protected final RepositoryMethodParameterMappingRenderer repositoryMethodParameterMappingRenderer;
+
+    protected RepositoryMethodImplementationGenerator() {
+        this.preparedStatementMethodMappingRenderer =
+                new PreparedStatementMethodMappingRenderer();
+        this.repositoryMethodParameterMappingRenderer =
+                new RepositoryMethodParameterMappingRenderer(preparedStatementMethodMappingRenderer);
+    }
+
+    public final MethodSpec generate(MethodMetadata method, NativeQuery query, EntityMetadata entity) {
         return MethodSpec.overriding(method.getNativeElement())
-                         .addCode(renderConnection(method, query))
+                         .addCode(renderConnection(method, query, entity))
                          .build();
     }
 
-    protected CodeBlock renderConnection(MethodMetadata method, NativeQuery query) {
+    protected CodeBlock renderConnection(MethodMetadata method, NativeQuery query, EntityMetadata entity) {
         return CodeBlock.builder()
                         .beginControlFlow("try ($T $L = dataSource.getConnection())",
                                           Connection.class, CONNECTION_VARIABLE_NAME)
                         .add(renderQuery(method, query))
-                        .add(renderStatement(method, query))
+                        .add(renderStatement(method, query, entity))
                         .endControlFlow()
                         .beginControlFlow("catch ($T e)", SQLException.class)
                         .addStatement("throw new $T(e)", GraphineException.class)
@@ -97,41 +104,21 @@ public abstract class RepositoryMethodImplementationGenerator {
         }
     }
 
-    protected CodeBlock renderStatement(MethodMetadata method, NativeQuery query) {
+    protected CodeBlock renderStatement(MethodMetadata method, NativeQuery query, EntityMetadata entity) {
         return CodeBlock.builder()
                         .beginControlFlow("try ($T $L = $L.prepareStatement($L))",
                                           PreparedStatement.class,
                                           STATEMENT_VARIABLE_NAME,
                                           CONNECTION_VARIABLE_NAME,
                                           QUERY_VARIABLE_NAME)
-                        .add(renderStatementParameters(method, query))
+                        .add(renderStatementParameters(method, query, entity))
                         .add(renderResultSet(method, query))
                         .endControlFlow()
                         .build();
     }
 
-    protected CodeBlock renderStatementParameters(MethodMetadata method, NativeQuery query) {
-        CodeBlock.Builder builder = CodeBlock.builder();
-
-        List<Parameter> consumedParameters = query.getConsumedParameters();
-        if (!consumedParameters.isEmpty()) {
-            ParameterIndexProvider parameterIndexProvider;
-
-            List<ParameterMetadata> deferredParameters = method.getDeferredParameters();
-            if (deferredParameters.isEmpty()) {
-                parameterIndexProvider = new NumericParameterIndexProvider();
-            }
-            else {
-                builder.addStatement("int $L = 1", INDEX_VARIABLE_NAME);
-                parameterIndexProvider = new IncrementalParameterIndexProvider(INDEX_VARIABLE_NAME);
-            }
-
-            for (Parameter parameter : consumedParameters) {
-                builder.add(parameter.accept(new PreparedStatementParameterLowLevelRenderer(parameterIndexProvider)));
-            }
-        }
-
-        return builder.build();
+    protected CodeBlock renderStatementParameters(MethodMetadata method, NativeQuery query, EntityMetadata entity) {
+        return repositoryMethodParameterMappingRenderer.render(method);
     }
 
     protected CodeBlock renderResultSet(MethodMetadata method, NativeQuery query) {

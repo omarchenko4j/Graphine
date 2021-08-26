@@ -10,7 +10,6 @@ import io.graphine.processor.query.model.parameter.Parameter;
 import javax.lang.model.element.ExecutableElement;
 import java.util.List;
 
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.nonNull;
 
@@ -47,16 +46,5 @@ public final class RepositoryCountMethodNativeQueryGenerator extends RepositoryM
     protected List<Parameter> collectProducedParameters(MethodMetadata method) {
         ExecutableElement methodElement = method.getNativeElement();
         return singletonList(new Parameter("count", methodElement.getReturnType()));
-    }
-
-    @Override
-    protected List<Parameter> collectConsumedParameters(MethodMetadata method) {
-        QueryableMethodName queryableName = method.getQueryableName();
-
-        ConditionFragment condition = queryableName.getCondition();
-        if (nonNull(condition)) {
-            return collectConditionParameters(condition, method.getParameters());
-        }
-        return emptyList();
     }
 }

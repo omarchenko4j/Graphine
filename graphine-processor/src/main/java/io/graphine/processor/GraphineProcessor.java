@@ -147,7 +147,9 @@ public class GraphineProcessor extends AbstractProcessor {
             RepositoryMetadata repository = nativeQueryRegistry.getRepository();
 
             RepositoryImplementationGenerator repositoryImplementationGenerator =
-                    new RepositoryImplementationGenerator(originatingElementDependencyCollector, nativeQueryRegistry);
+                    new RepositoryImplementationGenerator(originatingElementDependencyCollector,
+                                                          nativeQueryRegistry,
+                                                          entityMetadataRegistry);
             TypeSpec typeSpec = repositoryImplementationGenerator.generate(repository);
 
             JavaFile javaFile = JavaFile.builder(repository.getPackageName(), typeSpec)

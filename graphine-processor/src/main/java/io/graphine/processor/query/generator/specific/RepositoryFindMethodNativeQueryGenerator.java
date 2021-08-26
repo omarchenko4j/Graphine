@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
 
 import static io.graphine.processor.util.StringUtils.uncapitalize;
 import static io.graphine.processor.util.VariableNameUniqueizer.uniqueize;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.nonNull;
 
@@ -101,16 +100,5 @@ public final class RepositoryFindMethodNativeQueryGenerator extends RepositoryMe
         }
 
         return singletonList(parameter);
-    }
-
-    @Override
-    protected List<Parameter> collectConsumedParameters(MethodMetadata method) {
-        QueryableMethodName queryableName = method.getQueryableName();
-
-        ConditionFragment condition = queryableName.getCondition();
-        if (nonNull(condition)) {
-            return collectConditionParameters(condition, method.getParameters());
-        }
-        return emptyList();
     }
 }

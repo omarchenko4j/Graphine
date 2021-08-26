@@ -12,14 +12,11 @@ import static java.util.Collections.unmodifiableList;
 public class NativeQuery {
     private final String value;
     private final List<Parameter> producedParameters;
-    private final List<Parameter> consumedParameters;
 
     public NativeQuery(String value,
-                       List<Parameter> producedParameters,
-                       List<Parameter> consumedParameters) {
+                       List<Parameter> producedParameters) {
         this.value = value;
         this.producedParameters = producedParameters;
-        this.consumedParameters = consumedParameters;
     }
 
     public String getValue() {
@@ -28,10 +25,6 @@ public class NativeQuery {
 
     public List<Parameter> getProducedParameters() {
         return unmodifiableList(producedParameters);
-    }
-
-    public List<Parameter> getConsumedParameters() {
-        return unmodifiableList(consumedParameters);
     }
 
     @Override
