@@ -18,6 +18,7 @@ import java.sql.PreparedStatement;
 import static io.graphine.processor.code.renderer.parameter.index_provider.IncrementalParameterIndexProvider.INDEX_VARIABLE_NAME;
 import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.MethodForm.PLURAL;
 import static io.graphine.processor.util.AccessorUtils.getter;
+import static io.graphine.processor.util.StringUtils.uncapitalize;
 import static io.graphine.processor.util.VariableNameUniqueizer.uniqueize;
 import static java.util.Objects.isNull;
 
@@ -58,7 +59,7 @@ public final class RepositoryDeleteMethodImplementationGenerator extends Reposit
 
                 snippetBuilder.addStatement("int $L = 1", INDEX_VARIABLE_NAME);
 
-                entityVariableName = uniqueize("element");
+                entityVariableName = uniqueize(uncapitalize(entity.getName()));
                 snippetBuilder
                         .beginControlFlow("for ($T $L : $L)",
                                           entity.getNativeType(), entityVariableName, parameter.getName());
@@ -74,7 +75,8 @@ public final class RepositoryDeleteMethodImplementationGenerator extends Reposit
                     preparedStatementMethodMappingRenderer.render(identifier.getNativeType(),
                                                                   parameterIndexProvider.getParameterIndex(),
                                                                   CodeBlock.of("$L.$L()",
-                                                                               entityVariableName, getter(identifier.getNativeElement())))
+                                                                               entityVariableName,
+                                                                               getter(identifier)))
             );
 
             if (qualifier.getMethodForm() == PLURAL) {

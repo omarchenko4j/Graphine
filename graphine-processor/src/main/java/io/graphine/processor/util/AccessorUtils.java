@@ -1,6 +1,6 @@
 package io.graphine.processor.util;
 
-import io.graphine.processor.query.model.parameter.Parameter;
+import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
 
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
@@ -16,14 +16,14 @@ public final class AccessorUtils {
     private static final String BOOLEAN_GETTER_PREFIX = "is";
     private static final String SETTER_PREFIX = "set";
 
+    public static String getter(AttributeMetadata attribute) {
+        return getter(attribute.getNativeElement());
+    }
+
     public static String getter(VariableElement field) {
         TypeMirror fieldType = field.asType();
         String fieldName = field.getSimpleName().toString();
         return getter(fieldType, fieldName);
-    }
-
-    public static String getter(Parameter parameter) {
-        return getter(parameter.getType(), parameter.getName());
     }
 
     private static String getter(TypeMirror fieldType, String fieldName) {
@@ -33,13 +33,13 @@ public final class AccessorUtils {
         return methodNameWithPrefix(fieldName, GETTER_PREFIX);
     }
 
+    public static String setter(AttributeMetadata attribute) {
+        return setter(attribute.getNativeElement());
+    }
+
     public static String setter(VariableElement field) {
         String fieldName = field.getSimpleName().toString();
         return setter(fieldName);
-    }
-
-    public static String setter(Parameter parameter) {
-        return setter(parameter.getName());
     }
 
     private static String setter(String fieldName) {

@@ -6,6 +6,7 @@ import io.graphine.core.GraphineException;
 import io.graphine.core.util.UnnamedParameterRepeater;
 import io.graphine.processor.code.renderer.PreparedStatementMethodMappingRenderer;
 import io.graphine.processor.code.renderer.RepositoryMethodParameterMappingRenderer;
+import io.graphine.processor.code.renderer.ResultSetMethodMappingRenderer;
 import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.model.repository.method.parameter.ParameterMetadata;
@@ -33,11 +34,14 @@ public abstract class RepositoryMethodImplementationGenerator {
     public static final String RESULT_SET_VARIABLE_NAME = uniqueize("resultSet");
 
     protected final PreparedStatementMethodMappingRenderer preparedStatementMethodMappingRenderer;
+    protected final ResultSetMethodMappingRenderer resultSetMethodMappingRenderer;
+
     protected final RepositoryMethodParameterMappingRenderer repositoryMethodParameterMappingRenderer;
 
     protected RepositoryMethodImplementationGenerator() {
-        this.preparedStatementMethodMappingRenderer =
-                new PreparedStatementMethodMappingRenderer();
+        this.preparedStatementMethodMappingRenderer = new PreparedStatementMethodMappingRenderer();
+        this.resultSetMethodMappingRenderer = new ResultSetMethodMappingRenderer();
+
         this.repositoryMethodParameterMappingRenderer =
                 new RepositoryMethodParameterMappingRenderer(preparedStatementMethodMappingRenderer);
     }
@@ -112,7 +116,7 @@ public abstract class RepositoryMethodImplementationGenerator {
                                           CONNECTION_VARIABLE_NAME,
                                           QUERY_VARIABLE_NAME)
                         .add(renderStatementParameters(method, query, entity))
-                        .add(renderResultSet(method, query))
+                        .add(renderResultSet(method, query, entity))
                         .endControlFlow()
                         .build();
     }
@@ -121,18 +125,18 @@ public abstract class RepositoryMethodImplementationGenerator {
         return repositoryMethodParameterMappingRenderer.render(method);
     }
 
-    protected CodeBlock renderResultSet(MethodMetadata method, NativeQuery query) {
+    protected CodeBlock renderResultSet(MethodMetadata method, NativeQuery query, EntityMetadata entity) {
         return CodeBlock.builder()
                         .beginControlFlow("try ($T $L = $L.executeQuery())",
                                           ResultSet.class,
                                           RESULT_SET_VARIABLE_NAME,
                                           STATEMENT_VARIABLE_NAME)
-                        .add(renderResultSetParameters(method, query))
+                        .add(renderResultSetParameters(method, query, entity))
                         .endControlFlow()
                         .build();
     }
 
-    protected CodeBlock renderResultSetParameters(MethodMetadata method, NativeQuery query) {
+    protected CodeBlock renderResultSetParameters(MethodMetadata method, NativeQuery query, EntityMetadata entity) {
         return CodeBlock.builder().build();
     }
 }

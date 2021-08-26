@@ -5,12 +5,7 @@ import io.graphine.processor.metadata.model.entity.attribute.IdentifierMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.model.repository.method.name.QueryableMethodName;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment;
-import io.graphine.processor.query.model.parameter.Parameter;
 
-import javax.lang.model.element.ExecutableElement;
-import java.util.List;
-
-import static java.util.Collections.singletonList;
 import static java.util.Objects.nonNull;
 
 /**
@@ -40,11 +35,5 @@ public final class RepositoryCountMethodNativeQueryGenerator extends RepositoryM
         }
 
         return queryBuilder.toString();
-    }
-
-    @Override
-    protected List<Parameter> collectProducedParameters(MethodMetadata method) {
-        ExecutableElement methodElement = method.getNativeElement();
-        return singletonList(new Parameter("count", methodElement.getReturnType()));
     }
 }

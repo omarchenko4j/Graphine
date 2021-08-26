@@ -1,11 +1,9 @@
 package io.graphine.processor.code.generator.repository.method;
 
 import com.squareup.javapoet.CodeBlock;
-import io.graphine.processor.code.renderer.parameter.index_provider.NumericParameterIndexProvider;
-import io.graphine.processor.code.renderer.parameter.result_set.ResultSetParameterHighLevelRenderer;
+import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.query.model.NativeQuery;
-import io.graphine.processor.query.model.parameter.Parameter;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
@@ -17,19 +15,16 @@ import javax.lang.model.type.TypeMirror;
  */
 public final class RepositoryCountMethodImplementationGenerator extends RepositoryMethodImplementationGenerator {
     @Override
-    protected CodeBlock renderResultSetParameters(MethodMetadata method, NativeQuery query) {
-        CodeBlock.Builder builder = CodeBlock.builder();
-
-        Parameter producedParameter = query.getProducedParameters().get(0);
-        builder.add(producedParameter.accept(
-                new ResultSetParameterHighLevelRenderer(snippet -> CodeBlock.builder()
-                                                                            .addStatement("return $L", snippet)
-                                                                            .build(),
-                                                        new NumericParameterIndexProvider())
-        ));
-
+    protected CodeBlock renderResultSetParameters(MethodMetadata method, NativeQuery query, EntityMetadata entity) {
         ExecutableElement methodElement = method.getNativeElement();
         TypeMirror returnType = methodElement.getReturnType();
+
+        CodeBlock.Builder builder = CodeBlock.builder();
+        builder
+                .beginControlFlow("if ($L.next())", RESULT_SET_VARIABLE_NAME)
+                .addStatement("return $L", resultSetMethodMappingRenderer.render(returnType, "1"))
+                .endControlFlow();
+
         switch (returnType.getKind()) {
             case INT:
             case LONG:
@@ -48,7 +43,6 @@ public final class RepositoryCountMethodImplementationGenerator extends Reposito
                 }
                 break;
         }
-
         return builder.build();
     }
 }

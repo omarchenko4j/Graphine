@@ -17,6 +17,7 @@ import java.util.Collection;
 
 import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.MethodForm.PLURAL;
 import static io.graphine.processor.util.AccessorUtils.getter;
+import static io.graphine.processor.util.StringUtils.uncapitalize;
 import static io.graphine.processor.util.VariableNameUniqueizer.uniqueize;
 
 /**
@@ -41,7 +42,7 @@ public final class RepositoryUpdateMethodImplementationGenerator extends Reposit
         QueryableMethodName queryableName = method.getQueryableName();
         QualifierFragment qualifier = queryableName.getQualifier();
         if (qualifier.getMethodForm() == PLURAL) {
-            entityVariableName = uniqueize("element");
+            entityVariableName = uniqueize(uncapitalize(entity.getName()));
             snippetBuilder
                     .beginControlFlow("for ($T $L : $L)",
                                       entity.getNativeType(), entityVariableName, parameter.getName());
@@ -55,7 +56,6 @@ public final class RepositoryUpdateMethodImplementationGenerator extends Reposit
         Collection<AttributeMetadata> attributes = entity.getAttributes(true);
         for (AttributeMetadata attribute : attributes) {
             TypeMirror attributeType = attribute.getNativeType();
-            String attributeGetter = getter(attribute.getNativeElement());
 
             String parameterIndex = parameterIndexProvider.getParameterIndex();
 
@@ -63,7 +63,7 @@ public final class RepositoryUpdateMethodImplementationGenerator extends Reposit
                     preparedStatementMethodMappingRenderer.render(attributeType,
                                                                   parameterIndex,
                                                                   CodeBlock.of("$L.$L()",
-                                                                               entityVariableName, attributeGetter))
+                                                                               entityVariableName, getter(attribute)))
             );
         }
 
@@ -72,7 +72,7 @@ public final class RepositoryUpdateMethodImplementationGenerator extends Reposit
                 preparedStatementMethodMappingRenderer.render(identifier.getNativeType(),
                                                               parameterIndexProvider.getParameterIndex(),
                                                               CodeBlock.of("$L.$L()",
-                                                                           entityVariableName, getter(identifier.getNativeElement())))
+                                                                           entityVariableName, getter(identifier)))
         );
 
         if (qualifier.getMethodForm() == PLURAL) {
@@ -90,7 +90,7 @@ public final class RepositoryUpdateMethodImplementationGenerator extends Reposit
     }
 
     @Override
-    protected CodeBlock renderResultSet(MethodMetadata method, NativeQuery query) {
+    protected CodeBlock renderResultSet(MethodMetadata method, NativeQuery query, EntityMetadata entity) {
         return CodeBlock.builder().build();
     }
 }

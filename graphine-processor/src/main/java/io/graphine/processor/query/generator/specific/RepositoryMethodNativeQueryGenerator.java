@@ -5,14 +5,12 @@ import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment;
 import io.graphine.processor.query.model.NativeQuery;
-import io.graphine.processor.query.model.parameter.Parameter;
 
 import java.util.List;
 import java.util.StringJoiner;
 
 import static io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment.AndPredicate;
 import static io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment.OrPredicate;
-import static java.util.Collections.emptyList;
 
 /**
  * @author Oleg Marchenko
@@ -25,15 +23,10 @@ public abstract class RepositoryMethodNativeQueryGenerator {
     }
 
     public final NativeQuery generate(MethodMetadata method) {
-        return new NativeQuery(generateQuery(method),
-                               collectProducedParameters(method));
+        return new NativeQuery(generateQuery(method));
     }
 
     protected abstract String generateQuery(MethodMetadata method);
-
-    protected List<Parameter> collectProducedParameters(MethodMetadata method) {
-        return emptyList();
-    }
 
     protected final String generateWhereClause(ConditionFragment condition) {
         StringJoiner orPredicateJoiner = new StringJoiner(" OR ");

@@ -7,17 +7,9 @@ import io.graphine.processor.metadata.model.repository.method.name.QueryableMeth
 import io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.SortingFragment;
-import io.graphine.processor.query.model.parameter.ComplexParameter;
-import io.graphine.processor.query.model.parameter.IterableParameter;
-import io.graphine.processor.query.model.parameter.Parameter;
 
-import javax.lang.model.element.ExecutableElement;
-import java.util.List;
 import java.util.stream.Collectors;
 
-import static io.graphine.processor.util.StringUtils.uncapitalize;
-import static io.graphine.processor.util.VariableNameUniqueizer.uniqueize;
-import static java.util.Collections.singletonList;
 import static java.util.Objects.nonNull;
 
 /**
@@ -77,28 +69,5 @@ public final class RepositoryFindMethodNativeQueryGenerator extends RepositoryMe
                        })
                        .collect(Collectors.joining(", "));
         return " ORDER BY " + joinedOrderColumns;
-    }
-
-    @Override
-    protected List<Parameter> collectProducedParameters(MethodMetadata method) {
-        Parameter parentParameter = new Parameter(uniqueize(uncapitalize(entity.getName())), entity.getNativeType());
-        List<Parameter> childParameters =
-                entity.getAttributes()
-                      .stream()
-                      .map(Parameter::basedOn)
-                      .collect(Collectors.toList());
-        Parameter parameter = new ComplexParameter(parentParameter, childParameters);
-
-        QueryableMethodName queryableName = method.getQueryableName();
-        QualifierFragment qualifier = queryableName.getQualifier();
-        if (qualifier.isPluralForm()) {
-            ExecutableElement methodElement = method.getNativeElement();
-
-            Parameter iteratedParameter = parameter;
-            parameter = new Parameter(uniqueize("elements"), methodElement.getReturnType());
-            parameter = new IterableParameter(parameter, iteratedParameter);
-        }
-
-        return singletonList(parameter);
     }
 }
