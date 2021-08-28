@@ -6,6 +6,8 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.TypeSpec;
 import io.graphine.processor.code.collector.OriginatingElementDependencyCollector;
 import io.graphine.processor.code.generator.repository.method.*;
+import io.graphine.processor.code.renderer.mapping.ResultSetMappingRenderer;
+import io.graphine.processor.code.renderer.mapping.StatementMappingRenderer;
 import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.model.repository.RepositoryMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
@@ -41,17 +43,29 @@ public final class RepositoryImplementationGenerator {
     public RepositoryImplementationGenerator(
             OriginatingElementDependencyCollector originatingElementDependencyCollector,
             RepositoryNativeQueryRegistry repositoryNativeQueryRegistry,
-            EntityMetadataRegistry entityMetadataRegistry) {
+            EntityMetadataRegistry entityMetadataRegistry,
+            StatementMappingRenderer statementMappingRenderer,
+            ResultSetMappingRenderer resultSetMappingRenderer) {
         this.originatingElementDependencyCollector = originatingElementDependencyCollector;
         this.repositoryNativeQueryRegistry = repositoryNativeQueryRegistry;
         this.entityMetadataRegistry = entityMetadataRegistry;
 
         this.methodGenerators = new EnumMap<>(MethodType.class);
-        this.methodGenerators.put(MethodType.FIND, new RepositoryFindMethodImplementationGenerator());
-        this.methodGenerators.put(MethodType.COUNT, new RepositoryCountMethodImplementationGenerator());
-        this.methodGenerators.put(MethodType.SAVE, new RepositorySaveMethodImplementationGenerator());
-        this.methodGenerators.put(MethodType.UPDATE, new RepositoryUpdateMethodImplementationGenerator());
-        this.methodGenerators.put(MethodType.DELETE, new RepositoryDeleteMethodImplementationGenerator());
+        this.methodGenerators.put(MethodType.FIND,
+                                  new RepositoryFindMethodImplementationGenerator(statementMappingRenderer,
+                                                                                  resultSetMappingRenderer));
+        this.methodGenerators.put(MethodType.COUNT,
+                                  new RepositoryCountMethodImplementationGenerator(statementMappingRenderer,
+                                                                                   resultSetMappingRenderer));
+        this.methodGenerators.put(MethodType.SAVE,
+                                  new RepositorySaveMethodImplementationGenerator(statementMappingRenderer,
+                                                                                  resultSetMappingRenderer));
+        this.methodGenerators.put(MethodType.UPDATE,
+                                  new RepositoryUpdateMethodImplementationGenerator(statementMappingRenderer,
+                                                                                    resultSetMappingRenderer));
+        this.methodGenerators.put(MethodType.DELETE,
+                                  new RepositoryDeleteMethodImplementationGenerator(statementMappingRenderer,
+                                                                                    resultSetMappingRenderer));
     }
 
     public TypeSpec generate(RepositoryMetadata repository) {

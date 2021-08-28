@@ -4,11 +4,18 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import io.graphine.core.GraphineException;
 import io.graphine.core.util.UnnamedParameterRepeater;
-import io.graphine.processor.code.renderer.PreparedStatementMethodMappingRenderer;
-import io.graphine.processor.code.renderer.RepositoryMethodParameterMappingRenderer;
-import io.graphine.processor.code.renderer.ResultSetMethodMappingRenderer;
+import io.graphine.processor.code.renderer.index.IncrementalParameterIndexProvider;
+import io.graphine.processor.code.renderer.index.NumericParameterIndexProvider;
+import io.graphine.processor.code.renderer.index.ParameterIndexProvider;
+import io.graphine.processor.code.renderer.mapping.ResultSetMappingRenderer;
+import io.graphine.processor.code.renderer.mapping.StatementMappingRenderer;
 import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
+import io.graphine.processor.metadata.model.repository.method.name.QueryableMethodName;
+import io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment;
+import io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment.AndPredicate;
+import io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment.OperatorType;
+import io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment.OrPredicate;
 import io.graphine.processor.metadata.model.repository.method.parameter.ParameterMetadata;
 import io.graphine.processor.query.model.NativeQuery;
 
@@ -22,7 +29,9 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static io.graphine.processor.code.renderer.index.IncrementalParameterIndexProvider.INDEX_VARIABLE_NAME;
 import static io.graphine.processor.util.VariableNameUniqueizer.uniqueize;
+import static java.util.Objects.nonNull;
 
 /**
  * @author Oleg Marchenko
@@ -33,17 +42,13 @@ public abstract class RepositoryMethodImplementationGenerator {
     public static final String STATEMENT_VARIABLE_NAME = uniqueize("statement");
     public static final String RESULT_SET_VARIABLE_NAME = uniqueize("resultSet");
 
-    protected final PreparedStatementMethodMappingRenderer preparedStatementMethodMappingRenderer;
-    protected final ResultSetMethodMappingRenderer resultSetMethodMappingRenderer;
+    protected final StatementMappingRenderer statementMappingRenderer;
+    protected final ResultSetMappingRenderer resultSetMappingRenderer;
 
-    protected final RepositoryMethodParameterMappingRenderer repositoryMethodParameterMappingRenderer;
-
-    protected RepositoryMethodImplementationGenerator() {
-        this.preparedStatementMethodMappingRenderer = new PreparedStatementMethodMappingRenderer();
-        this.resultSetMethodMappingRenderer = new ResultSetMethodMappingRenderer();
-
-        this.repositoryMethodParameterMappingRenderer =
-                new RepositoryMethodParameterMappingRenderer(preparedStatementMethodMappingRenderer);
+    protected RepositoryMethodImplementationGenerator(StatementMappingRenderer statementMappingRenderer,
+                                                      ResultSetMappingRenderer resultSetMappingRenderer) {
+        this.statementMappingRenderer = statementMappingRenderer;
+        this.resultSetMappingRenderer = resultSetMappingRenderer;
     }
 
     public final MethodSpec generate(MethodMetadata method, NativeQuery query, EntityMetadata entity) {
@@ -122,7 +127,67 @@ public abstract class RepositoryMethodImplementationGenerator {
     }
 
     protected CodeBlock renderStatementParameters(MethodMetadata method, NativeQuery query, EntityMetadata entity) {
-        return repositoryMethodParameterMappingRenderer.render(method);
+        CodeBlock.Builder snippetBuilder = CodeBlock.builder();
+
+        List<ParameterMetadata> parameters = method.getParameters();
+        if (!parameters.isEmpty()) {
+            ParameterIndexProvider parameterIndexProvider;
+            if (method.getDeferredParameters().isEmpty()) {
+                parameterIndexProvider = new NumericParameterIndexProvider();
+            }
+            else {
+                parameterIndexProvider = new IncrementalParameterIndexProvider(INDEX_VARIABLE_NAME);
+
+                snippetBuilder.addStatement("int $L = 1", INDEX_VARIABLE_NAME);
+            }
+
+            QueryableMethodName queryableName = method.getQueryableName();
+            ConditionFragment condition = queryableName.getCondition();
+            if (nonNull(condition)) {
+                int i = 0;
+
+                List<OrPredicate> orPredicates = condition.getOrPredicates();
+                for (OrPredicate orPredicate : orPredicates) {
+                    List<AndPredicate> andPredicates = orPredicate.getAndPredicates();
+                    for (AndPredicate andPredicate : andPredicates) {
+                        OperatorType operator = andPredicate.getOperator();
+
+                        for (int j = i; j < i + operator.getParameterCount(); j++) {
+                            ParameterMetadata parameter = parameters.get(j);
+
+                            String parameterName = parameter.getName();
+                            CodeBlock parameterValue;
+                            switch (operator) {
+                                case STARTING_WITH:
+                                    parameterValue = CodeBlock.of("$L + '%'", parameterName);
+                                    break;
+                                case ENDING_WITH:
+                                    parameterValue = CodeBlock.of("'%' + $L", parameterName);
+                                    break;
+                                case CONTAINING:
+                                case NOT_CONTAINING:
+                                    parameterValue = CodeBlock.of("'%' + $L + '%'", parameterName);
+                                    break;
+                                default:
+                                    parameterValue = CodeBlock.of(parameterName);
+                                    break;
+                            }
+
+                            TypeMirror parameterType = parameter.getNativeType();
+                            String parameterIndex = parameterIndexProvider.getParameterIndex();
+
+                            snippetBuilder.add(statementMappingRenderer.render(parameterType,
+                                                                               parameterIndex,
+                                                                               parameterValue));
+                        }
+
+                        i += operator.getParameterCount();
+                    }
+                }
+            }
+        }
+
+        return snippetBuilder.build();
     }
 
     protected CodeBlock renderResultSet(MethodMetadata method, NativeQuery query, EntityMetadata entity) {

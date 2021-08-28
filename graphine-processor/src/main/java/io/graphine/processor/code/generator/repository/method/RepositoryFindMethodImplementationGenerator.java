@@ -5,8 +5,10 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import io.graphine.core.NonUniqueResultException;
-import io.graphine.processor.code.renderer.parameter.index_provider.NumericParameterIndexProvider;
-import io.graphine.processor.code.renderer.parameter.index_provider.ParameterIndexProvider;
+import io.graphine.processor.code.renderer.index.NumericParameterIndexProvider;
+import io.graphine.processor.code.renderer.index.ParameterIndexProvider;
+import io.graphine.processor.code.renderer.mapping.ResultSetMappingRenderer;
+import io.graphine.processor.code.renderer.mapping.StatementMappingRenderer;
 import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
@@ -33,6 +35,11 @@ import static io.graphine.processor.util.VariableNameUniqueizer.uniqueize;
  */
 public final class RepositoryFindMethodImplementationGenerator extends RepositoryMethodImplementationGenerator {
     private static final String COLLECTION_VARIABLE_NAME = uniqueize("elements");
+
+    public RepositoryFindMethodImplementationGenerator(StatementMappingRenderer statementMappingRenderer,
+                                                       ResultSetMappingRenderer resultSetMappingRenderer) {
+        super(statementMappingRenderer, resultSetMappingRenderer);
+    }
 
     @Override
     protected CodeBlock renderResultSetParameters(MethodMetadata method, NativeQuery query, EntityMetadata entity) {
@@ -109,8 +116,8 @@ public final class RepositoryFindMethodImplementationGenerator extends Repositor
                     .addStatement("$L.$L($L)",
                                   entityVariableName,
                                   setter(attribute),
-                                  resultSetMethodMappingRenderer.render(attribute.getNativeType(),
-                                                                        parameterIndexProvider.getParameterIndex()));
+                                  resultSetMappingRenderer.render(attribute.getNativeType(),
+                                                                  parameterIndexProvider.getParameterIndex()));
         }
 
         switch (returnType.getKind()) {

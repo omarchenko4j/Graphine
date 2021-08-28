@@ -5,6 +5,8 @@ import com.squareup.javapoet.TypeSpec;
 import io.graphine.core.util.UnnamedParameterRepeater;
 import io.graphine.processor.code.collector.OriginatingElementDependencyCollector;
 import io.graphine.processor.code.generator.repository.RepositoryImplementationGenerator;
+import io.graphine.processor.code.renderer.mapping.ResultSetMappingRenderer;
+import io.graphine.processor.code.renderer.mapping.StatementMappingRenderer;
 import io.graphine.processor.metadata.collector.EntityMetadataCollector;
 import io.graphine.processor.metadata.collector.RepositoryMetadataCollector;
 import io.graphine.processor.metadata.factory.entity.AttributeMetadataFactory;
@@ -142,6 +144,8 @@ public class GraphineProcessor extends AbstractProcessor {
                                                   EntityMetadataRegistry entityMetadataRegistry) {
         OriginatingElementDependencyCollector originatingElementDependencyCollector =
                 new OriginatingElementDependencyCollector(entityMetadataRegistry);
+        StatementMappingRenderer statementMappingRenderer = new StatementMappingRenderer();
+        ResultSetMappingRenderer resultSetMappingRenderer = new ResultSetMappingRenderer();
 
         for (RepositoryNativeQueryRegistry nativeQueryRegistry : nativeQueryRegistries) {
             RepositoryMetadata repository = nativeQueryRegistry.getRepository();
@@ -149,7 +153,9 @@ public class GraphineProcessor extends AbstractProcessor {
             RepositoryImplementationGenerator repositoryImplementationGenerator =
                     new RepositoryImplementationGenerator(originatingElementDependencyCollector,
                                                           nativeQueryRegistry,
-                                                          entityMetadataRegistry);
+                                                          entityMetadataRegistry,
+                                                          statementMappingRenderer,
+                                                          resultSetMappingRenderer);
             TypeSpec typeSpec = repositoryImplementationGenerator.generate(repository);
 
             JavaFile javaFile = JavaFile.builder(repository.getPackageName(), typeSpec)

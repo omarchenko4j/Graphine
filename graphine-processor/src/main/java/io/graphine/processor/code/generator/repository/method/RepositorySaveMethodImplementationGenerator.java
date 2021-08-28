@@ -1,8 +1,10 @@
 package io.graphine.processor.code.generator.repository.method;
 
 import com.squareup.javapoet.CodeBlock;
-import io.graphine.processor.code.renderer.parameter.index_provider.NumericParameterIndexProvider;
-import io.graphine.processor.code.renderer.parameter.index_provider.ParameterIndexProvider;
+import io.graphine.processor.code.renderer.index.NumericParameterIndexProvider;
+import io.graphine.processor.code.renderer.index.ParameterIndexProvider;
+import io.graphine.processor.code.renderer.mapping.ResultSetMappingRenderer;
+import io.graphine.processor.code.renderer.mapping.StatementMappingRenderer;
 import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.IdentifierMetadata;
@@ -32,6 +34,11 @@ import static io.graphine.processor.util.VariableNameUniqueizer.uniqueize;
  */
 public final class RepositorySaveMethodImplementationGenerator extends RepositoryMethodImplementationGenerator {
     public static final String ITERATOR_VARIABLE_NAME = uniqueize("iterator");
+
+    public RepositorySaveMethodImplementationGenerator(StatementMappingRenderer statementMappingRenderer,
+                                                       ResultSetMappingRenderer resultSetMappingRenderer) {
+        super(statementMappingRenderer, resultSetMappingRenderer);
+    }
 
     @Override
     protected CodeBlock renderQuery(MethodMetadata method, NativeQuery query) {
@@ -95,10 +102,10 @@ public final class RepositorySaveMethodImplementationGenerator extends Repositor
             String parameterIndex = parameterIndexProvider.getParameterIndex();
 
             snippetBuilder.add(
-                    preparedStatementMethodMappingRenderer.render(attributeType,
-                                                                  parameterIndex,
-                                                                  CodeBlock.of("$L.$L()",
-                                                                               entityVariableName, getter(attribute)))
+                    statementMappingRenderer.render(attributeType,
+                                                    parameterIndex,
+                                                    CodeBlock.of("$L.$L()",
+                                                                 entityVariableName, getter(attribute)))
             );
         }
 
@@ -155,7 +162,7 @@ public final class RepositorySaveMethodImplementationGenerator extends Repositor
                                 .addStatement("$L.$L($L)",
                                               entityVariableName,
                                               setter(identifier),
-                                              resultSetMethodMappingRenderer.render(identifier.getNativeType(), "1"))
+                                              resultSetMappingRenderer.render(identifier.getNativeType(), "1"))
                                 .addStatement("i++")
                                 .endControlFlow();
                         break;
@@ -182,7 +189,7 @@ public final class RepositorySaveMethodImplementationGenerator extends Repositor
                                         .addStatement("$L.$L($L)",
                                                       entityVariableName,
                                                       setter(identifier),
-                                                      resultSetMethodMappingRenderer.render(identifier.getNativeType(), "1"))
+                                                      resultSetMappingRenderer.render(identifier.getNativeType(), "1"))
                                         .endControlFlow();
                                 break;
                         }
@@ -195,7 +202,7 @@ public final class RepositorySaveMethodImplementationGenerator extends Repositor
                         .addStatement("$L.$L($L)",
                                       parameter.getName(),
                                       setter(identifier),
-                                      resultSetMethodMappingRenderer.render(identifier.getNativeType(), "1"))
+                                      resultSetMappingRenderer.render(identifier.getNativeType(), "1"))
                         .endControlFlow();
             }
         }

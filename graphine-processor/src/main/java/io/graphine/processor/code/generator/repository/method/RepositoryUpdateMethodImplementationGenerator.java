@@ -1,8 +1,10 @@
 package io.graphine.processor.code.generator.repository.method;
 
 import com.squareup.javapoet.CodeBlock;
-import io.graphine.processor.code.renderer.parameter.index_provider.NumericParameterIndexProvider;
-import io.graphine.processor.code.renderer.parameter.index_provider.ParameterIndexProvider;
+import io.graphine.processor.code.renderer.index.NumericParameterIndexProvider;
+import io.graphine.processor.code.renderer.index.ParameterIndexProvider;
+import io.graphine.processor.code.renderer.mapping.ResultSetMappingRenderer;
+import io.graphine.processor.code.renderer.mapping.StatementMappingRenderer;
 import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.IdentifierMetadata;
@@ -24,6 +26,11 @@ import static io.graphine.processor.util.VariableNameUniqueizer.uniqueize;
  * @author Oleg Marchenko
  */
 public final class RepositoryUpdateMethodImplementationGenerator extends RepositoryMethodImplementationGenerator {
+    public RepositoryUpdateMethodImplementationGenerator(StatementMappingRenderer statementMappingRenderer,
+                                                         ResultSetMappingRenderer resultSetMappingRenderer) {
+        super(statementMappingRenderer, resultSetMappingRenderer);
+    }
+
     @Override
     protected CodeBlock renderQuery(MethodMetadata method, NativeQuery query) {
         return CodeBlock.builder()
@@ -60,19 +67,19 @@ public final class RepositoryUpdateMethodImplementationGenerator extends Reposit
             String parameterIndex = parameterIndexProvider.getParameterIndex();
 
             snippetBuilder.add(
-                    preparedStatementMethodMappingRenderer.render(attributeType,
-                                                                  parameterIndex,
-                                                                  CodeBlock.of("$L.$L()",
-                                                                               entityVariableName, getter(attribute)))
+                    statementMappingRenderer.render(attributeType,
+                                                    parameterIndex,
+                                                    CodeBlock.of("$L.$L()",
+                                                                 entityVariableName, getter(attribute)))
             );
         }
 
         IdentifierMetadata identifier = entity.getIdentifier();
         snippetBuilder.add(
-                preparedStatementMethodMappingRenderer.render(identifier.getNativeType(),
-                                                              parameterIndexProvider.getParameterIndex(),
-                                                              CodeBlock.of("$L.$L()",
-                                                                           entityVariableName, getter(identifier)))
+                statementMappingRenderer.render(identifier.getNativeType(),
+                                                parameterIndexProvider.getParameterIndex(),
+                                                CodeBlock.of("$L.$L()",
+                                                             entityVariableName, getter(identifier)))
         );
 
         if (qualifier.getMethodForm() == PLURAL) {

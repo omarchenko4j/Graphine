@@ -1,9 +1,11 @@
 package io.graphine.processor.code.generator.repository.method;
 
 import com.squareup.javapoet.CodeBlock;
-import io.graphine.processor.code.renderer.parameter.index_provider.IncrementalParameterIndexProvider;
-import io.graphine.processor.code.renderer.parameter.index_provider.NumericParameterIndexProvider;
-import io.graphine.processor.code.renderer.parameter.index_provider.ParameterIndexProvider;
+import io.graphine.processor.code.renderer.index.IncrementalParameterIndexProvider;
+import io.graphine.processor.code.renderer.index.NumericParameterIndexProvider;
+import io.graphine.processor.code.renderer.index.ParameterIndexProvider;
+import io.graphine.processor.code.renderer.mapping.ResultSetMappingRenderer;
+import io.graphine.processor.code.renderer.mapping.StatementMappingRenderer;
 import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.IdentifierMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
@@ -15,7 +17,7 @@ import io.graphine.processor.query.model.NativeQuery;
 
 import java.sql.PreparedStatement;
 
-import static io.graphine.processor.code.renderer.parameter.index_provider.IncrementalParameterIndexProvider.INDEX_VARIABLE_NAME;
+import static io.graphine.processor.code.renderer.index.IncrementalParameterIndexProvider.INDEX_VARIABLE_NAME;
 import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.MethodForm.PLURAL;
 import static io.graphine.processor.util.AccessorUtils.getter;
 import static io.graphine.processor.util.StringUtils.uncapitalize;
@@ -26,6 +28,11 @@ import static java.util.Objects.isNull;
  * @author Oleg Marchenko
  */
 public final class RepositoryDeleteMethodImplementationGenerator extends RepositoryMethodImplementationGenerator {
+    public RepositoryDeleteMethodImplementationGenerator(StatementMappingRenderer statementMappingRenderer,
+                                                         ResultSetMappingRenderer resultSetMappingRenderer) {
+        super(statementMappingRenderer, resultSetMappingRenderer);
+    }
+
     @Override
     protected CodeBlock renderStatement(MethodMetadata method, NativeQuery query, EntityMetadata entity) {
         return CodeBlock.builder()
@@ -72,11 +79,11 @@ public final class RepositoryDeleteMethodImplementationGenerator extends Reposit
 
             IdentifierMetadata identifier = entity.getIdentifier();
             snippetBuilder.add(
-                    preparedStatementMethodMappingRenderer.render(identifier.getNativeType(),
-                                                                  parameterIndexProvider.getParameterIndex(),
-                                                                  CodeBlock.of("$L.$L()",
-                                                                               entityVariableName,
-                                                                               getter(identifier)))
+                    statementMappingRenderer.render(identifier.getNativeType(),
+                                                    parameterIndexProvider.getParameterIndex(),
+                                                    CodeBlock.of("$L.$L()",
+                                                                 entityVariableName,
+                                                                 getter(identifier)))
             );
 
             if (qualifier.getMethodForm() == PLURAL) {
@@ -84,7 +91,7 @@ public final class RepositoryDeleteMethodImplementationGenerator extends Reposit
             }
         }
         else {
-            snippetBuilder.add(repositoryMethodParameterMappingRenderer.render(method));
+            snippetBuilder.add(super.renderStatementParameters(method, query, entity));
         }
         return snippetBuilder.build();
     }

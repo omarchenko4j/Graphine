@@ -1,6 +1,8 @@
 package io.graphine.processor.code.generator.repository.method;
 
 import com.squareup.javapoet.CodeBlock;
+import io.graphine.processor.code.renderer.mapping.ResultSetMappingRenderer;
+import io.graphine.processor.code.renderer.mapping.StatementMappingRenderer;
 import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.query.model.NativeQuery;
@@ -14,6 +16,11 @@ import javax.lang.model.type.TypeMirror;
  * @author Oleg Marchenko
  */
 public final class RepositoryCountMethodImplementationGenerator extends RepositoryMethodImplementationGenerator {
+    public RepositoryCountMethodImplementationGenerator(StatementMappingRenderer statementMappingRenderer,
+                                                        ResultSetMappingRenderer resultSetMappingRenderer) {
+        super(statementMappingRenderer, resultSetMappingRenderer);
+    }
+
     @Override
     protected CodeBlock renderResultSetParameters(MethodMetadata method, NativeQuery query, EntityMetadata entity) {
         ExecutableElement methodElement = method.getNativeElement();
@@ -22,7 +29,7 @@ public final class RepositoryCountMethodImplementationGenerator extends Reposito
         CodeBlock.Builder builder = CodeBlock.builder();
         builder
                 .beginControlFlow("if ($L.next())", RESULT_SET_VARIABLE_NAME)
-                .addStatement("return $L", resultSetMethodMappingRenderer.render(returnType, "1"))
+                .addStatement("return $L", resultSetMappingRenderer.render(returnType, "1"))
                 .endControlFlow();
 
         switch (returnType.getKind()) {

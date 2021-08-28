@@ -1,4 +1,4 @@
-package io.graphine.processor.code.renderer.parameter.index_provider;
+package io.graphine.processor.code.renderer.index;
 
 import static io.graphine.processor.util.VariableNameUniqueizer.uniqueize;
 
