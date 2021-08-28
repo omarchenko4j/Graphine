@@ -8,8 +8,7 @@ import io.graphine.processor.metadata.validator.repository.RepositoryElementVali
 
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.TypeElement;
-import java.util.Map;
-import java.util.function.Function;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -26,13 +25,13 @@ public final class RepositoryMetadataCollector {
     }
 
     public RepositoryMetadataRegistry collect(RoundEnvironment environment) {
-        Map<String, RepositoryMetadata> repositoryRegistry =
+        List<RepositoryMetadata> repositories =
                 environment.getElementsAnnotatedWith(Repository.class)
                            .stream()
                            .map(element -> (TypeElement) element)
                            .filter(repositoryElementValidator::validate)
                            .map(repositoryMetadataFactory::createRepository)
-                           .collect(Collectors.toMap(RepositoryMetadata::getQualifiedName, Function.identity()));
-        return new RepositoryMetadataRegistry(repositoryRegistry);
+                           .collect(Collectors.toList());
+        return new RepositoryMetadataRegistry(repositories);
     }
 }

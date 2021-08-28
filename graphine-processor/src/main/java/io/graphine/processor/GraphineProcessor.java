@@ -66,23 +66,23 @@ public class GraphineProcessor extends AbstractProcessor {
 
         // Step 1. Collecting entity metadata
         EntityMetadataRegistry entityMetadataRegistry = collectEntityMetadata(roundEnv);
-        entityMetadataRegistry.getAll()
+        entityMetadataRegistry.getEntities()
                               .forEach(entity -> messager.printMessage(Kind.NOTE, "Found entity: " + entity));
 
         // Step 2. Collecting repository metadata
         RepositoryMetadataRegistry repositoryMetadataRegistry = collectRepositoryMetadata(roundEnv);
 
         // Step 3. Validating repository metadata
-        if (!validateRepositoryMetadata(repositoryMetadataRegistry.getAll(), entityMetadataRegistry)) {
+        if (!validateRepositoryMetadata(repositoryMetadataRegistry.getRepositories(), entityMetadataRegistry)) {
             return ANNOTATIONS_CLAIMED;
         }
 
-        repositoryMetadataRegistry.getAll()
+        repositoryMetadataRegistry.getRepositories()
                                   .forEach(repository -> messager.printMessage(Kind.NOTE, "Found repository: " + repository));
 
         // Step 4. Generating repository native queries
         RepositoryNativeQueryRegistryStorage nativeQueryRegistryStorage =
-                generateNativeQueries(repositoryMetadataRegistry.getAll(), entityMetadataRegistry);
+                generateNativeQueries(repositoryMetadataRegistry.getRepositories(), entityMetadataRegistry);
 
         nativeQueryRegistryStorage.getRegistries()
                                   .stream()

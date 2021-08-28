@@ -27,10 +27,13 @@ public final class EntityMetadataCollector {
     }
 
     public EntityMetadataRegistry collect(RoundEnvironment environment) {
+        return new EntityMetadataRegistry(collectEntities(environment));
+    }
+
+    private Map<String, EntityMetadata> collectEntities(RoundEnvironment environment) {
         Set<? extends Element> elements = environment.getElementsAnnotatedWith(Entity.class);
 
         Map<String, EntityMetadata> entityRegistry = new HashMap<>(elements.size() + 1, 1);
-
         for (Element element : elements) {
             TypeElement entityElement = (TypeElement) element;
             if (entityElementValidator.validate(entityElement)) {
@@ -44,7 +47,6 @@ public final class EntityMetadataCollector {
                 entityRegistry.put(qualifiedName, null);
             }
         }
-
-        return new EntityMetadataRegistry(entityRegistry);
+        return entityRegistry;
     }
 }

@@ -40,14 +40,14 @@ public final class RepositoryMetadataValidator {
 
     public boolean validate(RepositoryMetadata repository) {
         String entityQualifiedName = repository.getEntityQualifiedName();
-        if (!entityMetadataRegistry.exists(entityQualifiedName)) {
+        if (!entityMetadataRegistry.containsEntity(entityQualifiedName)) {
             messager.printMessage(Kind.ERROR, "Entity class not found", repository.getNativeElement());
             return false;
         }
 
         boolean valid = true;
 
-        EntityMetadata entity = entityMetadataRegistry.get(entityQualifiedName);
+        EntityMetadata entity = entityMetadataRegistry.getEntity(entityQualifiedName);
         if (isNull(entity)) return false; // Abort validation if the entity has no metadata.
 
         Map<MethodType, RepositoryMethodMetadataValidator> methodValidators = new EnumMap<>(MethodType.class);

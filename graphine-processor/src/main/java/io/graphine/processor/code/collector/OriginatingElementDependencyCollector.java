@@ -24,7 +24,7 @@ public final class OriginatingElementDependencyCollector {
 
         // Entity is a dependency of the repository implementation.
         // It positively affects on incremental build!
-        EntityMetadata entity = entityMetadataRegistry.get(repository.getEntityQualifiedName());
+        EntityMetadata entity = entityMetadataRegistry.getEntity(repository.getEntityQualifiedName());
         TypeElement entityElement = entity.getNativeElement();
 
         return Arrays.asList(repositoryElement, entityElement);

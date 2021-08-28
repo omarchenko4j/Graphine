@@ -94,7 +94,7 @@ public final class RepositoryImplementationGenerator {
             if (isNull(qualifier)) continue; // Method implementation is skipped because it is invalid!
 
             NativeQuery query = repositoryNativeQueryRegistry.getQuery(method);
-            EntityMetadata entity = entityMetadataRegistry.get(repository.getEntityQualifiedName());
+            EntityMetadata entity = entityMetadataRegistry.getEntity(repository.getEntityQualifiedName());
 
             RepositoryMethodImplementationGenerator methodGenerator = methodGenerators.get(qualifier.getMethodType());
             classBuilder.addMethod(methodGenerator.generate(method, query, entity));
