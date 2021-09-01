@@ -8,6 +8,8 @@ import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static io.graphine.processor.util.StringUtils.getIfNotEmpty;
+
 /**
  * @author Oleg Marchenko
  */
@@ -27,7 +29,8 @@ public final class RepositoryUpdateMethodNativeQueryGenerator extends Repository
         IdentifierMetadata identifier = entity.getIdentifier();
         return new StringBuilder()
                 .append("UPDATE ")
-                .append(entity.getQualifiedTable())
+                .append(getIfNotEmpty(entity.getSchema(), () -> entity.getSchema() + '.'))
+                .append(entity.getTable())
                 .append(" SET ")
                 .append(joinedColumns)
                 .append(" WHERE ")

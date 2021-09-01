@@ -7,6 +7,7 @@ import io.graphine.processor.metadata.model.repository.method.name.QueryableMeth
 import io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment;
 import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 
+import static io.graphine.processor.util.StringUtils.getIfNotEmpty;
 import static java.util.Objects.nonNull;
 
 /**
@@ -26,7 +27,8 @@ public final class RepositoryCountMethodNativeQueryGenerator extends RepositoryM
                 .append(identifier.getColumn())
                 .append(") AS count")
                 .append(" FROM ")
-                .append(entity.getQualifiedTable());
+                .append(getIfNotEmpty(entity.getSchema(), () -> entity.getSchema() + '.'))
+                .append(entity.getTable());
 
         QueryableMethodName queryableName = method.getQueryableName();
         ConditionFragment condition = queryableName.getCondition();

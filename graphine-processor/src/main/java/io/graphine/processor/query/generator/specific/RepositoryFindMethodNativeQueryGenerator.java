@@ -12,6 +12,7 @@ import io.graphine.processor.util.StringUtils;
 
 import java.util.stream.Collectors;
 
+import static io.graphine.processor.util.StringUtils.getIfNotEmpty;
 import static java.util.Objects.nonNull;
 
 /**
@@ -38,7 +39,8 @@ public final class RepositoryFindMethodNativeQueryGenerator extends RepositoryMe
         queryBuilder
                 .append(joinedColumns)
                 .append(" FROM ")
-                .append(entity.getQualifiedTable());
+                .append(getIfNotEmpty(entity.getSchema(), () -> entity.getSchema() + '.'))
+                .append(entity.getTable());
 
         ConditionFragment condition = queryableName.getCondition();
         if (nonNull(condition)) {

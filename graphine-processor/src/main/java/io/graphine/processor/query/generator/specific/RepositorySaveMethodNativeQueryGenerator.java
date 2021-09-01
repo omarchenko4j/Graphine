@@ -7,8 +7,7 @@ import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static io.graphine.processor.util.StringUtils.join;
-import static io.graphine.processor.util.StringUtils.repeat;
+import static io.graphine.processor.util.StringUtils.*;
 
 /**
  * @author Oleg Marchenko
@@ -23,7 +22,8 @@ public final class RepositorySaveMethodNativeQueryGenerator extends RepositoryMe
         List<String> columns = collectColumns(entity);
         return new StringBuilder()
                 .append("INSERT INTO ")
-                .append(entity.getQualifiedTable())
+                .append(getIfNotEmpty(entity.getSchema(), () -> entity.getSchema() + '.'))
+                .append(entity.getTable())
                 .append(join(columns, ", ", "(", ")"))
                 .append(" VALUES ")
                 .append(repeat("?", ", ", "(", ")", columns.size()))

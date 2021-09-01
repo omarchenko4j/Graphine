@@ -8,6 +8,7 @@ import io.graphine.processor.metadata.model.repository.method.name.fragment.Cond
 import io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment;
 import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 
+import static io.graphine.processor.util.StringUtils.getIfNotEmpty;
 import static java.util.Objects.isNull;
 
 /**
@@ -22,7 +23,8 @@ public final class RepositoryDeleteMethodNativeQueryGenerator extends Repository
     protected String generateQuery(EntityMetadata entity, MethodMetadata method) {
         StringBuilder queryBuilder = new StringBuilder()
                 .append("DELETE FROM ")
-                .append(entity.getQualifiedTable());
+                .append(getIfNotEmpty(entity.getSchema(), () -> entity.getSchema() + '.'))
+                .append(entity.getTable());
 
         QueryableMethodName queryableName = method.getQueryableName();
 

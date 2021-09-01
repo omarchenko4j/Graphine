@@ -22,7 +22,6 @@ import static java.util.stream.Collectors.toUnmodifiableList;
 public class EntityMetadata extends NativeTypeElement {
     private final String schema;
     private final String table;
-    private final String qualifiedTable;
     private final IdentifierMetadata identifier;
     private final Map<String, AttributeMetadata> attributes;
 
@@ -34,7 +33,6 @@ public class EntityMetadata extends NativeTypeElement {
         super(element);
         this.schema = schema;
         this.table = table;
-        this.qualifiedTable = getIfNotEmpty(schema, () -> schema + '.') + table;
         this.identifier = identifier;
         this.attributes = attributes
                 .stream()
@@ -47,10 +45,6 @@ public class EntityMetadata extends NativeTypeElement {
 
     public String getTable() {
         return table;
-    }
-
-    public String getQualifiedTable() {
-        return qualifiedTable;
     }
 
     public IdentifierMetadata getIdentifier() {
@@ -77,6 +71,6 @@ public class EntityMetadata extends NativeTypeElement {
 
     @Override
     public String toString() {
-        return qualifiedName + " [" + qualifiedTable + ']';
+        return qualifiedName + " [" + getIfNotEmpty(schema, () -> schema + '.') + table + ']';
     }
 }
