@@ -1,6 +1,7 @@
 package io.graphine.processor.metadata.model.entity.attribute;
 
 import io.graphine.core.annotation.Attribute;
+import io.graphine.core.annotation.Embeddable;
 import io.graphine.core.annotation.Id;
 import io.graphine.processor.support.element.NativeElement;
 
@@ -30,6 +31,7 @@ public class AttributeMetadata extends NativeElement<VariableElement> {
 
     public static boolean isAttribute(VariableElement fieldElement) {
         return nonNull(fieldElement.getAnnotation(Id.class)) ||
-               nonNull(fieldElement.getAnnotation(Attribute.class));
+               nonNull(fieldElement.getAnnotation(Attribute.class)) ||
+               nonNull(fieldElement.getAnnotation(Embeddable.class));
     }
 }

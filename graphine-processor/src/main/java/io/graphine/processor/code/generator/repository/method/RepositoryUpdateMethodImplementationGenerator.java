@@ -1,8 +1,8 @@
 package io.graphine.processor.code.generator.repository.method;
 
 import com.squareup.javapoet.CodeBlock;
+import io.graphine.processor.code.renderer.AttributeToStatementMappingRenderer;
 import io.graphine.processor.code.renderer.index.NumericParameterIndexProvider;
-import io.graphine.processor.code.renderer.index.ParameterIndexProvider;
 import io.graphine.processor.code.renderer.mapping.ResultSetMappingRenderer;
 import io.graphine.processor.code.renderer.mapping.StatementMappingRenderer;
 import io.graphine.processor.metadata.model.entity.EntityMetadata;
@@ -12,9 +12,9 @@ import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.model.repository.method.name.QueryableMethodName;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment;
 import io.graphine.processor.metadata.model.repository.method.parameter.ParameterMetadata;
+import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 import io.graphine.processor.query.model.NativeQuery;
 
-import javax.lang.model.type.TypeMirror;
 import java.util.Collection;
 
 import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.MethodForm.PLURAL;
@@ -26,9 +26,14 @@ import static io.graphine.processor.util.VariableNameUniqueizer.uniqueize;
  * @author Oleg Marchenko
  */
 public final class RepositoryUpdateMethodImplementationGenerator extends RepositoryMethodImplementationGenerator {
-    public RepositoryUpdateMethodImplementationGenerator(StatementMappingRenderer statementMappingRenderer,
+    private final AttributeToStatementMappingRenderer attributeToStatementMappingRenderer;
+
+    public RepositoryUpdateMethodImplementationGenerator(EntityMetadataRegistry entityMetadataRegistry,
+                                                         StatementMappingRenderer statementMappingRenderer,
                                                          ResultSetMappingRenderer resultSetMappingRenderer) {
-        super(statementMappingRenderer, resultSetMappingRenderer);
+        super(entityMetadataRegistry, statementMappingRenderer, resultSetMappingRenderer);
+        this.attributeToStatementMappingRenderer =
+                new AttributeToStatementMappingRenderer(entityMetadataRegistry, statementMappingRenderer);
     }
 
     @Override
@@ -40,38 +45,32 @@ public final class RepositoryUpdateMethodImplementationGenerator extends Reposit
 
     @Override
     protected CodeBlock renderStatementParameters(MethodMetadata method, NativeQuery query, EntityMetadata entity) {
-        ParameterMetadata parameter = method.getParameters().get(0);
-
         CodeBlock.Builder snippetBuilder = CodeBlock.builder();
 
-        String entityVariableName;
+        ParameterMetadata parameter = method.getParameters().get(0);
+
+        String rootVariableName;
 
         QueryableMethodName queryableName = method.getQueryableName();
         QualifierFragment qualifier = queryableName.getQualifier();
         if (qualifier.getMethodForm() == PLURAL) {
-            entityVariableName = uniqueize(uncapitalize(entity.getName()));
+            rootVariableName = uniqueize(uncapitalize(entity.getName()));
             snippetBuilder
                     .beginControlFlow("for ($T $L : $L)",
-                                      entity.getNativeType(), entityVariableName, parameter.getName());
+                                      entity.getNativeType(), rootVariableName, parameter.getName());
         }
         else {
-            entityVariableName = parameter.getName();
+            rootVariableName = parameter.getName();
         }
 
-        ParameterIndexProvider parameterIndexProvider = new NumericParameterIndexProvider();
+        NumericParameterIndexProvider parameterIndexProvider = new NumericParameterIndexProvider();
 
         Collection<AttributeMetadata> attributes = entity.getAttributes(true);
         for (AttributeMetadata attribute : attributes) {
-            TypeMirror attributeType = attribute.getNativeType();
-
-            String parameterIndex = parameterIndexProvider.getParameterIndex();
-
-            snippetBuilder.add(
-                    statementMappingRenderer.render(attributeType,
-                                                    parameterIndex,
-                                                    CodeBlock.of("$L.$L()",
-                                                                 entityVariableName, getter(attribute)))
-            );
+            snippetBuilder
+                    .add(attributeToStatementMappingRenderer.renderAttribute(rootVariableName,
+                                                                             attribute,
+                                                                             parameterIndexProvider));
         }
 
         IdentifierMetadata identifier = entity.getIdentifier();
@@ -79,7 +78,7 @@ public final class RepositoryUpdateMethodImplementationGenerator extends Reposit
                 statementMappingRenderer.render(identifier.getNativeType(),
                                                 parameterIndexProvider.getParameterIndex(),
                                                 CodeBlock.of("$L.$L()",
-                                                             entityVariableName, getter(identifier)))
+                                                             rootVariableName, getter(identifier)))
         );
 
         if (qualifier.getMethodForm() == PLURAL) {

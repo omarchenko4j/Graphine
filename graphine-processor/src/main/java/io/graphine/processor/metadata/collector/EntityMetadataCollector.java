@@ -1,9 +1,13 @@
 package io.graphine.processor.metadata.collector;
 
+import io.graphine.core.annotation.Embeddable;
 import io.graphine.core.annotation.Entity;
+import io.graphine.processor.metadata.factory.entity.EmbeddableEntityMetadataFactory;
 import io.graphine.processor.metadata.factory.entity.EntityMetadataFactory;
+import io.graphine.processor.metadata.model.entity.EmbeddableEntityMetadata;
 import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
+import io.graphine.processor.metadata.validator.entity.EmbeddableEntityElementValidator;
 import io.graphine.processor.metadata.validator.entity.EntityElementValidator;
 
 import javax.annotation.processing.RoundEnvironment;
@@ -20,14 +24,21 @@ public final class EntityMetadataCollector {
     private final EntityElementValidator entityElementValidator;
     private final EntityMetadataFactory entityMetadataFactory;
 
+    private final EmbeddableEntityElementValidator embeddableEntityElementValidator;
+    private final EmbeddableEntityMetadataFactory embeddableEntityMetadataFactory;
+
     public EntityMetadataCollector(EntityElementValidator entityElementValidator,
-                                   EntityMetadataFactory entityMetadataFactory) {
+                                   EntityMetadataFactory entityMetadataFactory,
+                                   EmbeddableEntityElementValidator embeddableEntityElementValidator,
+                                   EmbeddableEntityMetadataFactory embeddableEntityMetadataFactory) {
         this.entityElementValidator = entityElementValidator;
         this.entityMetadataFactory = entityMetadataFactory;
+        this.embeddableEntityElementValidator = embeddableEntityElementValidator;
+        this.embeddableEntityMetadataFactory = embeddableEntityMetadataFactory;
     }
 
     public EntityMetadataRegistry collect(RoundEnvironment environment) {
-        return new EntityMetadataRegistry(collectEntities(environment));
+        return new EntityMetadataRegistry(collectEntities(environment), collectEmbeddableEntities(environment));
     }
 
     private Map<String, EntityMetadata> collectEntities(RoundEnvironment environment) {
@@ -48,5 +59,25 @@ public final class EntityMetadataCollector {
             }
         }
         return entityRegistry;
+    }
+
+    private Map<String, EmbeddableEntityMetadata> collectEmbeddableEntities(RoundEnvironment environment) {
+        Set<? extends Element> elements = environment.getElementsAnnotatedWith(Embeddable.class);
+
+        Map<String, EmbeddableEntityMetadata> embeddableEntityRegistry = new HashMap<>(elements.size() + 1, 1);
+        for (Element element : elements) {
+            TypeElement embeddableEntityElement = (TypeElement) element;
+            if (embeddableEntityElementValidator.validate(embeddableEntityElement)) {
+                EmbeddableEntityMetadata embeddedEntity =
+                        embeddableEntityMetadataFactory.createEmbeddedEntity(embeddableEntityElement);
+                embeddableEntityRegistry.put(embeddedEntity.getQualifiedName(), embeddedEntity);
+            }
+            else {
+                // Register invalid embeddable entity without creating metadata.
+                String qualifiedName = embeddableEntityElement.getQualifiedName().toString();
+                embeddableEntityRegistry.put(qualifiedName, null);
+            }
+        }
+        return embeddableEntityRegistry;
     }
 }

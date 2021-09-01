@@ -1,6 +1,5 @@
 package io.graphine.processor.query.generator;
 
-import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.model.repository.RepositoryMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.model.repository.method.name.QueryableMethodName;
@@ -20,10 +19,15 @@ import static java.util.Objects.isNull;
  * @author Oleg Marchenko
  */
 public final class RepositoryNativeQueryGenerator {
-    private final EntityMetadataRegistry entityMetadataRegistry;
+    private final Map<MethodType, RepositoryMethodNativeQueryGenerator> nativeQueryGenerators;
 
     public RepositoryNativeQueryGenerator(EntityMetadataRegistry entityMetadataRegistry) {
-        this.entityMetadataRegistry = entityMetadataRegistry;
+        this.nativeQueryGenerators = new EnumMap<>(MethodType.class);
+        this.nativeQueryGenerators.put(MethodType.FIND, new RepositoryFindMethodNativeQueryGenerator(entityMetadataRegistry));
+        this.nativeQueryGenerators.put(MethodType.COUNT, new RepositoryCountMethodNativeQueryGenerator(entityMetadataRegistry));
+        this.nativeQueryGenerators.put(MethodType.SAVE, new RepositorySaveMethodNativeQueryGenerator(entityMetadataRegistry));
+        this.nativeQueryGenerators.put(MethodType.UPDATE, new RepositoryUpdateMethodNativeQueryGenerator(entityMetadataRegistry));
+        this.nativeQueryGenerators.put(MethodType.DELETE, new RepositoryDeleteMethodNativeQueryGenerator(entityMetadataRegistry));
     }
 
     public RepositoryNativeQueryRegistryStorage generate(Collection<RepositoryMetadata> repositories) {
@@ -35,11 +39,9 @@ public final class RepositoryNativeQueryGenerator {
     }
 
     public RepositoryNativeQueryRegistry generate(RepositoryMetadata repository) {
-        EntityMetadata entity = entityMetadataRegistry.getEntity(repository.getEntityQualifiedName());
+        String entityQualifiedName = repository.getEntityQualifiedName();
 
         RepositoryNativeQueryRegistry repositoryNativeQueryRegistry = new RepositoryNativeQueryRegistry(repository);
-
-        Map<MethodType, RepositoryMethodNativeQueryGenerator> nativeQueryGenerators = new EnumMap<>(MethodType.class);
 
         List<MethodMetadata> methods = repository.getMethods();
         for (MethodMetadata method : methods) {
@@ -48,31 +50,11 @@ public final class RepositoryNativeQueryGenerator {
             QualifierFragment qualifier = queryableName.getQualifier();
             if (isNull(qualifier)) continue; // Native query generation is skipped! Method is invalid.
 
-            NativeQuery query = nativeQueryGenerators
-                    .computeIfAbsent(qualifier.getMethodType(),
-                                     methodType -> createSpecificNativeQueryGenerator(methodType, entity))
-                    .generate(method);
+            RepositoryMethodNativeQueryGenerator nativeQueryGenerator = nativeQueryGenerators.get(qualifier.getMethodType());
+
+            NativeQuery query = nativeQueryGenerator.generate(entityQualifiedName, method);
             repositoryNativeQueryRegistry.registerQuery(method, query);
         }
         return repositoryNativeQueryRegistry;
-    }
-
-    private RepositoryMethodNativeQueryGenerator createSpecificNativeQueryGenerator(MethodType methodType,
-                                                                                    EntityMetadata entity) {
-        switch (methodType) {
-            case FIND:
-                return new RepositoryFindMethodNativeQueryGenerator(entity);
-            case COUNT:
-                return new RepositoryCountMethodNativeQueryGenerator(entity);
-            case SAVE:
-                return new RepositorySaveMethodNativeQueryGenerator(entity);
-            case UPDATE:
-                return new RepositoryUpdateMethodNativeQueryGenerator(entity);
-            case DELETE:
-                return new RepositoryDeleteMethodNativeQueryGenerator(entity);
-            default:
-                // Unreachable exception for the current method type.
-                throw new IllegalArgumentException("Unknown method type");
-        }
     }
 }

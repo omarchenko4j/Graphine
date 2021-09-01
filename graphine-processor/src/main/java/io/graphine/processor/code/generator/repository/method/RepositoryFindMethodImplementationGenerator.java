@@ -5,6 +5,7 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import io.graphine.core.NonUniqueResultException;
+import io.graphine.processor.code.renderer.AttributeFromResultSetMappingRenderer;
 import io.graphine.processor.code.renderer.index.NumericParameterIndexProvider;
 import io.graphine.processor.code.renderer.index.ParameterIndexProvider;
 import io.graphine.processor.code.renderer.mapping.ResultSetMappingRenderer;
@@ -14,6 +15,7 @@ import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.model.repository.method.name.QueryableMethodName;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment;
+import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 import io.graphine.processor.query.model.NativeQuery;
 
 import javax.lang.model.element.ExecutableElement;
@@ -26,7 +28,6 @@ import java.util.HashSet;
 import java.util.Optional;
 
 import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.MethodForm.PLURAL;
-import static io.graphine.processor.util.AccessorUtils.setter;
 import static io.graphine.processor.util.StringUtils.uncapitalize;
 import static io.graphine.processor.util.VariableNameUniqueizer.uniqueize;
 
@@ -36,14 +37,19 @@ import static io.graphine.processor.util.VariableNameUniqueizer.uniqueize;
 public final class RepositoryFindMethodImplementationGenerator extends RepositoryMethodImplementationGenerator {
     private static final String COLLECTION_VARIABLE_NAME = uniqueize("elements");
 
-    public RepositoryFindMethodImplementationGenerator(StatementMappingRenderer statementMappingRenderer,
+    private final AttributeFromResultSetMappingRenderer attributeFromResultSetMappingRenderer;
+
+    public RepositoryFindMethodImplementationGenerator(EntityMetadataRegistry entityMetadataRegistry,
+                                                       StatementMappingRenderer statementMappingRenderer,
                                                        ResultSetMappingRenderer resultSetMappingRenderer) {
-        super(statementMappingRenderer, resultSetMappingRenderer);
+        super(entityMetadataRegistry, statementMappingRenderer, resultSetMappingRenderer);
+        this.attributeFromResultSetMappingRenderer =
+                new AttributeFromResultSetMappingRenderer(entityMetadataRegistry, resultSetMappingRenderer);
     }
 
     @Override
     protected CodeBlock renderResultSetParameters(MethodMetadata method, NativeQuery query, EntityMetadata entity) {
-        CodeBlock.Builder builder = CodeBlock.builder();
+        CodeBlock.Builder snippetBuilder = CodeBlock.builder();
 
         ExecutableElement methodElement = method.getNativeElement();
         TypeMirror returnType = methodElement.getReturnType();
@@ -55,7 +61,7 @@ public final class RepositoryFindMethodImplementationGenerator extends Repositor
         if (qualifier.getMethodForm() == PLURAL) {
             switch (returnType.getKind()) {
                 case ARRAY:
-                    builder
+                    snippetBuilder
                             .addStatement("$T $L = new $T<>()",
                                           ParameterizedTypeName.get(ClassName.get(Collection.class),
                                                                     TypeName.get(entity.getNativeType())),
@@ -68,7 +74,7 @@ public final class RepositoryFindMethodImplementationGenerator extends Repositor
                     switch (typeElement.getQualifiedName().toString()) {
                         case "java.lang.Iterable":
                         case "java.util.stream.Stream":
-                            builder
+                            snippetBuilder
                                     .addStatement("$T $L = new $T<>()",
                                                   ParameterizedTypeName.get(ClassName.get(Collection.class),
                                                                             TypeName.get(entity.getNativeType())),
@@ -77,14 +83,14 @@ public final class RepositoryFindMethodImplementationGenerator extends Repositor
                             break;
                         case "java.util.Collection":
                         case "java.util.List":
-                            builder
+                            snippetBuilder
                                     .addStatement("$T $L = new $T<>()",
                                                   ParameterizedTypeName.get(returnType),
                                                   COLLECTION_VARIABLE_NAME,
                                                   ArrayList.class);
                             break;
                         case "java.util.Set":
-                            builder
+                            snippetBuilder
                                     .addStatement("$T $L = new $T<>()",
                                                   ParameterizedTypeName.get(returnType),
                                                   COLLECTION_VARIABLE_NAME,
@@ -94,35 +100,32 @@ public final class RepositoryFindMethodImplementationGenerator extends Repositor
                     break;
             }
 
-            builder
+            snippetBuilder
                     .beginControlFlow("while ($L.next())", RESULT_SET_VARIABLE_NAME);
         }
         else {
-            builder
+            snippetBuilder
                     .beginControlFlow("if ($L.next())", RESULT_SET_VARIABLE_NAME);
         }
 
-        builder
+        ParameterIndexProvider parameterIndexProvider = new NumericParameterIndexProvider();
+
+        snippetBuilder
                 .addStatement("$T $L = new $T()",
                               entity.getNativeType(),
                               entityVariableName,
                               entity.getNativeType());
-
-        ParameterIndexProvider parameterIndexProvider = new NumericParameterIndexProvider();
-
         Collection<AttributeMetadata> attributes = entity.getAttributes();
         for (AttributeMetadata attribute : attributes) {
-            builder
-                    .addStatement("$L.$L($L)",
-                                  entityVariableName,
-                                  setter(attribute),
-                                  resultSetMappingRenderer.render(attribute.getNativeType(),
-                                                                  parameterIndexProvider.getParameterIndex()));
+            snippetBuilder
+                    .add(attributeFromResultSetMappingRenderer.renderAttribute(entityVariableName,
+                                                                               attribute,
+                                                                               parameterIndexProvider));
         }
 
         switch (returnType.getKind()) {
             case ARRAY:
-                builder
+                snippetBuilder
                         .addStatement("$L.add($L)",
                                       COLLECTION_VARIABLE_NAME,
                                       entityVariableName);
@@ -137,27 +140,27 @@ public final class RepositoryFindMethodImplementationGenerator extends Repositor
                     case "java.util.List":
                     case "java.util.Set":
                     case "java.util.stream.Stream":
-                        builder
+                        snippetBuilder
                                 .addStatement("$L.add($L)",
                                               COLLECTION_VARIABLE_NAME,
                                               entityVariableName);
                         break;
                     default:
                         if (!qualifier.hasFirstSpecifier()) {
-                            builder
+                            snippetBuilder
                                     .beginControlFlow("if ($L.next())", RESULT_SET_VARIABLE_NAME)
                                     .addStatement("throw new $T()", NonUniqueResultException.class)
                                     .endControlFlow();
                         }
 
                         if (elementQualifiedName.equals("java.util.Optional")) {
-                            builder
+                            snippetBuilder
                                     .addStatement("return $T.of($L)",
                                                   Optional.class,
                                                   entityVariableName);
                         }
                         else {
-                            builder
+                            snippetBuilder
                                     .addStatement("return $L",
                                                   entityVariableName);
                         }
@@ -166,12 +169,12 @@ public final class RepositoryFindMethodImplementationGenerator extends Repositor
                 break;
         }
 
-        builder
+        snippetBuilder
                 .endControlFlow();
 
         switch (returnType.getKind()) {
             case ARRAY:
-                builder
+                snippetBuilder
                         .addStatement("return $L.toArray(new $T[0])",
                                       COLLECTION_VARIABLE_NAME,
                                       entity.getNativeType());
@@ -181,7 +184,7 @@ public final class RepositoryFindMethodImplementationGenerator extends Repositor
                 TypeElement typeElement = (TypeElement) declaredType.asElement();
                 switch (typeElement.getQualifiedName().toString()) {
                     case "java.util.Optional":
-                        builder
+                        snippetBuilder
                                 .addStatement("return $T.empty()",
                                               Optional.class);
                         break;
@@ -189,23 +192,23 @@ public final class RepositoryFindMethodImplementationGenerator extends Repositor
                     case "java.util.Collection":
                     case "java.util.List":
                     case "java.util.Set":
-                        builder
+                        snippetBuilder
                                 .addStatement("return $L",
                                               COLLECTION_VARIABLE_NAME);
                         break;
                     case "java.util.stream.Stream":
-                        builder
+                        snippetBuilder
                                 .addStatement("return $L.stream()",
                                               COLLECTION_VARIABLE_NAME);
                         break;
                     default:
-                        builder
+                        snippetBuilder
                                 .addStatement("return null");
                         break;
                 }
                 break;
         }
 
-        return builder.build();
+        return snippetBuilder.build();
     }
 }

@@ -7,6 +7,8 @@ import io.graphine.processor.metadata.model.repository.method.name.QueryableMeth
 import io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.SortingFragment;
+import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
+import io.graphine.processor.util.StringUtils;
 
 import java.util.stream.Collectors;
 
@@ -16,12 +18,12 @@ import static java.util.Objects.nonNull;
  * @author Oleg Marchenko
  */
 public final class RepositoryFindMethodNativeQueryGenerator extends RepositoryMethodNativeQueryGenerator {
-    public RepositoryFindMethodNativeQueryGenerator(EntityMetadata entity) {
-        super(entity);
+    public RepositoryFindMethodNativeQueryGenerator(EntityMetadataRegistry entityMetadataRegistry) {
+        super(entityMetadataRegistry);
     }
 
     @Override
-    protected String generateQuery(MethodMetadata method) {
+    protected String generateQuery(EntityMetadata entity, MethodMetadata method) {
         StringBuilder queryBuilder = new StringBuilder()
                 .append("SELECT ");
 
@@ -32,11 +34,7 @@ public final class RepositoryFindMethodNativeQueryGenerator extends RepositoryMe
             queryBuilder.append("DISTINCT ");
         }
 
-        String joinedColumns =
-                entity.getAttributes()
-                      .stream()
-                      .map(AttributeMetadata::getColumn)
-                      .collect(Collectors.joining(", "));
+        String joinedColumns = StringUtils.join(collectColumns(entity), ", ", "", "");
         queryBuilder
                 .append(joinedColumns)
                 .append(" FROM ")
@@ -44,12 +42,12 @@ public final class RepositoryFindMethodNativeQueryGenerator extends RepositoryMe
 
         ConditionFragment condition = queryableName.getCondition();
         if (nonNull(condition)) {
-            queryBuilder.append(generateWhereClause(condition));
+            queryBuilder.append(generateWhereClause(entity, condition));
         }
 
         SortingFragment sorting = queryableName.getSorting();
         if (nonNull(sorting)) {
-            queryBuilder.append(generateOrderClause(sorting));
+            queryBuilder.append(generateOrderClause(entity, sorting));
         }
 
         if (qualifier.hasFirstSpecifier()) {
@@ -59,7 +57,7 @@ public final class RepositoryFindMethodNativeQueryGenerator extends RepositoryMe
         return queryBuilder.toString();
     }
 
-    private String generateOrderClause(SortingFragment sorting) {
+    private String generateOrderClause(EntityMetadata entity, SortingFragment sorting) {
         String joinedOrderColumns =
                 sorting.getSorts()
                        .stream()

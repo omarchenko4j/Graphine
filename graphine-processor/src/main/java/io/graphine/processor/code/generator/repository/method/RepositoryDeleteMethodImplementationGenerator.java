@@ -13,6 +13,7 @@ import io.graphine.processor.metadata.model.repository.method.name.QueryableMeth
 import io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment;
 import io.graphine.processor.metadata.model.repository.method.parameter.ParameterMetadata;
+import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 import io.graphine.processor.query.model.NativeQuery;
 
 import java.sql.PreparedStatement;
@@ -28,9 +29,10 @@ import static java.util.Objects.isNull;
  * @author Oleg Marchenko
  */
 public final class RepositoryDeleteMethodImplementationGenerator extends RepositoryMethodImplementationGenerator {
-    public RepositoryDeleteMethodImplementationGenerator(StatementMappingRenderer statementMappingRenderer,
+    public RepositoryDeleteMethodImplementationGenerator(EntityMetadataRegistry entityMetadataRegistry,
+                                                         StatementMappingRenderer statementMappingRenderer,
                                                          ResultSetMappingRenderer resultSetMappingRenderer) {
-        super(statementMappingRenderer, resultSetMappingRenderer);
+        super(entityMetadataRegistry, statementMappingRenderer, resultSetMappingRenderer);
     }
 
     @Override

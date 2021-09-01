@@ -10,6 +10,7 @@ import io.graphine.processor.code.renderer.mapping.StatementMappingRenderer;
 import io.graphine.processor.metadata.collector.EntityMetadataCollector;
 import io.graphine.processor.metadata.collector.RepositoryMetadataCollector;
 import io.graphine.processor.metadata.factory.entity.AttributeMetadataFactory;
+import io.graphine.processor.metadata.factory.entity.EmbeddableEntityMetadataFactory;
 import io.graphine.processor.metadata.factory.entity.EntityMetadataFactory;
 import io.graphine.processor.metadata.factory.repository.MethodMetadataFactory;
 import io.graphine.processor.metadata.factory.repository.RepositoryMetadataFactory;
@@ -17,6 +18,7 @@ import io.graphine.processor.metadata.model.repository.RepositoryMetadata;
 import io.graphine.processor.metadata.parser.RepositoryMethodNameParser;
 import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 import io.graphine.processor.metadata.registry.RepositoryMetadataRegistry;
+import io.graphine.processor.metadata.validator.entity.EmbeddableEntityElementValidator;
 import io.graphine.processor.metadata.validator.entity.EntityElementValidator;
 import io.graphine.processor.metadata.validator.repository.RepositoryElementValidator;
 import io.graphine.processor.metadata.validator.repository.RepositoryMetadataValidator;
@@ -107,8 +109,13 @@ public class GraphineProcessor extends AbstractProcessor {
                 new EntityMetadataFactory(tableNamingPipeline, attributeMetadataFactory);
         EntityElementValidator entityElementValidator =
                 new EntityElementValidator();
+        EmbeddableEntityElementValidator embeddableEntityElementValidator =
+                new EmbeddableEntityElementValidator();
+        EmbeddableEntityMetadataFactory embeddableEntityMetadataFactory =
+                new EmbeddableEntityMetadataFactory(attributeMetadataFactory);
         EntityMetadataCollector entityMetadataCollector =
-                new EntityMetadataCollector(entityElementValidator, entityMetadataFactory);
+                new EntityMetadataCollector(entityElementValidator, entityMetadataFactory,
+                                            embeddableEntityElementValidator, embeddableEntityMetadataFactory);
         return entityMetadataCollector.collect(roundEnv);
     }
 

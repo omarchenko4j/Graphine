@@ -17,6 +17,7 @@ import io.graphine.processor.metadata.model.repository.method.name.fragment.Cond
 import io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment.OperatorType;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment.OrPredicate;
 import io.graphine.processor.metadata.model.repository.method.parameter.ParameterMetadata;
+import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 import io.graphine.processor.query.model.NativeQuery;
 
 import javax.lang.model.element.TypeElement;
@@ -42,16 +43,20 @@ public abstract class RepositoryMethodImplementationGenerator {
     public static final String STATEMENT_VARIABLE_NAME = uniqueize("statement");
     public static final String RESULT_SET_VARIABLE_NAME = uniqueize("resultSet");
 
+    protected final EntityMetadataRegistry entityMetadataRegistry;
     protected final StatementMappingRenderer statementMappingRenderer;
     protected final ResultSetMappingRenderer resultSetMappingRenderer;
 
-    protected RepositoryMethodImplementationGenerator(StatementMappingRenderer statementMappingRenderer,
+    protected RepositoryMethodImplementationGenerator(EntityMetadataRegistry entityMetadataRegistry,
+                                                      StatementMappingRenderer statementMappingRenderer,
                                                       ResultSetMappingRenderer resultSetMappingRenderer) {
+        this.entityMetadataRegistry = entityMetadataRegistry;
         this.statementMappingRenderer = statementMappingRenderer;
         this.resultSetMappingRenderer = resultSetMappingRenderer;
     }
 
-    public final MethodSpec generate(MethodMetadata method, NativeQuery query, EntityMetadata entity) {
+    public final MethodSpec generate(MethodMetadata method, NativeQuery query, String entityQualifiedName) {
+        EntityMetadata entity = entityMetadataRegistry.getEntity(entityQualifiedName);
         return MethodSpec.overriding(method.getNativeElement())
                          .addCode(renderConnection(method, query, entity))
                          .build();

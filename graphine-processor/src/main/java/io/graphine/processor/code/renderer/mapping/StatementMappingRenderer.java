@@ -163,6 +163,12 @@ public final class StatementMappingRenderer {
                                                       STATEMENT_VARIABLE_NAME, index, valueSnippet)
                                         .build();
                 }
+            case NULL:
+                return CodeBlock.builder()
+                                // TODO: switch to using PreparedStatement.setNull(..)
+                                .addStatement("$L.setObject($L, null)",
+                                              STATEMENT_VARIABLE_NAME, index)
+                                .build();
             default:
                 return CodeBlock.builder().build();
         }

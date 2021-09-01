@@ -1,34 +1,59 @@
 package io.graphine.processor.query.generator.specific;
 
+import io.graphine.processor.metadata.model.entity.EmbeddableEntityMetadata;
 import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
+import io.graphine.processor.metadata.model.entity.attribute.EmbeddedAttribute;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment;
+import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 import io.graphine.processor.query.model.NativeQuery;
 
 import java.util.List;
 import java.util.StringJoiner;
+import java.util.stream.Collectors;
 
 import static io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment.AndPredicate;
 import static io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment.OrPredicate;
+import static java.util.Collections.singletonList;
 
 /**
  * @author Oleg Marchenko
  */
 public abstract class RepositoryMethodNativeQueryGenerator {
-    protected final EntityMetadata entity;
+    protected final EntityMetadataRegistry entityMetadataRegistry;
 
-    protected RepositoryMethodNativeQueryGenerator(EntityMetadata entity) {
-        this.entity = entity;
+    protected RepositoryMethodNativeQueryGenerator(EntityMetadataRegistry entityMetadataRegistry) {
+        this.entityMetadataRegistry = entityMetadataRegistry;
     }
 
-    public final NativeQuery generate(MethodMetadata method) {
-        return new NativeQuery(generateQuery(method));
+    public final NativeQuery generate(String entityQualifiedName, MethodMetadata method) {
+        EntityMetadata entity = entityMetadataRegistry.getEntity(entityQualifiedName);
+        return new NativeQuery(generateQuery(entity, method));
     }
 
-    protected abstract String generateQuery(MethodMetadata method);
+    protected abstract String generateQuery(EntityMetadata entity, MethodMetadata method);
 
-    protected final String generateWhereClause(ConditionFragment condition) {
+    protected List<String> collectColumns(EntityMetadata entity) {
+        return entity.getAttributes()
+                     .stream()
+                     .flatMap(attribute -> getColumn(attribute).stream())
+                     .collect(Collectors.toList());
+    }
+
+    protected List<String> getColumn(AttributeMetadata attribute) {
+        if (attribute instanceof EmbeddedAttribute) {
+            EmbeddableEntityMetadata embeddableEntity =
+                    entityMetadataRegistry.getEmbeddableEntity(attribute.getNativeType().toString());
+            return embeddableEntity.getAttributes()
+                                   .stream()
+                                   .flatMap(attr -> getColumn(attr).stream())
+                                   .collect(Collectors.toList());
+        }
+        return singletonList(attribute.getColumn());
+    }
+
+    protected final String generateWhereClause(EntityMetadata entity, ConditionFragment condition) {
         StringJoiner orPredicateJoiner = new StringJoiner(" OR ");
 
         List<OrPredicate> orPredicates = condition.getOrPredicates();
@@ -105,6 +130,6 @@ public abstract class RepositoryMethodNativeQueryGenerator {
             orPredicateJoiner.add(andPredicateJoiner.toString());
         }
 
-        return " WHERE " + orPredicateJoiner.toString();
+        return " WHERE " + orPredicateJoiner;
     }
 }
