@@ -6,6 +6,7 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import java.util.Map;
 
 import static java.util.Objects.nonNull;
 
@@ -13,8 +14,16 @@ import static java.util.Objects.nonNull;
  * @author Oleg Marchenko
  */
 public class EmbeddedAttribute extends AttributeMetadata {
-    public EmbeddedAttribute(VariableElement element) {
+    private final Map<String, String> attributeNameToColumnNameMap;
+
+    public EmbeddedAttribute(VariableElement element,
+                             Map<String, String> attributeNameToColumnNameMap) {
         super(element, null);
+        this.attributeNameToColumnNameMap = attributeNameToColumnNameMap;
+    }
+
+    public String overrideAttribute(AttributeMetadata attribute) {
+        return attributeNameToColumnNameMap.getOrDefault(attribute.getName(), attribute.getColumn());
     }
 
     @Override
