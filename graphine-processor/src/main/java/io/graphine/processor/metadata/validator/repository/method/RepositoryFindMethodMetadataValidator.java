@@ -9,6 +9,7 @@ import io.graphine.processor.metadata.model.repository.method.name.fragment.Qual
 import io.graphine.processor.metadata.model.repository.method.name.fragment.SortingFragment;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.SortingFragment.Sort;
 import io.graphine.processor.metadata.model.repository.method.parameter.ParameterMetadata;
+import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
@@ -32,12 +33,12 @@ import static javax.tools.Diagnostic.Kind;
  * @author Oleg Marchenko
  */
 public final class RepositoryFindMethodMetadataValidator extends RepositoryMethodMetadataValidator {
-    public RepositoryFindMethodMetadataValidator(EntityMetadata entity) {
-        super(entity);
+    public RepositoryFindMethodMetadataValidator(EntityMetadataRegistry entityMetadataRegistry) {
+        super(entityMetadataRegistry);
     }
 
     @Override
-    protected boolean validateReturnType(MethodMetadata method) {
+    protected boolean validateReturnType(MethodMetadata method, EntityMetadata entity) {
         boolean valid = true;
 
         TypeMirror entityType = entity.getNativeType();
@@ -115,7 +116,7 @@ public final class RepositoryFindMethodMetadataValidator extends RepositoryMetho
     }
 
     @Override
-    protected boolean validateSignature(MethodMetadata method) {
+    protected boolean validateSignature(MethodMetadata method, EntityMetadata entity) {
         boolean valid = true;
 
         QueryableMethodName queryableName = method.getQueryableName();
@@ -147,7 +148,7 @@ public final class RepositoryFindMethodMetadataValidator extends RepositoryMetho
             }
         }
         else {
-            if (!validateConditionParameters(method)) {
+            if (!validateConditionParameters(method, entity)) {
                 valid = false;
             }
         }
@@ -158,7 +159,7 @@ public final class RepositoryFindMethodMetadataValidator extends RepositoryMetho
                 valid = false;
                 messager.printMessage(Kind.ERROR, "Method name must not include sorting", method.getNativeElement());
             }
-            if (!validateSortingParameters(method)) {
+            if (!validateSortingParameters(method, entity)) {
                 valid = false;
             }
         }
@@ -171,7 +172,7 @@ public final class RepositoryFindMethodMetadataValidator extends RepositoryMetho
         return valid;
     }
 
-    private boolean validateSortingParameters(MethodMetadata method) {
+    private boolean validateSortingParameters(MethodMetadata method, EntityMetadata entity) {
         boolean valid = true;
 
         QueryableMethodName queryableName = method.getQueryableName();

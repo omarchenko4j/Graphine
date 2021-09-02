@@ -7,6 +7,7 @@ import io.graphine.processor.metadata.model.repository.method.name.fragment.Cond
 import io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.SortingFragment;
 import io.graphine.processor.metadata.model.repository.method.parameter.ParameterMetadata;
+import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
@@ -24,12 +25,12 @@ import static javax.tools.Diagnostic.Kind;
  * @author Oleg Marchenko
  */
 public final class RepositoryCountMethodMetadataValidator extends RepositoryMethodMetadataValidator {
-    public RepositoryCountMethodMetadataValidator(EntityMetadata entity) {
-        super(entity);
+    public RepositoryCountMethodMetadataValidator(EntityMetadataRegistry entityMetadataRegistry) {
+        super(entityMetadataRegistry);
     }
 
     @Override
-    protected boolean validateReturnType(MethodMetadata method) {
+    protected boolean validateReturnType(MethodMetadata method, EntityMetadata entity) {
         boolean valid = true;
 
         ExecutableElement methodElement = method.getNativeElement();
@@ -63,7 +64,7 @@ public final class RepositoryCountMethodMetadataValidator extends RepositoryMeth
     }
 
     @Override
-    protected boolean validateSignature(MethodMetadata method) {
+    protected boolean validateSignature(MethodMetadata method, EntityMetadata entity) {
         boolean valid = true;
 
         QueryableMethodName queryableName = method.getQueryableName();
@@ -98,7 +99,7 @@ public final class RepositoryCountMethodMetadataValidator extends RepositoryMeth
             }
         }
         else {
-            if (!validateConditionParameters(method)) {
+            if (!validateConditionParameters(method, entity)) {
                 valid = false;
             }
         }

@@ -23,9 +23,17 @@ import static javax.tools.Diagnostic.Kind;
  */
 public final class RepositoryMetadataValidator {
     private final EntityMetadataRegistry entityMetadataRegistry;
+    private final Map<MethodType, RepositoryMethodMetadataValidator> methodValidators;
 
     public RepositoryMetadataValidator(EntityMetadataRegistry entityMetadataRegistry) {
         this.entityMetadataRegistry = entityMetadataRegistry;
+
+        this.methodValidators = new EnumMap<>(MethodType.class);
+        this.methodValidators.put(MethodType.FIND, new RepositoryFindMethodMetadataValidator(entityMetadataRegistry));
+        this.methodValidators.put(MethodType.COUNT, new RepositoryCountMethodMetadataValidator(entityMetadataRegistry));
+        this.methodValidators.put(MethodType.SAVE, new RepositorySaveMethodMetadataValidator(entityMetadataRegistry));
+        this.methodValidators.put(MethodType.UPDATE, new RepositoryUpdateMethodMetadataValidator(entityMetadataRegistry));
+        this.methodValidators.put(MethodType.DELETE, new RepositoryDeleteMethodMetadataValidator(entityMetadataRegistry));
     }
 
     public boolean validate(Collection<RepositoryMetadata> repositories) {
@@ -50,8 +58,6 @@ public final class RepositoryMetadataValidator {
         EntityMetadata entity = entityMetadataRegistry.getEntity(entityQualifiedName);
         if (isNull(entity)) return false; // Abort validation if the entity has no metadata.
 
-        Map<MethodType, RepositoryMethodMetadataValidator> methodValidators = new EnumMap<>(MethodType.class);
-
         List<MethodMetadata> methods = repository.getMethods();
         for (MethodMetadata method : methods) {
             QueryableMethodName queryableName = method.getQueryableName();
@@ -60,30 +66,11 @@ public final class RepositoryMetadataValidator {
             if (isNull(qualifier)) continue; // Method validation is skipped! Error will be thrown in the parser.
 
             RepositoryMethodMetadataValidator repositoryMethodMetadataValidator =
-                    methodValidators.computeIfAbsent(qualifier.getMethodType(),
-                                                     methodType -> createMethodValidator(methodType, entity));
-            if (!repositoryMethodMetadataValidator.validate(method)) {
+                    methodValidators.get(qualifier.getMethodType());
+            if (!repositoryMethodMetadataValidator.validate(method, entity)) {
                 valid = false;
             }
         }
         return valid;
-    }
-
-    private RepositoryMethodMetadataValidator createMethodValidator(MethodType methodType, EntityMetadata entity) {
-        switch (methodType) {
-            case FIND:
-                return new RepositoryFindMethodMetadataValidator(entity);
-            case COUNT:
-                return new RepositoryCountMethodMetadataValidator(entity);
-            case SAVE:
-                return new RepositorySaveMethodMetadataValidator(entity);
-            case UPDATE:
-                return new RepositoryUpdateMethodMetadataValidator(entity);
-            case DELETE:
-                return new RepositoryDeleteMethodMetadataValidator(entity);
-            default:
-                // Unreachable exception for the current method type.
-                throw new IllegalArgumentException("Unknown method type");
-        }
     }
 }

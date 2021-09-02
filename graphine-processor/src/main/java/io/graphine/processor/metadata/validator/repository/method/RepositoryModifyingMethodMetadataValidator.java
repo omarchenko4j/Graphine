@@ -7,6 +7,7 @@ import io.graphine.processor.metadata.model.repository.method.name.fragment.Cond
 import io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.SortingFragment;
 import io.graphine.processor.metadata.model.repository.method.parameter.ParameterMetadata;
+import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
@@ -27,12 +28,12 @@ import static javax.tools.Diagnostic.Kind;
  * @author Oleg Marchenko
  */
 public abstract class RepositoryModifyingMethodMetadataValidator extends RepositoryMethodMetadataValidator {
-    protected RepositoryModifyingMethodMetadataValidator(EntityMetadata entity) {
-        super(entity);
+    protected RepositoryModifyingMethodMetadataValidator(EntityMetadataRegistry entityMetadataRegistry) {
+        super(entityMetadataRegistry);
     }
 
     @Override
-    protected boolean validateReturnType(MethodMetadata method) {
+    protected boolean validateReturnType(MethodMetadata method, EntityMetadata entity) {
         boolean valid = true;
 
         ExecutableElement methodElement = method.getNativeElement();
@@ -47,7 +48,7 @@ public abstract class RepositoryModifyingMethodMetadataValidator extends Reposit
     }
 
     @Override
-    protected boolean validateSignature(MethodMetadata method) {
+    protected boolean validateSignature(MethodMetadata method, EntityMetadata entity) {
         boolean valid = true;
 
         QueryableMethodName queryableName = method.getQueryableName();
@@ -62,7 +63,7 @@ public abstract class RepositoryModifyingMethodMetadataValidator extends Reposit
             messager.printMessage(Kind.ERROR, "Method name must not include 'First' keyword", method.getNativeElement());
         }
 
-        if (!validateConsumedParameter(method)) {
+        if (!validateMethodParameter(method, entity)) {
             valid = false;
         }
 
@@ -81,7 +82,7 @@ public abstract class RepositoryModifyingMethodMetadataValidator extends Reposit
         return valid;
     }
 
-    protected boolean validateConsumedParameter(MethodMetadata method) {
+    protected boolean validateMethodParameter(MethodMetadata method, EntityMetadata entity) {
         boolean valid = true;
 
         List<ParameterMetadata> methodParameters = method.getParameters();
@@ -123,9 +124,9 @@ public abstract class RepositoryModifyingMethodMetadataValidator extends Reposit
                             DeclaredType declaredType = (DeclaredType) parameterType;
                             String qualifiedName = ((TypeElement) declaredType.asElement()).getQualifiedName().toString();
                             if (qualifiedName.equals(Iterable.class.getName()) ||
-                                    qualifiedName.equals(Collection.class.getName()) ||
-                                    qualifiedName.equals(List.class.getName()) ||
-                                    qualifiedName.equals(Set.class.getName())) {
+                                qualifiedName.equals(Collection.class.getName()) ||
+                                qualifiedName.equals(List.class.getName()) ||
+                                qualifiedName.equals(Set.class.getName())) {
                                 parameterType = declaredType.getTypeArguments().get(0);
                                 if (!typeUtils.isSameType(parameterType, entityType)) {
                                     valid = false;

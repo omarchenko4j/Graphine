@@ -6,6 +6,7 @@ import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.model.repository.method.name.QueryableMethodName;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment;
 import io.graphine.processor.metadata.model.repository.method.parameter.ParameterMetadata;
+import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.ArrayType;
@@ -28,28 +29,28 @@ import static javax.tools.Diagnostic.Kind;
  * @author Oleg Marchenko
  */
 public abstract class RepositoryMethodMetadataValidator {
-    protected final EntityMetadata entity;
+    protected final EntityMetadataRegistry entityMetadataRegistry;
 
-    protected RepositoryMethodMetadataValidator(EntityMetadata entity) {
-        this.entity = entity;
+    protected RepositoryMethodMetadataValidator(EntityMetadataRegistry entityMetadataRegistry) {
+        this.entityMetadataRegistry = entityMetadataRegistry;
     }
 
-    public boolean validate(MethodMetadata method) {
+    public final boolean validate(MethodMetadata method, EntityMetadata entity) {
         boolean valid = true;
-        if (!validateReturnType(method)) {
+        if (!validateReturnType(method, entity)) {
             valid = false;
         }
-        if (!validateSignature(method)) {
+        if (!validateSignature(method, entity)) {
             valid = false;
         }
         return valid;
     }
 
-    protected abstract boolean validateReturnType(MethodMetadata method);
+    protected abstract boolean validateReturnType(MethodMetadata method, EntityMetadata entity);
 
-    protected abstract boolean validateSignature(MethodMetadata method);
+    protected abstract boolean validateSignature(MethodMetadata method, EntityMetadata entity);
 
-    protected boolean validateConditionParameters(MethodMetadata method) {
+    protected boolean validateConditionParameters(MethodMetadata method, EntityMetadata entity) {
         boolean valid = true;
 
         QueryableMethodName queryableName = method.getQueryableName();

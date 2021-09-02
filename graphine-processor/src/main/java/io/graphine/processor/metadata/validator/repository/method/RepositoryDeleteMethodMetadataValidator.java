@@ -6,6 +6,7 @@ import io.graphine.processor.metadata.model.repository.method.name.QueryableMeth
 import io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.SortingFragment;
+import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 
 import static io.graphine.processor.support.EnvironmentContext.messager;
 import static java.util.Objects.isNull;
@@ -16,12 +17,12 @@ import static javax.tools.Diagnostic.Kind;
  * @author Oleg Marchenko
  */
 public final class RepositoryDeleteMethodMetadataValidator extends RepositoryModifyingMethodMetadataValidator {
-    public RepositoryDeleteMethodMetadataValidator(EntityMetadata entity) {
-        super(entity);
+    public RepositoryDeleteMethodMetadataValidator(EntityMetadataRegistry entityMetadataRegistry) {
+        super(entityMetadataRegistry);
     }
 
     @Override
-    protected boolean validateSignature(MethodMetadata method) {
+    protected boolean validateSignature(MethodMetadata method, EntityMetadata entity) {
         boolean valid = true;
 
         QueryableMethodName queryableName = method.getQueryableName();
@@ -38,12 +39,12 @@ public final class RepositoryDeleteMethodMetadataValidator extends RepositoryMod
 
         ConditionFragment condition = queryableName.getCondition();
         if (isNull(condition)) {
-            if (!validateConsumedParameter(method)) {
+            if (!validateMethodParameter(method, entity)) {
                 valid = false;
             }
         }
         else {
-            if (!validateConditionParameters(method)) {
+            if (!validateConditionParameters(method, entity)) {
                 valid = false;
             }
         }
