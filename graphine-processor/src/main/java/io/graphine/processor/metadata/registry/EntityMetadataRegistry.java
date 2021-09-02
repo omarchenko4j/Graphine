@@ -40,4 +40,8 @@ public final class EntityMetadataRegistry {
     public EmbeddableEntityMetadata getEmbeddableEntity(String qualifiedName) {
         return embeddableEntityRegistry.get(qualifiedName);
     }
+
+    public boolean containsEmbeddableEntity(String qualifiedName) {
+        return embeddableEntityRegistry.containsKey(qualifiedName);
+    }
 }

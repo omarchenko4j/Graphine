@@ -7,10 +7,12 @@ import io.graphine.processor.metadata.model.repository.method.name.QueryableMeth
 import io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.SortingFragment;
+import io.graphine.processor.metadata.model.repository.method.name.fragment.SortingFragment.Sort;
 import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 import io.graphine.processor.util.StringUtils;
 
-import java.util.stream.Collectors;
+import java.util.List;
+import java.util.StringJoiner;
 
 import static io.graphine.processor.util.StringUtils.getIfNotEmpty;
 import static java.util.Objects.nonNull;
@@ -60,14 +62,15 @@ public final class RepositoryFindMethodNativeQueryGenerator extends RepositoryMe
     }
 
     private String generateOrderClause(EntityMetadata entity, SortingFragment sorting) {
-        String joinedOrderColumns =
-                sorting.getSorts()
-                       .stream()
-                       .map(sort -> {
-                           AttributeMetadata attribute = entity.getAttribute(sort.getAttributeName());
-                           return attribute.getColumn() + " " + sort.getDirection().name();
-                       })
-                       .collect(Collectors.joining(", "));
-        return " ORDER BY " + joinedOrderColumns;
+        StringJoiner orderJoiner = new StringJoiner(", ");
+        for (Sort sort : sorting.getSorts()) {
+            AttributeMetadata attribute = entity.getAttribute(sort.getAttributeName());
+
+            List<String> columns = getColumn(attribute);
+            for (String column : columns) {
+                orderJoiner.add(column + " " + sort.getDirection().name());
+            }
+        }
+        return " ORDER BY " + orderJoiner;
     }
 }

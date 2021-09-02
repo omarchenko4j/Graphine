@@ -5,7 +5,6 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import io.graphine.core.NonUniqueResultException;
-import io.graphine.processor.code.renderer.AttributeFromResultSetMappingRenderer;
 import io.graphine.processor.code.renderer.index.NumericParameterIndexProvider;
 import io.graphine.processor.code.renderer.index.ParameterIndexProvider;
 import io.graphine.processor.code.renderer.mapping.ResultSetMappingRenderer;
@@ -37,14 +36,10 @@ import static io.graphine.processor.util.VariableNameUniqueizer.uniqueize;
 public final class RepositoryFindMethodImplementationGenerator extends RepositoryMethodImplementationGenerator {
     private static final String COLLECTION_VARIABLE_NAME = uniqueize("elements");
 
-    private final AttributeFromResultSetMappingRenderer attributeFromResultSetMappingRenderer;
-
     public RepositoryFindMethodImplementationGenerator(EntityMetadataRegistry entityMetadataRegistry,
                                                        StatementMappingRenderer statementMappingRenderer,
                                                        ResultSetMappingRenderer resultSetMappingRenderer) {
         super(entityMetadataRegistry, statementMappingRenderer, resultSetMappingRenderer);
-        this.attributeFromResultSetMappingRenderer =
-                new AttributeFromResultSetMappingRenderer(entityMetadataRegistry, resultSetMappingRenderer);
     }
 
     @Override

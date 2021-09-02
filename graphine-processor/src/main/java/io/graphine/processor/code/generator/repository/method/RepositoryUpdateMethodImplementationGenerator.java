@@ -1,7 +1,6 @@
 package io.graphine.processor.code.generator.repository.method;
 
 import com.squareup.javapoet.CodeBlock;
-import io.graphine.processor.code.renderer.AttributeToStatementMappingRenderer;
 import io.graphine.processor.code.renderer.index.NumericParameterIndexProvider;
 import io.graphine.processor.code.renderer.mapping.ResultSetMappingRenderer;
 import io.graphine.processor.code.renderer.mapping.StatementMappingRenderer;
@@ -26,14 +25,10 @@ import static io.graphine.processor.util.VariableNameUniqueizer.uniqueize;
  * @author Oleg Marchenko
  */
 public final class RepositoryUpdateMethodImplementationGenerator extends RepositoryMethodImplementationGenerator {
-    private final AttributeToStatementMappingRenderer attributeToStatementMappingRenderer;
-
     public RepositoryUpdateMethodImplementationGenerator(EntityMetadataRegistry entityMetadataRegistry,
                                                          StatementMappingRenderer statementMappingRenderer,
                                                          ResultSetMappingRenderer resultSetMappingRenderer) {
         super(entityMetadataRegistry, statementMappingRenderer, resultSetMappingRenderer);
-        this.attributeToStatementMappingRenderer =
-                new AttributeToStatementMappingRenderer(entityMetadataRegistry, statementMappingRenderer);
     }
 
     @Override

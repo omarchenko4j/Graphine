@@ -4,12 +4,16 @@ import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import io.graphine.core.GraphineException;
 import io.graphine.core.util.UnnamedParameterRepeater;
+import io.graphine.processor.code.renderer.AttributeFromResultSetMappingRenderer;
+import io.graphine.processor.code.renderer.AttributeToStatementMappingRenderer;
 import io.graphine.processor.code.renderer.index.IncrementalParameterIndexProvider;
 import io.graphine.processor.code.renderer.index.NumericParameterIndexProvider;
 import io.graphine.processor.code.renderer.index.ParameterIndexProvider;
 import io.graphine.processor.code.renderer.mapping.ResultSetMappingRenderer;
 import io.graphine.processor.code.renderer.mapping.StatementMappingRenderer;
+import io.graphine.processor.metadata.model.entity.EmbeddableEntityMetadata;
 import io.graphine.processor.metadata.model.entity.EntityMetadata;
+import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.model.repository.method.name.QueryableMethodName;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment;
@@ -22,6 +26,7 @@ import io.graphine.processor.query.model.NativeQuery;
 
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -47,12 +52,20 @@ public abstract class RepositoryMethodImplementationGenerator {
     protected final StatementMappingRenderer statementMappingRenderer;
     protected final ResultSetMappingRenderer resultSetMappingRenderer;
 
+    protected final AttributeToStatementMappingRenderer attributeToStatementMappingRenderer;
+    protected final AttributeFromResultSetMappingRenderer attributeFromResultSetMappingRenderer;
+
     protected RepositoryMethodImplementationGenerator(EntityMetadataRegistry entityMetadataRegistry,
                                                       StatementMappingRenderer statementMappingRenderer,
                                                       ResultSetMappingRenderer resultSetMappingRenderer) {
         this.entityMetadataRegistry = entityMetadataRegistry;
         this.statementMappingRenderer = statementMappingRenderer;
         this.resultSetMappingRenderer = resultSetMappingRenderer;
+
+        this.attributeToStatementMappingRenderer =
+                new AttributeToStatementMappingRenderer(entityMetadataRegistry, statementMappingRenderer);
+        this.attributeFromResultSetMappingRenderer =
+                new AttributeFromResultSetMappingRenderer(entityMetadataRegistry, resultSetMappingRenderer);
     }
 
     public final MethodSpec generate(MethodMetadata method, NativeQuery query, String entityQualifiedName) {
@@ -161,6 +174,29 @@ public abstract class RepositoryMethodImplementationGenerator {
                             ParameterMetadata parameter = parameters.get(j);
 
                             String parameterName = parameter.getName();
+                            TypeMirror parameterType = parameter.getNativeType();
+                            if (parameterType.getKind() == TypeKind.DECLARED) {
+                                // TODO: define embeddable entities in method parameters earlier
+                                if (entityMetadataRegistry.containsEmbeddableEntity(parameterType.toString())) {
+                                    NumericParameterIndexProvider clonedParameterIndexProvider;
+                                    if (parameterIndexProvider instanceof NumericParameterIndexProvider) {
+                                        clonedParameterIndexProvider =
+                                                (NumericParameterIndexProvider) parameterIndexProvider;
+                                    }
+                                    else {
+                                        clonedParameterIndexProvider = new NumericParameterIndexProvider();
+                                    }
+
+                                    EmbeddableEntityMetadata embeddableEntity =
+                                            entityMetadataRegistry.getEmbeddableEntity(parameterType.toString());
+                                    for (AttributeMetadata attribute : embeddableEntity.getAttributes()) {
+                                        snippetBuilder
+                                                .add(attributeToStatementMappingRenderer.renderAttribute(parameterName, attribute, clonedParameterIndexProvider));
+                                    }
+                                    continue;
+                                }
+                            }
+
                             CodeBlock parameterValue;
                             switch (operator) {
                                 case STARTING_WITH:
@@ -178,12 +214,9 @@ public abstract class RepositoryMethodImplementationGenerator {
                                     break;
                             }
 
-                            TypeMirror parameterType = parameter.getNativeType();
                             String parameterIndex = parameterIndexProvider.getParameterIndex();
-
-                            snippetBuilder.add(statementMappingRenderer.render(parameterType,
-                                                                               parameterIndex,
-                                                                               parameterValue));
+                            snippetBuilder
+                                    .add(statementMappingRenderer.render(parameterType, parameterIndex, parameterValue));
                         }
 
                         i += operator.getParameterCount();
