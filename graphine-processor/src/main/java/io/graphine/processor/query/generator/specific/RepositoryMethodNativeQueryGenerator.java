@@ -5,6 +5,7 @@ import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.EmbeddedAttribute;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
+import io.graphine.processor.metadata.model.repository.method.name.fragment.AttributeChain;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment;
 import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 import io.graphine.processor.query.model.NativeQuery;
@@ -19,6 +20,7 @@ import static io.graphine.processor.metadata.model.repository.method.name.fragme
 import static io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment.OrPredicate;
 import static java.util.Collections.singletonList;
 import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
 
 /**
  * @author Oleg Marchenko
@@ -73,9 +75,31 @@ public abstract class RepositoryMethodNativeQueryGenerator {
 
             List<AndPredicate> andPredicates = orPredicate.getAndPredicates();
             for (AndPredicate andPredicate : andPredicates) {
-                AttributeMetadata attribute = entity.getAttribute(andPredicate.getAttributeName());
+                AttributeChain attributeChain = andPredicate.getAttributeChain();
+                List<String> attributeNames = attributeChain.getAttributeNames();
 
-                List<String> columns = getColumn(attribute);
+                AttributeMetadata prevAttribute = null;
+                AttributeMetadata attribute = entity.getAttribute(attributeNames.get(0));
+                for (int i = 1; i < attributeNames.size(); i++) {
+                    prevAttribute = attribute;
+                    if (attribute instanceof EmbeddedAttribute) {
+                        EmbeddableEntityMetadata embeddableEntity =
+                                entityMetadataRegistry.getEmbeddableEntity(attribute.getNativeType().toString());
+                        attribute = embeddableEntity.getAttribute(attributeNames.get(i));
+                    }
+                }
+
+                List<String> columns = null;
+                if (prevAttribute instanceof EmbeddedAttribute) {
+                    String column = ((EmbeddedAttribute) prevAttribute).overrideAttribute(attribute);
+                    if (nonNull(column)) {
+                        columns = singletonList(column);
+                    }
+                }
+                if (isNull(columns)) {
+                    columns = getColumn(attribute);
+                }
+
                 for (String column : columns) {
                     switch (andPredicate.getOperator()) {
                         case BETWEEN:

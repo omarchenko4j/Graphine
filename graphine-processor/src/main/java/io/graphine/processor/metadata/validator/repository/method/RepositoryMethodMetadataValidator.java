@@ -1,9 +1,12 @@
 package io.graphine.processor.metadata.validator.repository.method;
 
+import io.graphine.processor.metadata.model.entity.EmbeddableEntityMetadata;
 import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
+import io.graphine.processor.metadata.model.entity.attribute.EmbeddedAttribute;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.model.repository.method.name.QueryableMethodName;
+import io.graphine.processor.metadata.model.repository.method.name.fragment.AttributeChain;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment;
 import io.graphine.processor.metadata.model.repository.method.parameter.ParameterMetadata;
 import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
@@ -56,14 +59,14 @@ public abstract class RepositoryMethodMetadataValidator {
         QueryableMethodName queryableName = method.getQueryableName();
 
         ConditionFragment condition = queryableName.getCondition();
-        List<AndPredicate> predicates =
+        List<AndPredicate> andPredicates =
                 condition.getOrPredicates()
                          .stream()
                          .flatMap(orPredicate -> orPredicate.getAndPredicates().stream())
                          .collect(toList());
 
         int numberOfConditionParameters =
-                predicates
+                andPredicates
                         .stream()
                         .map(AndPredicate::getOperator)
                         .mapToInt(OperatorType::getParameterCount)
@@ -82,9 +85,11 @@ public abstract class RepositoryMethodMetadataValidator {
         }
 
         int parameterIndex = 0;
-        for (AndPredicate predicate : predicates) {
-            String attributeName = predicate.getAttributeName();
-            OperatorType operator = predicate.getOperator();
+        for (AndPredicate predicate : andPredicates) {
+            AttributeChain attributeChain = predicate.getAttributeChain();
+            List<String> attributeNames = attributeChain.getAttributeNames();
+            // Predicate must have at least one attribute.
+            String attributeName = attributeNames.get(0);
 
             AttributeMetadata attribute = entity.getAttribute(attributeName);
             if (isNull(attribute)) {
@@ -92,46 +97,56 @@ public abstract class RepositoryMethodMetadataValidator {
                 messager.printMessage(Kind.ERROR,
                                       "Condition parameter (" + attributeName + ") not found as entity attribute",
                                       method.getNativeElement());
+                continue;
             }
-            else {
-                TypeMirror attributeType = attribute.getNativeType();
 
-                int parameterCount = parameterIndex + operator.getParameterCount();
-                while (parameterIndex < parameterCount) {
-                    ParameterMetadata methodParameter = methodParameters.get(parameterIndex);
-                    TypeMirror parameterType = methodParameter.getNativeType();
+            for (int i = 1; i < attributeNames.size(); i++) {
+                attributeName = attributeNames.get(i);
 
-                    if (operator == OperatorType.IN || operator == OperatorType.NOT_IN) {
-                        switch (parameterType.getKind()) {
-                            case ARRAY:
-                                ArrayType arrayType = (ArrayType) parameterType;
-                                parameterType = arrayType.getComponentType();
-                                if (!typeUtils.isSameType(parameterType, attributeType)) {
-                                    if (parameterType.getKind().isPrimitive()) {
-                                        PrimitiveType primitiveType = typeUtils.getPrimitiveType(parameterType.getKind());
-                                        parameterType = typeUtils.boxedClass(primitiveType).asType();
-                                        if (!typeUtils.isSameType(parameterType, attributeType)) {
-                                            valid = false;
-                                            messager.printMessage(Kind.ERROR,
-                                                                  "Method parameter (" + methodParameter.getName() +
-                                                                  ") has an incompatible array type with entity attribute type (" +
-                                                                  attributeName + ")",
-                                                                  methodParameter.getNativeElement());
-                                        }
-                                    }
-                                    else if (attributeType.getKind().isPrimitive()) {
-                                        PrimitiveType primitiveType = typeUtils.getPrimitiveType(attributeType.getKind());
-                                        attributeType = typeUtils.boxedClass(primitiveType).asType();
-                                        if (!typeUtils.isSameType(parameterType, attributeType)) {
-                                            valid = false;
-                                            messager.printMessage(Kind.ERROR,
-                                                                  "Method parameter (" + methodParameter.getName() +
-                                                                  ") has an incompatible array type with entity attribute type (" +
-                                                                  attributeName + ")",
-                                                                  methodParameter.getNativeElement());
-                                        }
-                                    }
-                                    else {
+                if (attribute instanceof EmbeddedAttribute) {
+                    EmbeddableEntityMetadata embeddableEntity =
+                            entityMetadataRegistry.getEmbeddableEntity(attribute.getNativeType().toString());
+                    AttributeMetadata innerAttribute = embeddableEntity.getAttribute(attributeName);
+                    if (isNull(innerAttribute)) {
+                        valid = false;
+                        messager.printMessage(Kind.ERROR,
+                                              "Condition parameter (" + attributeName + ") not found as entity attribute",
+                                              method.getNativeElement());
+                        break;
+                    }
+
+                    attribute = innerAttribute;
+                }
+                else {
+                    valid = false;
+                    messager.printMessage(Kind.ERROR,
+                                          "Condition parameter (" + attribute.getName() + ") is not an embeddable entity type",
+                                          method.getNativeElement());
+                    break;
+                }
+            }
+
+            // Skip parameter and attribute type checking because the last attribute was not found.
+            if (!valid) continue;
+
+            TypeMirror attributeType = attribute.getNativeType();
+
+            OperatorType operator = predicate.getOperator();
+            int parameterCount = parameterIndex + operator.getParameterCount();
+            while (parameterIndex < parameterCount) {
+                ParameterMetadata methodParameter = methodParameters.get(parameterIndex);
+                TypeMirror parameterType = methodParameter.getNativeType();
+
+                if (operator == OperatorType.IN || operator == OperatorType.NOT_IN) {
+                    switch (parameterType.getKind()) {
+                        case ARRAY:
+                            ArrayType arrayType = (ArrayType) parameterType;
+                            parameterType = arrayType.getComponentType();
+                            if (!typeUtils.isSameType(parameterType, attributeType)) {
+                                if (parameterType.getKind().isPrimitive()) {
+                                    PrimitiveType primitiveType = typeUtils.getPrimitiveType(parameterType.getKind());
+                                    parameterType = typeUtils.boxedClass(primitiveType).asType();
+                                    if (!typeUtils.isSameType(parameterType, attributeType)) {
                                         valid = false;
                                         messager.printMessage(Kind.ERROR,
                                                               "Method parameter (" + methodParameter.getName() +
@@ -140,29 +155,41 @@ public abstract class RepositoryMethodMetadataValidator {
                                                               methodParameter.getNativeElement());
                                     }
                                 }
-                                break;
-                            case DECLARED:
-                                DeclaredType declaredType = (DeclaredType) parameterType;
-                                String qualifiedName = ((TypeElement) declaredType.asElement()).getQualifiedName().toString();
-                                if (qualifiedName.equals(Iterable.class.getName()) ||
-                                    qualifiedName.equals(Collection.class.getName()) ||
-                                    qualifiedName.equals(List.class.getName()) ||
-                                    qualifiedName.equals(Set.class.getName())) {
-                                    parameterType = declaredType.getTypeArguments().get(0);
+                                else if (attributeType.getKind().isPrimitive()) {
+                                    PrimitiveType primitiveType = typeUtils.getPrimitiveType(attributeType.getKind());
+                                    attributeType = typeUtils.boxedClass(primitiveType).asType();
                                     if (!typeUtils.isSameType(parameterType, attributeType)) {
-                                        if (attributeType.getKind().isPrimitive()) {
-                                            PrimitiveType primitiveType = typeUtils.getPrimitiveType(attributeType.getKind());
-                                            attributeType = typeUtils.boxedClass(primitiveType).asType();
-                                            if (!typeUtils.isSameType(parameterType, attributeType)) {
-                                                valid = false;
-                                                messager.printMessage(Kind.ERROR,
-                                                                      "Method parameter (" + methodParameter.getName() +
-                                                                      ") has an incompatible argument type in collection with entity attribute type (" +
-                                                                      attributeName + ")",
-                                                                      methodParameter.getNativeElement());
-                                            }
-                                        }
-                                        else {
+                                        valid = false;
+                                        messager.printMessage(Kind.ERROR,
+                                                              "Method parameter (" + methodParameter.getName() +
+                                                              ") has an incompatible array type with entity attribute type (" +
+                                                              attributeName + ")",
+                                                              methodParameter.getNativeElement());
+                                    }
+                                }
+                                else {
+                                    valid = false;
+                                    messager.printMessage(Kind.ERROR,
+                                                          "Method parameter (" + methodParameter.getName() +
+                                                          ") has an incompatible array type with entity attribute type (" +
+                                                          attributeName + ")",
+                                                          methodParameter.getNativeElement());
+                                }
+                            }
+                            break;
+                        case DECLARED:
+                            DeclaredType declaredType = (DeclaredType) parameterType;
+                            String qualifiedName = ((TypeElement) declaredType.asElement()).getQualifiedName().toString();
+                            if (qualifiedName.equals(Iterable.class.getName()) ||
+                                qualifiedName.equals(Collection.class.getName()) ||
+                                qualifiedName.equals(List.class.getName()) ||
+                                qualifiedName.equals(Set.class.getName())) {
+                                parameterType = declaredType.getTypeArguments().get(0);
+                                if (!typeUtils.isSameType(parameterType, attributeType)) {
+                                    if (attributeType.getKind().isPrimitive()) {
+                                        PrimitiveType primitiveType = typeUtils.getPrimitiveType(attributeType.getKind());
+                                        attributeType = typeUtils.boxedClass(primitiveType).asType();
+                                        if (!typeUtils.isSameType(parameterType, attributeType)) {
                                             valid = false;
                                             messager.printMessage(Kind.ERROR,
                                                                   "Method parameter (" + methodParameter.getName() +
@@ -171,58 +198,39 @@ public abstract class RepositoryMethodMetadataValidator {
                                                                   methodParameter.getNativeElement());
                                         }
                                     }
+                                    else {
+                                        valid = false;
+                                        messager.printMessage(Kind.ERROR,
+                                                              "Method parameter (" + methodParameter.getName() +
+                                                              ") has an incompatible argument type in collection with entity attribute type (" +
+                                                              attributeName + ")",
+                                                              methodParameter.getNativeElement());
+                                    }
                                 }
-                                else {
-                                    valid = false;
-                                    messager.printMessage(Kind.ERROR,
-                                                          "Condition parameter with the predicate (" + operator.getKeyword() +
-                                                          ") must match the array or collection type in the method parameter",
-                                                          methodParameter.getNativeElement());
-                                }
-                                break;
-                            default:
+                            }
+                            else {
                                 valid = false;
                                 messager.printMessage(Kind.ERROR,
                                                       "Condition parameter with the predicate (" + operator.getKeyword() +
                                                       ") must match the array or collection type in the method parameter",
                                                       methodParameter.getNativeElement());
-                                break;
-                        }
+                            }
+                            break;
+                        default:
+                            valid = false;
+                            messager.printMessage(Kind.ERROR,
+                                                  "Condition parameter with the predicate (" + operator.getKeyword() +
+                                                  ") must match the array or collection type in the method parameter",
+                                                  methodParameter.getNativeElement());
+                            break;
                     }
-                    else {
-                        if (!typeUtils.isSameType(parameterType, attributeType)) {
-                            if (parameterType.getKind().isPrimitive()) {
-                                PrimitiveType primitiveType = typeUtils.getPrimitiveType(parameterType.getKind());
-                                parameterType = typeUtils.boxedClass(primitiveType).asType();
-                                if (!typeUtils.isSameType(parameterType, attributeType)) {
-                                    valid = false;
-                                    messager.printMessage(Kind.ERROR,
-                                                          "Method parameter (" + methodParameter.getName() +
-                                                          ") has an incompatible type with entity attribute type (" +
-                                                          attributeName + ")",
-                                                          methodParameter.getNativeElement());
-                                }
-                            }
-                            else if (attributeType.getKind().isPrimitive()) {
-                                PrimitiveType primitiveType = typeUtils.getPrimitiveType(attributeType.getKind());
-                                attributeType = typeUtils.boxedClass(primitiveType).asType();
-                                if (!typeUtils.isSameType(parameterType, attributeType)) {
-                                    valid = false;
-                                    messager.printMessage(Kind.ERROR,
-                                                          "Method parameter (" + methodParameter.getName() +
-                                                          ") has an incompatible type with entity attribute type (" +
-                                                          attributeName + ")",
-                                                          methodParameter.getNativeElement());
-                                }
-                                else {
-                                    messager.printMessage(Kind.MANDATORY_WARNING,
-                                                          "Method parameter (" + methodParameter.getName() +
-                                                          ") can be primitive because entity attribute (" +
-                                                          attributeName + ") is primitive",
-                                                          methodParameter.getNativeElement());
-                                }
-                            }
-                            else {
+                }
+                else {
+                    if (!typeUtils.isSameType(parameterType, attributeType)) {
+                        if (parameterType.getKind().isPrimitive()) {
+                            PrimitiveType primitiveType = typeUtils.getPrimitiveType(parameterType.getKind());
+                            parameterType = typeUtils.boxedClass(primitiveType).asType();
+                            if (!typeUtils.isSameType(parameterType, attributeType)) {
                                 valid = false;
                                 messager.printMessage(Kind.ERROR,
                                                       "Method parameter (" + methodParameter.getName() +
@@ -231,10 +239,37 @@ public abstract class RepositoryMethodMetadataValidator {
                                                       methodParameter.getNativeElement());
                             }
                         }
+                        else if (attributeType.getKind().isPrimitive()) {
+                            PrimitiveType primitiveType = typeUtils.getPrimitiveType(attributeType.getKind());
+                            attributeType = typeUtils.boxedClass(primitiveType).asType();
+                            if (!typeUtils.isSameType(parameterType, attributeType)) {
+                                valid = false;
+                                messager.printMessage(Kind.ERROR,
+                                                      "Method parameter (" + methodParameter.getName() +
+                                                      ") has an incompatible type with entity attribute type (" +
+                                                      attributeName + ")",
+                                                      methodParameter.getNativeElement());
+                            }
+                            else {
+                                messager.printMessage(Kind.MANDATORY_WARNING,
+                                                      "Method parameter (" + methodParameter.getName() +
+                                                      ") can be primitive because entity attribute (" +
+                                                      attributeName + ") is primitive",
+                                                      methodParameter.getNativeElement());
+                            }
+                        }
+                        else {
+                            valid = false;
+                            messager.printMessage(Kind.ERROR,
+                                                  "Method parameter (" + methodParameter.getName() +
+                                                  ") has an incompatible type with entity attribute type (" +
+                                                  attributeName + ")",
+                                                  methodParameter.getNativeElement());
+                        }
                     }
-
-                    parameterIndex++;
                 }
+
+                parameterIndex++;
             }
         }
         return valid;

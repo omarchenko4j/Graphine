@@ -1,9 +1,12 @@
 package io.graphine.processor.metadata.validator.repository.method;
 
+import io.graphine.processor.metadata.model.entity.EmbeddableEntityMetadata;
 import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
+import io.graphine.processor.metadata.model.entity.attribute.EmbeddedAttribute;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.model.repository.method.name.QueryableMethodName;
+import io.graphine.processor.metadata.model.repository.method.name.fragment.AttributeChain;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.SortingFragment;
@@ -176,12 +179,13 @@ public final class RepositoryFindMethodMetadataValidator extends RepositoryMetho
         boolean valid = true;
 
         QueryableMethodName queryableName = method.getQueryableName();
-
         SortingFragment sorting = queryableName.getSorting();
-
         List<Sort> sorts = sorting.getSorts();
         for (Sort sort : sorts) {
-            String attributeName = sort.getAttributeName();
+            AttributeChain attributeChain = sort.getAttributeChain();
+            List<String> attributeNames = attributeChain.getAttributeNames();
+            // Predicate must have at least one attribute.
+            String attributeName = attributeNames.get(0);
 
             AttributeMetadata attribute = entity.getAttribute(attributeName);
             if (isNull(attribute)) {
@@ -189,6 +193,33 @@ public final class RepositoryFindMethodMetadataValidator extends RepositoryMetho
                 messager.printMessage(Kind.ERROR,
                                       "Sorting parameter '" + attributeName + "' not found as entity attribute",
                                       method.getNativeElement());
+                continue;
+            }
+
+            for (int i = 1; i < attributeNames.size(); i++) {
+                attributeName = attributeNames.get(i);
+
+                if (attribute instanceof EmbeddedAttribute) {
+                    EmbeddableEntityMetadata embeddableEntity =
+                            entityMetadataRegistry.getEmbeddableEntity(attribute.getNativeType().toString());
+                    AttributeMetadata innerAttribute = embeddableEntity.getAttribute(attributeName);
+                    if (isNull(innerAttribute)) {
+                        valid = false;
+                        messager.printMessage(Kind.ERROR,
+                                              "Sorting parameter (" + attributeName + ") not found in embeddable entity as attribute",
+                                              method.getNativeElement());
+                        break;
+                    }
+
+                    attribute = innerAttribute;
+                }
+                else {
+                    valid = false;
+                    messager.printMessage(Kind.ERROR,
+                                          "Sorting parameter (" + attribute.getName() + ") is not an embeddable entity type",
+                                          method.getNativeElement());
+                    break;
+                }
             }
         }
 

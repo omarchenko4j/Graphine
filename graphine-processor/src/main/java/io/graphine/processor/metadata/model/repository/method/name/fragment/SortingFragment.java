@@ -3,7 +3,6 @@ package io.graphine.processor.metadata.model.repository.method.name.fragment;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static io.graphine.processor.util.StringUtils.uncapitalize;
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toList;
 
@@ -11,8 +10,6 @@ import static java.util.stream.Collectors.toList;
  * @author Oleg Marchenko
  */
 public final class SortingFragment {
-    public static final String KEYWORD = "OrderBy";
-
     private final List<Sort> sorts;
 
     public SortingFragment(String fragment) {
@@ -27,16 +24,16 @@ public final class SortingFragment {
     }
 
     public static final class Sort {
-        private final String attributeName;
+        private final AttributeChain attributeChain;
         private final Direction direction;
 
         public Sort(String predicate) {
-            this.attributeName = Direction.retrieveAttributeName(predicate);
+            this.attributeChain = Direction.retrieveAttributeName(predicate);
             this.direction = Direction.defineBy(predicate);
         }
 
-        public String getAttributeName() {
-            return attributeName;
+        public AttributeChain getAttributeChain() {
+            return attributeChain;
         }
 
         public Direction getDirection() {
@@ -57,15 +54,15 @@ public final class SortingFragment {
                 return value.endsWith(DESC.keyword) ? DESC : ASC;
             }
 
-            public static String retrieveAttributeName(String predicate) {
-                String attributeName = predicate;
+            public static AttributeChain retrieveAttributeName(String predicate) {
+                String attributeChain = predicate;
                 if (predicate.endsWith(DESC.keyword)) {
-                    attributeName = predicate.substring(0, predicate.length() - DESC.keyword.length());
+                    attributeChain = predicate.substring(0, predicate.length() - DESC.keyword.length());
                 }
                 else if (predicate.endsWith(ASC.keyword)) {
-                    attributeName = predicate.substring(0, predicate.length() - ASC.keyword.length());
+                    attributeChain = predicate.substring(0, predicate.length() - ASC.keyword.length());
                 }
-                return uncapitalize(attributeName);
+                return AttributeChain.parse(attributeChain);
             }
         }
     }

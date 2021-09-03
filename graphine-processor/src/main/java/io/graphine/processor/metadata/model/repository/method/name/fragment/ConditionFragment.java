@@ -3,7 +3,6 @@ package io.graphine.processor.metadata.model.repository.method.name.fragment;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static io.graphine.processor.util.StringUtils.uncapitalize;
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toList;
 
@@ -44,16 +43,16 @@ public final class ConditionFragment {
     public static class AndPredicate {
         private static final String KEYWORD = "And";
 
-        private final String attributeName;
+        private final AttributeChain attributeChain;
         private final OperatorType operator;
 
         public AndPredicate(String predicate) {
-            this.attributeName = OperatorType.retrieveAttributeName(predicate);
+            this.attributeChain = OperatorType.retrieveAttributeChain(predicate);
             this.operator = OperatorType.defineBy(predicate);
         }
 
-        public String getAttributeName() {
-            return attributeName;
+        public AttributeChain getAttributeChain() {
+            return attributeChain;
         }
 
         public OperatorType getOperator() {
@@ -114,15 +113,15 @@ public final class ConditionFragment {
             return EQUAL;
         }
 
-        public static String retrieveAttributeName(String predicate) {
-            String attribute = predicate;
+        public static AttributeChain retrieveAttributeChain(String predicate) {
+            String attributeChain = predicate;
             for (OperatorType operator : ALL_OPERATORS) {
                 if (predicate.endsWith(operator.keyword)) {
-                    attribute = predicate.substring(0, predicate.length() - operator.keyword.length());
+                    attributeChain = predicate.substring(0, predicate.length() - operator.keyword.length());
                     break;
                 }
             }
-            return uncapitalize(attribute);
+            return AttributeChain.parse(attributeChain);
         }
     }
 }

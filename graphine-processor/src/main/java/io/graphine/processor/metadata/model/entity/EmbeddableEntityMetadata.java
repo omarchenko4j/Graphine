@@ -27,6 +27,10 @@ public class EmbeddableEntityMetadata extends NativeTypeElement {
                 .collect(toMap(AttributeMetadata::getName, identity(), (a1, a2) -> a1, LinkedHashMap::new));
     }
 
+    public AttributeMetadata getAttribute(String attributeName) {
+        return attributes.get(attributeName);
+    }
+
     public Collection<AttributeMetadata> getAttributes() {
         return unmodifiableCollection(attributes.values());
     }
