@@ -11,7 +11,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import static io.graphine.test.util.DataSourceProvider.DATA_SOURCE;
@@ -30,16 +33,16 @@ public class FilmRepositoryTest {
         @Cleanup Connection connection = DATA_SOURCE.getConnection();
         @Cleanup Statement statement = connection.createStatement();
         statement.executeQuery("CREATE TABLE public.film(" +
-                               "id bigserial PRIMARY KEY, " +
-                               "imdb_id text NOT NULL, " +
-                               "title text NOT NULL, " +
+                               "id BIGSERIAL NOT NULL PRIMARY KEY, " +
+                               "imdb_id TEXT NOT NULL, " +
+                               "title TEXT NOT NULL, " +
                                "year INTEGER NOT NULL, " +
                                "rating_value FLOAT NOT NULL, " +
-                               "rating_count bigint NOT NULL, " +
-                               "budget bigint, " +
-                               "gross bigint, " +
-                               "tagline text, " +
-                               "was_released boolean NOT NULL)");
+                               "rating_count BIGINT NOT NULL, " +
+                               "budget BIGINT, " +
+                               "gross BIGINT, " +
+                               "tagline TEXT, " +
+                               "was_released BOOLEAN NOT NULL)");
     }
 
     @AfterEach
@@ -102,7 +105,7 @@ public class FilmRepositoryTest {
         Film film2 = MarvelFilms.ironMan2();
         film2.setImdbId("tt0000000");
 
-        insertFilms(Arrays.asList(film1, film2));
+        insertFilms(List.of(film1, film2));
 
         Assertions.assertThrows(NonUniqueResultException.class,
                                 () -> filmRepository.findByImdbId("tt0000000"));
@@ -111,11 +114,7 @@ public class FilmRepositoryTest {
     @Test
     public void testFindFirstByBudgetGreaterThanEqualOrderByBudgetAscMethodReturnFirstResult() {
         Film film = MarvelFilms.ironMan();
-        Collection<Film> films = Arrays.asList(
-                MarvelFilms.incredibleHulk(),
-                film,
-                MarvelFilms.ironMan2()
-        );
+        Collection<Film> films = List.of(MarvelFilms.incredibleHulk(), film, MarvelFilms.ironMan2());
         insertFilms(films);
 
         Film foundFilm = filmRepository.findFirstByBudgetGreaterThanEqualOrderByBudgetAsc(film.getBudget());
@@ -132,10 +131,7 @@ public class FilmRepositoryTest {
     @Test
     public void testFindFirstOrderByYearDescMethodReturnFirstResult() {
         Film film = MarvelFilms.ironMan2();
-        Collection<Film> films = Arrays.asList(
-                MarvelFilms.ironMan(),
-                film
-        );
+        Collection<Film> films = List.of(MarvelFilms.ironMan(), film);
         insertFilms(films);
 
         Optional<Film> foundFilm = filmRepository.findFirstOrderByYearDesc();
@@ -153,11 +149,7 @@ public class FilmRepositoryTest {
 
     @Test
     public void testFindAllMethodReturnAllResults() {
-        Collection<Film> films = Arrays.asList(
-                MarvelFilms.ironMan(),
-                MarvelFilms.ironMan2(),
-                MarvelFilms.ironMan3()
-        );
+        Collection<Film> films = List.of(MarvelFilms.ironMan(), MarvelFilms.ironMan2(), MarvelFilms.ironMan3());
         insertFilms(films);
 
         Iterable<Film> foundFilms = filmRepository.findAll();
@@ -175,10 +167,7 @@ public class FilmRepositoryTest {
 
     @Test
     public void testFindAllByYearMethodReturnResults() {
-        Collection<Film> films = Arrays.asList(
-                MarvelFilms.incredibleHulk(),
-                MarvelFilms.ironMan()
-        );
+        Collection<Film> films = List.of(MarvelFilms.incredibleHulk(), MarvelFilms.ironMan());
         insertFilms(films);
 
         Collection<Film> foundFilms = filmRepository.findAllByYear(2008);
@@ -196,10 +185,7 @@ public class FilmRepositoryTest {
 
     @Test
     public void testFindAllByYearIsNotMethodReturnResults() {
-        Collection<Film> films = Arrays.asList(
-                MarvelFilms.incredibleHulk(),
-                MarvelFilms.ironMan()
-        );
+        Collection<Film> films = List.of(MarvelFilms.incredibleHulk(), MarvelFilms.ironMan());
         insertFilms(films);
 
         Collection<Film> foundFilms = filmRepository.findAllByYearIsNot(2010);
@@ -210,10 +196,7 @@ public class FilmRepositoryTest {
 
     @Test
     public void testFindAllByBudgetBetweenMethodReturnResults() {
-        Collection<Film> films = Arrays.asList(
-                MarvelFilms.incredibleHulk(),
-                MarvelFilms.ironMan()
-        );
+        Collection<Film> films = List.of(MarvelFilms.incredibleHulk(), MarvelFilms.ironMan());
         insertFilms(films);
 
         Collection<Film> foundFilms = filmRepository.findAllByBudgetBetween(140_000_000, 150_000_000);
@@ -224,10 +207,7 @@ public class FilmRepositoryTest {
 
     @Test
     public void testFindAllByBudgetNotBetweenMethodReturnResults() {
-        Collection<Film> films = Arrays.asList(
-                MarvelFilms.incredibleHulk(),
-                MarvelFilms.ironMan()
-        );
+        Collection<Film> films = List.of(MarvelFilms.incredibleHulk(), MarvelFilms.ironMan());
         insertFilms(films);
 
         Collection<Film> foundFilms = filmRepository.findAllByBudgetNotBetween(200_000_000, 300_000_000);
@@ -238,10 +218,7 @@ public class FilmRepositoryTest {
 
     @Test
     public void testFindAllByBudgetLessThanMethodReturnResults() {
-        Collection<Film> films = Arrays.asList(
-                MarvelFilms.incredibleHulk(),
-                MarvelFilms.ironMan()
-        );
+        Collection<Film> films = List.of(MarvelFilms.incredibleHulk(), MarvelFilms.ironMan());
         insertFilms(films);
 
         Collection<Film> foundFilms = filmRepository.findAllByBudgetLessThan(200_000_000);
@@ -252,11 +229,7 @@ public class FilmRepositoryTest {
 
     @Test
     public void testFindAllByBudgetLessThanEqualMethodReturnResults() {
-        Collection<Film> films = Arrays.asList(
-                MarvelFilms.incredibleHulk(),
-                MarvelFilms.ironMan(),
-                MarvelFilms.ironMan2()
-        );
+        Collection<Film> films = List.of(MarvelFilms.incredibleHulk(), MarvelFilms.ironMan(), MarvelFilms.ironMan2());
         insertFilms(films);
 
         Collection<Film> foundFilms = filmRepository.findAllByBudgetLessThanEqual(200_000_000);
@@ -267,10 +240,7 @@ public class FilmRepositoryTest {
 
     @Test
     public void testFindAllByGrossGreaterThanMethodReturnResults() {
-        Collection<Film> films = Arrays.asList(
-                MarvelFilms.ironMan2(),
-                MarvelFilms.ironMan3()
-        );
+        Collection<Film> films = List.of(MarvelFilms.ironMan2(), MarvelFilms.ironMan3());
         insertFilms(films);
 
         Collection<Film> foundFilms = filmRepository.findAllByGrossGreaterThan(600_000_000);
@@ -281,7 +251,7 @@ public class FilmRepositoryTest {
 
     @Test
     public void testFindAllByGrossGreaterThanEqualMethodReturnResults() {
-        Collection<Film> films = Collections.singletonList(MarvelFilms.ironMan3());
+        Collection<Film> films = List.of(MarvelFilms.ironMan3());
         insertFilms(films);
 
         Collection<Film> foundFilms = filmRepository.findAllByGrossGreaterThanEqual(1_000_000_000);
@@ -298,7 +268,7 @@ public class FilmRepositoryTest {
         Film film2 = MarvelFilms.ironMan2();
         film2.setTagline("");
 
-        List<Film> films = Arrays.asList(film1, film2);
+        List<Film> films = List.of(film1, film2);
         insertFilms(films);
 
         List<Film> foundFilms = filmRepository.findAllByTaglineIsEmpty();
@@ -309,10 +279,7 @@ public class FilmRepositoryTest {
 
     @Test
     public void testFindAllByTaglineIsNotEmptyMethodReturnResults() {
-        List<Film> films = Arrays.asList(
-                MarvelFilms.ironMan(),
-                MarvelFilms.ironMan2()
-        );
+        List<Film> films = List.of(MarvelFilms.ironMan(), MarvelFilms.ironMan2());
         insertFilms(films);
 
         List<Film> foundFilms = filmRepository.findAllByTaglineIsNotEmpty();
@@ -323,11 +290,7 @@ public class FilmRepositoryTest {
 
     @Test
     public void testFindAllByTitleLikeMethodReturnResults() {
-        List<Film> films = Arrays.asList(
-                MarvelFilms.ironMan(),
-                MarvelFilms.ironMan2(),
-                MarvelFilms.ironMan3()
-        );
+        List<Film> films = List.of(MarvelFilms.ironMan(), MarvelFilms.ironMan2(), MarvelFilms.ironMan3());
         insertFilms(films);
 
         List<Film> foundFilms = filmRepository.findAllByTitleLike("Iron Man%");
@@ -338,11 +301,7 @@ public class FilmRepositoryTest {
 
     @Test
     public void testFindAllByTitleNotLikeMethodReturnResults() {
-        List<Film> films = Arrays.asList(
-                MarvelFilms.ironMan(),
-                MarvelFilms.ironMan2(),
-                MarvelFilms.ironMan3()
-        );
+        List<Film> films = List.of(MarvelFilms.ironMan(), MarvelFilms.ironMan2(), MarvelFilms.ironMan3());
         insertFilms(films);
 
         List<Film> foundFilms = filmRepository.findAllByTitleNotLike("Captain America%");
@@ -353,11 +312,7 @@ public class FilmRepositoryTest {
 
     @Test
     public void testFindAllByTitleStartingWithMethodReturnResults() {
-        List<Film> films = Arrays.asList(
-                MarvelFilms.ironMan(),
-                MarvelFilms.ironMan2(),
-                MarvelFilms.ironMan3()
-        );
+        List<Film> films = List.of(MarvelFilms.ironMan(), MarvelFilms.ironMan2(), MarvelFilms.ironMan3());
         insertFilms(films);
 
         List<Film> foundFilms = filmRepository.findAllByTitleStartingWith("Iron Man");
@@ -379,11 +334,7 @@ public class FilmRepositoryTest {
 
     @Test
     public void testFindAllByTitleContainingMethodReturnResults() {
-        List<Film> films = Arrays.asList(
-                MarvelFilms.ironMan(),
-                MarvelFilms.ironMan2(),
-                MarvelFilms.ironMan3()
-        );
+        List<Film> films = List.of(MarvelFilms.ironMan(), MarvelFilms.ironMan2(), MarvelFilms.ironMan3());
         insertFilms(films);
 
         List<Film> foundFilms = filmRepository.findAllByTitleContaining("Man");
@@ -394,11 +345,7 @@ public class FilmRepositoryTest {
 
     @Test
     public void testFindAllByTitleNotContainingMethodReturnResults() {
-        List<Film> films = Arrays.asList(
-                MarvelFilms.ironMan(),
-                MarvelFilms.ironMan2(),
-                MarvelFilms.ironMan3()
-        );
+        List<Film> films = List.of(MarvelFilms.ironMan(), MarvelFilms.ironMan2(), MarvelFilms.ironMan3());
         insertFilms(films);
 
         List<Film> foundFilms = filmRepository.findAllByTitleNotContaining("Avenger");
@@ -415,7 +362,7 @@ public class FilmRepositoryTest {
         Film film2 = MarvelFilms.ironMan2();
         film2.setBudget(null);
 
-        List<Film> films = Arrays.asList(film1, film2);
+        List<Film> films = List.of(film1, film2);
         insertFilms(films);
 
         Set<Film> foundFilms = filmRepository.findAllByBudgetIsNull();
@@ -426,11 +373,7 @@ public class FilmRepositoryTest {
 
     @Test
     public void testFindAllByGrossIsNotNullMethodReturnResults() {
-        List<Film> films = Arrays.asList(
-                MarvelFilms.ironMan(),
-                MarvelFilms.ironMan2(),
-                MarvelFilms.ironMan3()
-        );
+        List<Film> films = List.of(MarvelFilms.ironMan(), MarvelFilms.ironMan2(), MarvelFilms.ironMan3());
         insertFilms(films);
 
         Set<Film> foundFilms = filmRepository.findAllByGrossIsNotNull();
@@ -441,11 +384,7 @@ public class FilmRepositoryTest {
 
     @Test
     public void testFindAllByWasReleasedIsTrueMethodReturnResults() {
-        List<Film> films = Arrays.asList(
-                MarvelFilms.ironMan(),
-                MarvelFilms.ironMan2(),
-                MarvelFilms.ironMan3()
-        );
+        List<Film> films = List.of(MarvelFilms.ironMan(), MarvelFilms.ironMan2(), MarvelFilms.ironMan3());
         insertFilms(films);
 
         Set<Film> foundFilms = filmRepository.findAllByWasReleasedIsTrue();
@@ -462,7 +401,7 @@ public class FilmRepositoryTest {
         Film film2 = MarvelFilms.ironMan2();
         film2.setWasReleased(false);
 
-        List<Film> films = Arrays.asList(film1, film2);
+        List<Film> films = List.of(film1, film2);
         insertFilms(films);
 
         Set<Film> foundFilms = filmRepository.findAllByWasReleasedIsFalse();
@@ -473,15 +412,13 @@ public class FilmRepositoryTest {
 
     @Test
     public void testFindAllByYearInMethodReturnResults() {
-        List<Film> films = Arrays.asList(
-                MarvelFilms.incredibleHulk(),
-                MarvelFilms.ironMan(),
-                MarvelFilms.ironMan2(),
-                MarvelFilms.ironMan3()
-        );
+        List<Film> films = List.of(MarvelFilms.incredibleHulk(),
+                                   MarvelFilms.ironMan(),
+                                   MarvelFilms.ironMan2(),
+                                   MarvelFilms.ironMan3());
         insertFilms(films);
 
-        Set<Film> foundFilms = filmRepository.findAllByYearIn(Arrays.asList(2008, 2010, 2013));
+        Set<Film> foundFilms = filmRepository.findAllByYearIn(List.of(2008, 2010, 2013));
         Assertions.assertNotNull(foundFilms);
         Assertions.assertEquals(films.size(), foundFilms.size());
         Assertions.assertTrue(films.containsAll(foundFilms));
@@ -489,12 +426,10 @@ public class FilmRepositoryTest {
 
     @Test
     public void testFindAllByYearNotInMethodReturnResults() {
-        List<Film> films = Arrays.asList(
-                MarvelFilms.incredibleHulk(),
-                MarvelFilms.ironMan(),
-                MarvelFilms.ironMan2(),
-                MarvelFilms.ironMan3()
-        );
+        List<Film> films = List.of(MarvelFilms.incredibleHulk(),
+                                   MarvelFilms.ironMan(),
+                                   MarvelFilms.ironMan2(),
+                                   MarvelFilms.ironMan3());
         insertFilms(films);
 
         Set<Film> foundFilms = filmRepository.findAllByYearNotIn(2000, 2001, 2002);
@@ -505,7 +440,7 @@ public class FilmRepositoryTest {
 
     @Test
     public void testFindAllByBudgetGreaterThanEqualAndGrossGreaterThanMethodReturnResults() {
-        List<Film> films = Collections.singletonList(MarvelFilms.ironMan3());
+        List<Film> films = List.of(MarvelFilms.ironMan3());
         insertFilms(films);
 
         Set<Film> foundFilms = filmRepository.findAllByBudgetGreaterThanEqualAndGrossGreaterThan(200_000_000,
@@ -517,11 +452,7 @@ public class FilmRepositoryTest {
 
     @Test
     public void testFindAllByBudgetBetweenOrGrossBetweenMethodReturnResults() {
-        List<Film> films = Arrays.asList(
-                MarvelFilms.ironMan(),
-                MarvelFilms.ironMan2(),
-                MarvelFilms.ironMan3()
-        );
+        List<Film> films = List.of(MarvelFilms.ironMan(), MarvelFilms.ironMan2(), MarvelFilms.ironMan3());
         insertFilms(films);
 
         Set<Film> foundFilms = filmRepository.findAllByBudgetBetweenOrGrossBetween(100_000_000, 150_000_000,
@@ -533,10 +464,7 @@ public class FilmRepositoryTest {
 
     @Test
     public void testFindAllByWasReleasedIsTrueAndGrossGreaterThanEqualMethodReturnResults() {
-        List<Film> films = Arrays.asList(
-                MarvelFilms.ironMan2(),
-                MarvelFilms.ironMan3()
-        );
+        List<Film> films = List.of(MarvelFilms.ironMan2(), MarvelFilms.ironMan3());
         insertFilms(films);
 
         Stream<Film> foundFilms = filmRepository.findAllByWasReleasedIsTrueAndGrossGreaterThanEqual(200_000_000);
@@ -556,11 +484,7 @@ public class FilmRepositoryTest {
 
     @Test
     public void testFindAllByYearBetweenOrderByYearMethodReturnResults() {
-        List<Film> films = Arrays.asList(
-                MarvelFilms.ironMan(),
-                MarvelFilms.ironMan2(),
-                MarvelFilms.ironMan3()
-        );
+        List<Film> films = List.of(MarvelFilms.ironMan(), MarvelFilms.ironMan2(), MarvelFilms.ironMan3());
         insertFilms(films);
 
         List<Film> foundFilms = filmRepository.findAllByYearBetweenOrderByYear(2008, 2013);
@@ -574,11 +498,7 @@ public class FilmRepositoryTest {
 
     @Test
     public void testFindAllByYearLessThanEqualOrderByYearAscMethodReturnResults() {
-        List<Film> films = Arrays.asList(
-                MarvelFilms.ironMan(),
-                MarvelFilms.ironMan2(),
-                MarvelFilms.ironMan3()
-        );
+        List<Film> films = List.of(MarvelFilms.ironMan(), MarvelFilms.ironMan2(), MarvelFilms.ironMan3());
         insertFilms(films);
 
         List<Film> foundFilms = filmRepository.findAllByYearLessThanEqualOrderByYearAsc(2013);
@@ -592,11 +512,7 @@ public class FilmRepositoryTest {
 
     @Test
     public void testFindAllByYearGreaterThanAndTaglineIsNotEmptyOrderByYearDescMethodReturnResults() {
-        List<Film> films = Arrays.asList(
-                MarvelFilms.ironMan(),
-                MarvelFilms.ironMan2(),
-                MarvelFilms.ironMan3()
-        );
+        List<Film> films = List.of(MarvelFilms.ironMan(), MarvelFilms.ironMan2(), MarvelFilms.ironMan3());
         insertFilms(films);
 
         List<Film> foundFilms = filmRepository.findAllByYearGreaterThanAndTaglineIsNotEmptyOrderByYearDesc(2005);
@@ -611,11 +527,7 @@ public class FilmRepositoryTest {
     @Test
     public void testFindAllByRatingMethodReturnResults() {
         Film film = MarvelFilms.ironMan();
-        List<Film> films = Arrays.asList(
-                film,
-                MarvelFilms.ironMan2(),
-                MarvelFilms.ironMan3()
-        );
+        List<Film> films = List.of(film, MarvelFilms.ironMan2(), MarvelFilms.ironMan3());
         insertFilms(films);
 
         Film foundFilm = filmRepository.findFirstByRating(film.getRating());
@@ -625,11 +537,7 @@ public class FilmRepositoryTest {
 
     @Test
     public void testFindAllByRating_valueGreaterThanEqualAndRating_countGreaterThanEqualMethodReturnResults() {
-        List<Film> films = Arrays.asList(
-                MarvelFilms.ironMan(),
-                MarvelFilms.ironMan2(),
-                MarvelFilms.ironMan3()
-        );
+        List<Film> films = List.of(MarvelFilms.ironMan(), MarvelFilms.ironMan2(), MarvelFilms.ironMan3());
         insertFilms(films);
 
         List<Film> foundFilms =
@@ -641,11 +549,7 @@ public class FilmRepositoryTest {
 
     @Test
     public void testFindAllByRating_valueLessThanEqualMethodReturnResults() {
-        List<Film> films = Arrays.asList(
-                MarvelFilms.ironMan(),
-                MarvelFilms.ironMan2(),
-                MarvelFilms.ironMan3()
-        );
+        List<Film> films = List.of(MarvelFilms.ironMan(), MarvelFilms.ironMan2(), MarvelFilms.ironMan3());
         insertFilms(films);
 
         List<Film> foundFilms = filmRepository.findAllByRating_valueLessThanEqual(7.5f);
@@ -656,11 +560,7 @@ public class FilmRepositoryTest {
 
     @Test
     public void testFindAllByRating_valueGreaterThanEqualOrderByRating_countMethodReturnResults() {
-        List<Film> films = Arrays.asList(
-                MarvelFilms.ironMan(),
-                MarvelFilms.ironMan2(),
-                MarvelFilms.ironMan3()
-        );
+        List<Film> films = List.of(MarvelFilms.ironMan(), MarvelFilms.ironMan2(), MarvelFilms.ironMan3());
         insertFilms(films);
 
         List<Film> foundFilms = filmRepository.findAllByRating_valueGreaterThanEqualOrderByRating_count(7.1f);
@@ -673,11 +573,7 @@ public class FilmRepositoryTest {
 
     @Test
     public void testCountAllMethodReturnNonZero() {
-        List<Film> films = Arrays.asList(
-                MarvelFilms.ironMan(),
-                MarvelFilms.ironMan2(),
-                MarvelFilms.ironMan3()
-        );
+        List<Film> films = List.of(MarvelFilms.ironMan(), MarvelFilms.ironMan2(), MarvelFilms.ironMan3());
         insertFilms(films);
 
         long numberOfFilms = filmRepository.countAll();
@@ -686,10 +582,7 @@ public class FilmRepositoryTest {
 
     @Test
     public void testCountAllByYearMethodReturnNonZero() {
-        List<Film> films = Arrays.asList(
-                MarvelFilms.incredibleHulk(),
-                MarvelFilms.ironMan()
-        );
+        List<Film> films = List.of(MarvelFilms.incredibleHulk(), MarvelFilms.ironMan());
         insertFilms(films);
 
         long numberOfFilms = filmRepository.countAllByYear(2008);
@@ -704,11 +597,7 @@ public class FilmRepositoryTest {
 
     @Test
     public void testCountAllByGrossGreaterThanEqualMethodReturnNonZero() {
-        List<Film> films = Arrays.asList(
-                MarvelFilms.ironMan(),
-                MarvelFilms.ironMan2(),
-                MarvelFilms.ironMan3()
-        );
+        List<Film> films = List.of(MarvelFilms.ironMan(), MarvelFilms.ironMan2(), MarvelFilms.ironMan3());
         insertFilms(films);
 
         Long numberOfFilms = filmRepository.countAllByGrossGreaterThanEqual(500_000_000);
@@ -783,7 +672,7 @@ public class FilmRepositoryTest {
                          .rating(Rating.builder().build())
                          .wasReleased(false)
                          .build();
-        filmRepository.saveAll((Iterable<Film>) Arrays.asList(film1, film2));
+        filmRepository.saveAll((Iterable<Film>) List.of(film1, film2));
 
         Assertions.assertNotNull(film1.getId());
         Assertions.assertNotNull(film2.getId());
@@ -810,7 +699,7 @@ public class FilmRepositoryTest {
                          .rating(Rating.builder().build())
                          .wasReleased(false)
                          .build();
-        filmRepository.saveAll((Collection<Film>) Arrays.asList(film1, film2));
+        filmRepository.saveAll((Collection<Film>) List.of(film1, film2));
 
         Assertions.assertNotNull(film1.getId());
         Assertions.assertNotNull(film2.getId());
@@ -837,7 +726,7 @@ public class FilmRepositoryTest {
                          .rating(Rating.builder().build())
                          .wasReleased(false)
                          .build();
-        filmRepository.saveAll(Arrays.asList(film1, film2));
+        filmRepository.saveAll(List.of(film1, film2));
 
         Assertions.assertNotNull(film1.getId());
         Assertions.assertNotNull(film2.getId());
@@ -864,7 +753,7 @@ public class FilmRepositoryTest {
                          .rating(Rating.builder().build())
                          .wasReleased(false)
                          .build();
-        filmRepository.saveAll(new HashSet<>(Arrays.asList(film1, film2)));
+        filmRepository.saveAll(Set.of(film1, film2));
 
         Assertions.assertNotNull(film1.getId());
         Assertions.assertNotNull(film2.getId());
@@ -900,7 +789,7 @@ public class FilmRepositoryTest {
     public void testUpdateAllMethodConsumesVarArgsParameter() {
         Film film1 = MarvelFilms.ironMan();
         Film film2 = MarvelFilms.ironMan2();
-        insertFilms(Arrays.asList(film1, film2));
+        insertFilms(List.of(film1, film2));
 
         film1.setImdbId("tt0458339");
         film1.setTitle("Captain America: The First Avenger");
@@ -936,7 +825,7 @@ public class FilmRepositoryTest {
     public void testUpdateAllMethodConsumesIterableParameter() {
         Film film1 = MarvelFilms.ironMan();
         Film film2 = MarvelFilms.ironMan2();
-        insertFilms(Arrays.asList(film1, film2));
+        insertFilms(List.of(film1, film2));
 
         film1.setImdbId("tt0458339");
         film1.setTitle("Captain America: The First Avenger");
@@ -960,7 +849,7 @@ public class FilmRepositoryTest {
         film2.setGross(714_000_000L);
         film2.setTagline("In heroes we trust.");
 
-        filmRepository.updateAll((Iterable<Film>) Arrays.asList(film1, film2));
+        filmRepository.updateAll((Iterable<Film>) List.of(film1, film2));
 
         Film foundFilm1 = selectFilmById(film1.getId());
         Film foundFilm2 = selectFilmById(film2.getId());
@@ -972,7 +861,7 @@ public class FilmRepositoryTest {
     public void testUpdateAllMethodConsumesCollectionParameter() {
         Film film1 = MarvelFilms.ironMan();
         Film film2 = MarvelFilms.ironMan2();
-        insertFilms(Arrays.asList(film1, film2));
+        insertFilms(List.of(film1, film2));
 
         film1.setImdbId("tt0458339");
         film1.setTitle("Captain America: The First Avenger");
@@ -996,7 +885,7 @@ public class FilmRepositoryTest {
         film2.setGross(714_000_000L);
         film2.setTagline("In heroes we trust.");
 
-        filmRepository.updateAll((Collection<Film>) Arrays.asList(film1, film2));
+        filmRepository.updateAll((Collection<Film>) List.of(film1, film2));
 
         Film foundFilm1 = selectFilmById(film1.getId());
         Film foundFilm2 = selectFilmById(film2.getId());
@@ -1008,7 +897,7 @@ public class FilmRepositoryTest {
     public void testUpdateAllMethodConsumesListParameter() {
         Film film1 = MarvelFilms.ironMan();
         Film film2 = MarvelFilms.ironMan2();
-        insertFilms(Arrays.asList(film1, film2));
+        insertFilms(List.of(film1, film2));
 
         film1.setImdbId("tt0458339");
         film1.setTitle("Captain America: The First Avenger");
@@ -1032,7 +921,7 @@ public class FilmRepositoryTest {
         film2.setGross(714_000_000L);
         film2.setTagline("In heroes we trust.");
 
-        filmRepository.updateAll(Arrays.asList(film1, film2));
+        filmRepository.updateAll(List.of(film1, film2));
 
         Film foundFilm1 = selectFilmById(film1.getId());
         Film foundFilm2 = selectFilmById(film2.getId());
@@ -1044,7 +933,7 @@ public class FilmRepositoryTest {
     public void testUpdateAllMethodConsumesSetParameter() {
         Film film1 = MarvelFilms.ironMan();
         Film film2 = MarvelFilms.ironMan2();
-        insertFilms(Arrays.asList(film1, film2));
+        insertFilms(List.of(film1, film2));
 
         film1.setImdbId("tt0458339");
         film1.setTitle("Captain America: The First Avenger");
@@ -1068,7 +957,7 @@ public class FilmRepositoryTest {
         film2.setGross(714_000_000L);
         film2.setTagline("In heroes we trust.");
 
-        filmRepository.updateAll(new HashSet<>(Arrays.asList(film1, film2)));
+        filmRepository.updateAll(Set.of(film1, film2));
 
         Film foundFilm1 = selectFilmById(film1.getId());
         Film foundFilm2 = selectFilmById(film2.getId());
@@ -1103,7 +992,7 @@ public class FilmRepositoryTest {
         Film film1 = MarvelFilms.ironMan();
         Film film2 = MarvelFilms.ironMan2();
         Film film3 = MarvelFilms.ironMan3();
-        insertFilms(Arrays.asList(film1, film2, film3));
+        insertFilms(List.of(film1, film2, film3));
 
         filmRepository.deleteAll(film1, film2, film3);
 
@@ -1119,11 +1008,7 @@ public class FilmRepositoryTest {
 
     @Test
     public void testDeleteAllMethodConsumesIterableParameter() {
-        Iterable<Film> films = Arrays.asList(
-                MarvelFilms.ironMan(),
-                MarvelFilms.ironMan2(),
-                MarvelFilms.ironMan3()
-        );
+        Iterable<Film> films = List.of(MarvelFilms.ironMan(), MarvelFilms.ironMan2(), MarvelFilms.ironMan3());
         insertFilms(films);
 
         filmRepository.deleteAll(films);
@@ -1136,11 +1021,7 @@ public class FilmRepositoryTest {
 
     @Test
     public void testDeleteAllMethodConsumesCollectionParameter() {
-        Collection<Film> films = Arrays.asList(
-                MarvelFilms.ironMan(),
-                MarvelFilms.ironMan2(),
-                MarvelFilms.ironMan3()
-        );
+        Collection<Film> films = List.of(MarvelFilms.ironMan(), MarvelFilms.ironMan2(), MarvelFilms.ironMan3());
         insertFilms(films);
 
         filmRepository.deleteAll(films);
@@ -1153,11 +1034,7 @@ public class FilmRepositoryTest {
 
     @Test
     public void testDeleteAllMethodConsumesListParameter() {
-        List<Film> films = Arrays.asList(
-                MarvelFilms.ironMan(),
-                MarvelFilms.ironMan2(),
-                MarvelFilms.ironMan3()
-        );
+        List<Film> films = List.of(MarvelFilms.ironMan(), MarvelFilms.ironMan2(), MarvelFilms.ironMan3());
         insertFilms(films);
 
         filmRepository.deleteAll(films);
@@ -1170,11 +1047,7 @@ public class FilmRepositoryTest {
 
     @Test
     public void testDeleteAllMethodConsumesSetParameter() {
-        Set<Film> films = new HashSet<>(Arrays.asList(
-                MarvelFilms.ironMan(),
-                MarvelFilms.ironMan2(),
-                MarvelFilms.ironMan3()
-        ));
+        Set<Film> films = Set.of(MarvelFilms.ironMan(), MarvelFilms.ironMan2(), MarvelFilms.ironMan3());
         insertFilms(films);
 
         filmRepository.deleteAll(films);
@@ -1187,14 +1060,10 @@ public class FilmRepositoryTest {
 
     @Test
     public void testDeleteAllByYearInMethod() {
-        List<Film> films = Arrays.asList(
-                MarvelFilms.ironMan(),
-                MarvelFilms.ironMan2(),
-                MarvelFilms.ironMan3()
-        );
+        List<Film> films = List.of(MarvelFilms.ironMan(), MarvelFilms.ironMan2(), MarvelFilms.ironMan3());
         insertFilms(films);
 
-        filmRepository.deleteAllByYearIn(new HashSet<>(Arrays.asList(2008, 2010, 2013)));
+        filmRepository.deleteAllByYearIn(Set.of(2008, 2010, 2013));
 
         films.forEach(film -> {
             Film foundFilm = selectFilmById(film.getId());

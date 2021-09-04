@@ -9,7 +9,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.util.Arrays;
+import java.util.List;
 import java.util.UUID;
 
 import static io.graphine.test.util.DataSourceProvider.DATA_SOURCE;
@@ -25,7 +25,7 @@ public class GenreRepositoryTest {
     public static void createTable() {
         @Cleanup Connection connection = DATA_SOURCE.getConnection();
         @Cleanup Statement statement = connection.createStatement();
-        statement.executeQuery("CREATE TABLE public.genre(id TEXT PRIMARY KEY, name TEXT NOT NULL)");
+        statement.executeQuery("CREATE TABLE public.genre(id TEXT NOT NULL PRIMARY KEY, name TEXT NOT NULL)");
     }
 
     @AfterEach
@@ -72,7 +72,7 @@ public class GenreRepositoryTest {
                             .id(UUID.randomUUID())
                             .name("Thriller")
                             .build();
-        genreRepository.saveAll(Arrays.asList(genre1, genre2, genre3));
+        genreRepository.saveAll(List.of(genre1, genre2, genre3));
 
         Genre savedGenre1 = selectGenreById(genre1.getId());
         Assertions.assertEquals(savedGenre1, genre1);
