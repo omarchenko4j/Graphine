@@ -2,6 +2,7 @@ package io.graphine.test.repository;
 
 import io.graphine.core.NonUniqueResultException;
 import io.graphine.test.model.Film;
+import io.graphine.test.model.Rating;
 import lombok.Cleanup;
 import lombok.SneakyThrows;
 import org.junit.jupiter.api.*;
@@ -29,14 +30,16 @@ public class FilmRepositoryTest {
         @Cleanup Connection connection = DATA_SOURCE.getConnection();
         @Cleanup Statement statement = connection.createStatement();
         statement.executeQuery("CREATE TABLE public.film(" +
-                               "id BIGSERIAL PRIMARY KEY, " +
-                               "imdb_id TEXT NOT NULL, " +
-                               "title TEXT NOT NULL, " +
+                               "id bigserial PRIMARY KEY, " +
+                               "imdb_id text NOT NULL, " +
+                               "title text NOT NULL, " +
                                "year INTEGER NOT NULL, " +
-                               "budget BIGINT, " +
-                               "gross BIGINT, " +
-                               "tagline TEXT, " +
-                               "was_released BOOLEAN NOT NULL DEFAULT FALSE)");
+                               "rating_value FLOAT NOT NULL, " +
+                               "rating_count bigint NOT NULL, " +
+                               "budget bigint, " +
+                               "gross bigint, " +
+                               "tagline text, " +
+                               "was_released boolean NOT NULL)");
     }
 
     @AfterEach
@@ -606,6 +609,69 @@ public class FilmRepositoryTest {
     }
 
     @Test
+    public void testFindAllByRatingMethodReturnResults() {
+        Film film = MarvelFilms.ironMan();
+        List<Film> films = Arrays.asList(
+                film,
+                MarvelFilms.ironMan2(),
+                MarvelFilms.ironMan3()
+        );
+        insertFilms(films);
+
+        Film foundFilm = filmRepository.findFirstByRating(film.getRating());
+        Assertions.assertNotNull(foundFilm);
+        Assertions.assertEquals(film, foundFilm);
+    }
+
+    @Test
+    public void testFindAllByRating_valueGreaterThanEqualAndRating_countGreaterThanEqualMethodReturnResults() {
+        List<Film> films = Arrays.asList(
+                MarvelFilms.ironMan(),
+                MarvelFilms.ironMan2(),
+                MarvelFilms.ironMan3()
+        );
+        insertFilms(films);
+
+        List<Film> foundFilms =
+                filmRepository.findAllByRating_valueGreaterThanEqualAndRating_countGreaterThanEqual(7.5f, 900_000);
+        Assertions.assertNotNull(foundFilms);
+        Assertions.assertEquals(1, foundFilms.size());
+        Assertions.assertTrue(films.contains(foundFilms.get(0)));
+    }
+
+    @Test
+    public void testFindAllByRating_valueLessThanEqualMethodReturnResults() {
+        List<Film> films = Arrays.asList(
+                MarvelFilms.ironMan(),
+                MarvelFilms.ironMan2(),
+                MarvelFilms.ironMan3()
+        );
+        insertFilms(films);
+
+        List<Film> foundFilms = filmRepository.findAllByRating_valueLessThanEqual(7.5f);
+        Assertions.assertNotNull(foundFilms);
+        Assertions.assertEquals(2, foundFilms.size());
+        Assertions.assertTrue(films.containsAll(foundFilms));
+    }
+
+    @Test
+    public void testFindAllByRating_valueGreaterThanEqualOrderByRating_countMethodReturnResults() {
+        List<Film> films = Arrays.asList(
+                MarvelFilms.ironMan(),
+                MarvelFilms.ironMan2(),
+                MarvelFilms.ironMan3()
+        );
+        insertFilms(films);
+
+        List<Film> foundFilms = filmRepository.findAllByRating_valueGreaterThanEqualOrderByRating_count(7.1f);
+        Assertions.assertNotNull(foundFilms);
+        Assertions.assertEquals(2, foundFilms.size());
+        Assertions.assertTrue(films.containsAll(foundFilms));
+        Assertions.assertEquals(foundFilms.get(0).getYear(), 2013);
+        Assertions.assertEquals(foundFilms.get(1).getYear(), 2008);
+    }
+
+    @Test
     public void testCountAllMethodReturnNonZero() {
         List<Film> films = Arrays.asList(
                 MarvelFilms.ironMan(),
@@ -663,6 +729,7 @@ public class FilmRepositoryTest {
                         .imdbId("tt9419884")
                         .title("Doctor Strange in the Multiverse of Madness")
                         .year(2022)
+                        .rating(Rating.builder().build())
                         .wasReleased(false)
                         .build();
         filmRepository.save(film);
@@ -679,12 +746,14 @@ public class FilmRepositoryTest {
                          .imdbId("tt9419884")
                          .title("Doctor Strange in the Multiverse of Madness")
                          .year(2022)
+                         .rating(Rating.builder().build())
                          .wasReleased(false)
                          .build();
         Film film2 = Film.builder()
                          .imdbId("tt10648342")
                          .title("Thor: Love and Thunder")
                          .year(2022)
+                         .rating(Rating.builder().build())
                          .wasReleased(false)
                          .build();
         filmRepository.saveAll(film1, film2);
@@ -704,12 +773,14 @@ public class FilmRepositoryTest {
                          .imdbId("tt9419884")
                          .title("Doctor Strange in the Multiverse of Madness")
                          .year(2022)
+                         .rating(Rating.builder().build())
                          .wasReleased(false)
                          .build();
         Film film2 = Film.builder()
                          .imdbId("tt10648342")
                          .title("Thor: Love and Thunder")
                          .year(2022)
+                         .rating(Rating.builder().build())
                          .wasReleased(false)
                          .build();
         filmRepository.saveAll((Iterable<Film>) Arrays.asList(film1, film2));
@@ -729,12 +800,14 @@ public class FilmRepositoryTest {
                          .imdbId("tt9419884")
                          .title("Doctor Strange in the Multiverse of Madness")
                          .year(2022)
+                         .rating(Rating.builder().build())
                          .wasReleased(false)
                          .build();
         Film film2 = Film.builder()
                          .imdbId("tt10648342")
                          .title("Thor: Love and Thunder")
                          .year(2022)
+                         .rating(Rating.builder().build())
                          .wasReleased(false)
                          .build();
         filmRepository.saveAll((Collection<Film>) Arrays.asList(film1, film2));
@@ -754,15 +827,17 @@ public class FilmRepositoryTest {
                          .imdbId("tt9419884")
                          .title("Doctor Strange in the Multiverse of Madness")
                          .year(2022)
+                         .rating(Rating.builder().build())
                          .wasReleased(false)
                          .build();
         Film film2 = Film.builder()
                          .imdbId("tt10648342")
                          .title("Thor: Love and Thunder")
                          .year(2022)
+                         .rating(Rating.builder().build())
                          .wasReleased(false)
                          .build();
-        filmRepository.saveAll((List<Film>) Arrays.asList(film1, film2));
+        filmRepository.saveAll(Arrays.asList(film1, film2));
 
         Assertions.assertNotNull(film1.getId());
         Assertions.assertNotNull(film2.getId());
@@ -779,12 +854,14 @@ public class FilmRepositoryTest {
                          .imdbId("tt9419884")
                          .title("Doctor Strange in the Multiverse of Madness")
                          .year(2022)
+                         .rating(Rating.builder().build())
                          .wasReleased(false)
                          .build();
         Film film2 = Film.builder()
                          .imdbId("tt10648342")
                          .title("Thor: Love and Thunder")
                          .year(2022)
+                         .rating(Rating.builder().build())
                          .wasReleased(false)
                          .build();
         filmRepository.saveAll(new HashSet<>(Arrays.asList(film1, film2)));
@@ -806,6 +883,10 @@ public class FilmRepositoryTest {
         film.setImdbId("tt0458339");
         film.setTitle("Captain America: The First Avenger");
         film.setYear(2011);
+        film.setRating(Rating.builder()
+                             .value(6.9f)
+                             .count(761_701)
+                             .build());
         film.setBudget(140_000_000L);
         film.setGross(370_000_000L);
         film.setTagline("When patriots become heroes");
@@ -824,6 +905,10 @@ public class FilmRepositoryTest {
         film1.setImdbId("tt0458339");
         film1.setTitle("Captain America: The First Avenger");
         film1.setYear(2011);
+        film1.setRating(Rating.builder()
+                              .value(6.9f)
+                              .count(761_701)
+                              .build());
         film1.setBudget(140_000_000L);
         film1.setGross(370_000_000L);
         film1.setTagline("When patriots become heroes");
@@ -831,6 +916,10 @@ public class FilmRepositoryTest {
         film2.setImdbId("tt1843866");
         film2.setTitle("Captain America: The Winter Soldier");
         film2.setYear(2014);
+        film2.setRating(Rating.builder()
+                              .value(7.7f)
+                              .count(756_645)
+                              .build());
         film2.setBudget(170_000_000L);
         film2.setGross(714_000_000L);
         film2.setTagline("In heroes we trust.");
@@ -852,6 +941,10 @@ public class FilmRepositoryTest {
         film1.setImdbId("tt0458339");
         film1.setTitle("Captain America: The First Avenger");
         film1.setYear(2011);
+        film1.setRating(Rating.builder()
+                              .value(6.9f)
+                              .count(761_701)
+                              .build());
         film1.setBudget(140_000_000L);
         film1.setGross(370_000_000L);
         film1.setTagline("When patriots become heroes");
@@ -859,6 +952,10 @@ public class FilmRepositoryTest {
         film2.setImdbId("tt1843866");
         film2.setTitle("Captain America: The Winter Soldier");
         film2.setYear(2014);
+        film2.setRating(Rating.builder()
+                              .value(7.7f)
+                              .count(756_645)
+                              .build());
         film2.setBudget(170_000_000L);
         film2.setGross(714_000_000L);
         film2.setTagline("In heroes we trust.");
@@ -880,6 +977,10 @@ public class FilmRepositoryTest {
         film1.setImdbId("tt0458339");
         film1.setTitle("Captain America: The First Avenger");
         film1.setYear(2011);
+        film1.setRating(Rating.builder()
+                              .value(6.9f)
+                              .count(761_701)
+                              .build());
         film1.setBudget(140_000_000L);
         film1.setGross(370_000_000L);
         film1.setTagline("When patriots become heroes");
@@ -887,6 +988,10 @@ public class FilmRepositoryTest {
         film2.setImdbId("tt1843866");
         film2.setTitle("Captain America: The Winter Soldier");
         film2.setYear(2014);
+        film2.setRating(Rating.builder()
+                              .value(7.7f)
+                              .count(756_645)
+                              .build());
         film2.setBudget(170_000_000L);
         film2.setGross(714_000_000L);
         film2.setTagline("In heroes we trust.");
@@ -908,6 +1013,10 @@ public class FilmRepositoryTest {
         film1.setImdbId("tt0458339");
         film1.setTitle("Captain America: The First Avenger");
         film1.setYear(2011);
+        film1.setRating(Rating.builder()
+                              .value(6.9f)
+                              .count(761_701)
+                              .build());
         film1.setBudget(140_000_000L);
         film1.setGross(370_000_000L);
         film1.setTagline("When patriots become heroes");
@@ -915,11 +1024,15 @@ public class FilmRepositoryTest {
         film2.setImdbId("tt1843866");
         film2.setTitle("Captain America: The Winter Soldier");
         film2.setYear(2014);
+        film2.setRating(Rating.builder()
+                              .value(7.7f)
+                              .count(756_645)
+                              .build());
         film2.setBudget(170_000_000L);
         film2.setGross(714_000_000L);
         film2.setTagline("In heroes we trust.");
 
-        filmRepository.updateAll((List<Film>) Arrays.asList(film1, film2));
+        filmRepository.updateAll(Arrays.asList(film1, film2));
 
         Film foundFilm1 = selectFilmById(film1.getId());
         Film foundFilm2 = selectFilmById(film2.getId());
@@ -936,6 +1049,10 @@ public class FilmRepositoryTest {
         film1.setImdbId("tt0458339");
         film1.setTitle("Captain America: The First Avenger");
         film1.setYear(2011);
+        film1.setRating(Rating.builder()
+                              .value(6.9f)
+                              .count(761_701)
+                              .build());
         film1.setBudget(140_000_000L);
         film1.setGross(370_000_000L);
         film1.setTagline("When patriots become heroes");
@@ -943,6 +1060,10 @@ public class FilmRepositoryTest {
         film2.setImdbId("tt1843866");
         film2.setTitle("Captain America: The Winter Soldier");
         film2.setYear(2014);
+        film2.setRating(Rating.builder()
+                              .value(7.7f)
+                              .count(756_645)
+                              .build());
         film2.setBudget(170_000_000L);
         film2.setGross(714_000_000L);
         film2.setTagline("In heroes we trust.");
@@ -1085,13 +1206,15 @@ public class FilmRepositoryTest {
     public static void insertFilm(Film film) {
         @Cleanup Connection connection = DATA_SOURCE.getConnection();
         @Cleanup PreparedStatement statement =
-                connection.prepareStatement("INSERT INTO public.film(id, imdb_id, title, year, budget, gross, tagline, was_released) " +
-                                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                connection.prepareStatement("INSERT INTO public.film(id, imdb_id, title, year, rating_value, rating_count, budget, gross, tagline, was_released) " +
+                                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         int index = 1;
         statement.setLong(index++, film.getId());
         statement.setString(index++, film.getImdbId());
         statement.setString(index++, film.getTitle());
         statement.setInt(index++, film.getYear());
+        statement.setFloat(index++, film.getRating().getValue());
+        statement.setLong(index++, film.getRating().getCount());
         statement.setObject(index++, film.getBudget());
         statement.setObject(index++, film.getGross());
         statement.setString(index++, film.getTagline());
@@ -1103,14 +1226,16 @@ public class FilmRepositoryTest {
     public static void insertFilms(Iterable<Film> films) {
         @Cleanup Connection connection = DATA_SOURCE.getConnection();
         @Cleanup PreparedStatement statement =
-                connection.prepareStatement("INSERT INTO public.film(id, imdb_id, title, year, budget, gross, tagline, was_released) " +
-                                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)");
+                connection.prepareStatement("INSERT INTO public.film(id, imdb_id, title, year, rating_value, rating_count, budget, gross, tagline, was_released) " +
+                                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         for (Film film : films) {
             int index = 1;
             statement.setLong(index++, film.getId());
             statement.setString(index++, film.getImdbId());
             statement.setString(index++, film.getTitle());
             statement.setInt(index++, film.getYear());
+            statement.setFloat(index++, film.getRating().getValue());
+            statement.setLong(index++, film.getRating().getCount());
             statement.setObject(index++, film.getBudget());
             statement.setObject(index++, film.getGross());
             statement.setString(index++, film.getTagline());
@@ -1124,8 +1249,8 @@ public class FilmRepositoryTest {
     public static Film selectFilmById(long id) {
         @Cleanup Connection connection = DATA_SOURCE.getConnection();
         @Cleanup PreparedStatement statement =
-                connection.prepareStatement("SELECT id, imdb_id, title, year, budget, gross, tagline, was_released " +
-                                            "FROM public.film " +
+                connection.prepareStatement("SELECT id, imdb_id, title, YEAR, rating_value, rating_count, budget, gross, tagline, was_released " +
+                                            "FROM PUBLIC.film " +
                                             "WHERE id = ?");
         statement.setLong(1, id);
         @Cleanup ResultSet resultSet = statement.executeQuery();
@@ -1135,6 +1260,10 @@ public class FilmRepositoryTest {
                        .imdbId(resultSet.getString("imdb_id"))
                        .title(resultSet.getString("title"))
                        .year(resultSet.getInt("year"))
+                       .rating(Rating.builder()
+                                     .value(resultSet.getFloat("rating_value"))
+                                     .count(resultSet.getLong("rating_count"))
+                                     .build())
                        .budget((Long) resultSet.getObject("budget"))
                        .gross((Long) resultSet.getObject("gross"))
                        .tagline(resultSet.getString("tagline"))
@@ -1151,6 +1280,10 @@ public class FilmRepositoryTest {
                        .imdbId("tt0800080")
                        .title("The Incredible Hulk")
                        .year(2008)
+                       .rating(Rating.builder()
+                                     .value(6.7f)
+                                     .count(444_129)
+                                     .build())
                        .budget(150_000_000L)
                        .gross(264_000_000L)
                        .tagline("This June, a hero shows his true colors")
@@ -1164,6 +1297,10 @@ public class FilmRepositoryTest {
                        .imdbId("tt0371746")
                        .title("Iron Man")
                        .year(2008)
+                       .rating(Rating.builder()
+                                     .value(7.9f)
+                                     .count(960_545)
+                                     .build())
                        .budget(140_000_000L)
                        .gross(585_000_000L)
                        .tagline("Get ready for a different breed of heavy metal hero.")
@@ -1177,6 +1314,10 @@ public class FilmRepositoryTest {
                        .imdbId("tt1228705")
                        .title("Iron Man 2")
                        .year(2010)
+                       .rating(Rating.builder()
+                                     .value(7)
+                                     .count(739_724)
+                                     .build())
                        .budget(200_000_000L)
                        .gross(623_000_000L)
                        .tagline("It's not the armor that makes the hero, but the man inside.")
@@ -1190,6 +1331,10 @@ public class FilmRepositoryTest {
                        .imdbId("tt1300854")
                        .title("Iron Man Three")
                        .year(2013)
+                       .rating(Rating.builder()
+                                     .value(7.1f)
+                                     .count(772_782)
+                                     .build())
                        .budget(200_000_000L)
                        .gross(1_214_000_000L)
                        .tagline("Unleash the power behind the armor.")

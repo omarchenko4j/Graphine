@@ -3,6 +3,7 @@ package io.graphine.test.repository;
 import io.graphine.core.GraphineRepository;
 import io.graphine.core.annotation.Repository;
 import io.graphine.test.model.Film;
+import io.graphine.test.model.Rating;
 
 import java.util.Collection;
 import java.util.List;
@@ -48,6 +49,11 @@ public interface FilmRepository extends GraphineRepository<Film> {
     List<Film> findAllByYearBetweenOrderByYear(int year1, int year2);
     List<Film> findAllByYearLessThanEqualOrderByYearAsc(int year);
     List<Film> findAllByYearGreaterThanAndTaglineIsNotEmptyOrderByYearDesc(int year);
+    Film findFirstByRating(Rating rating);
+    List<Film> findAllByRating_valueGreaterThanEqualAndRating_countGreaterThanEqual(float ratingValue,
+                                                                                    long ratingCount);
+    List<Film> findAllByRating_valueLessThanEqual(float ratingValue);
+    List<Film> findAllByRating_valueGreaterThanEqualOrderByRating_count(float ratingValue);
     int countAll();
     long countAllByYear(int year);
     Long countAllByGrossGreaterThanEqual(long gross);
