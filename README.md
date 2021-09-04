@@ -18,20 +18,23 @@ concepts and generates low-level JDBC code from them.
 - Human-readable generated source code;
 - NO reflection.
 
+## Requirements
+
+Graphine requires Java 11 or later.
+
 ## Getting Started
 
 ### Installation
 
 > **Warning!** While there are no artifacts in the *Maven Central* (**it is temporary**), so they must be placed **manually**.
 
-
 #### Maven
 
 1. Download artifacts:
 
-[graphine-core-0.2.0.jar](https://github.com/MarchenkoProjects/Graphine/releases/download/v0.2.0/graphine-core-0.2.0.jar)
-   
-[graphine-processor-0.2.0.jar](https://github.com/MarchenkoProjects/Graphine/releases/download/v0.2.0/graphine-processor-0.2.0.jar)
+[graphine-core-0.3.0.jar](https://github.com/MarchenkoProjects/Graphine/releases/download/v0.3.0/graphine-core-0.3.0.jar)
+
+[graphine-processor-0.3.0.jar](https://github.com/MarchenkoProjects/Graphine/releases/download/v0.3.0/graphine-processor-0.3.0.jar)
 
 2. Add dependencies:
 
@@ -39,16 +42,16 @@ concepts and generates low-level JDBC code from them.
 <dependency>
   <groupId>io.graphine.core</groupId>
   <artifactId>graphine-core</artifactId>
-  <version>0.2.0</version>
+  <version>0.3.0</version>
   <scope>system</scope>
-  <systemPath>./graphine-core-0.2.0.jar</systemPath> <!-- path to downloaded artifacts -->
+  <systemPath>./graphine-core-0.3.0.jar</systemPath> <!-- path to downloaded artifacts -->
 </dependency>
 <dependency>
   <groupId>io.graphine.processor</groupId>
   <artifactId>graphine-processor</artifactId>
-  <version>0.2.0</version>
+  <version>0.3.0</version>
   <scope>system</scope>
-  <systemPath>./graphine-processor-0.2.0.jar</systemPath> <!-- path to downloaded artifacts -->
+  <systemPath>./graphine-processor-0.3.0.jar</systemPath> <!-- path to downloaded artifacts -->
 </dependency>
 ```
 
@@ -60,7 +63,7 @@ concepts and generates low-level JDBC code from them.
   <artifactId>maven-compiler-plugin</artifactId>
   <configuration>
     <annotationProcessors>
-      <processor>io.graphine.processor.GraphineRepositoryProcessor</processor>
+      <processor>io.graphine.processor.GraphineProcessor</processor>
     </annotationProcessors>
   </configuration>
 </plugin>
@@ -74,30 +77,28 @@ Here is a small snippet that shows *Graphine in action*.
 /**
  * Your model.
  */
-@Entity(table = "users")
+@Entity
 public class User {
     @Id
     private Integer id;
-    @Attribute
     private String login;
-    @Attribute
     private String email;
-    
+
     // Default ctor, getters/setters, ...
 }
 
 /**
  * Repository for your model.
  */
-@Repository(User.class)
-public interface UserRepository {
+@Repository
+public interface UserRepository extends GraphineRepository<User> {
     User findById(int id);
 }
 
 /**
  * After building, Graphine will generate the following class.
  */
-@Generated("io.graphine.processor.GraphineRepositoryProcessor")
+@Generated("io.graphine.processor.GraphineProcessor")
 public class GraphineUserRepository implements UserRepository {
     private final DataSource dataSource;
 
@@ -108,13 +109,13 @@ public class GraphineUserRepository implements UserRepository {
     @Override
     public User findById(int id) {
         try (Connection _connection = dataSource.getConnection()) {
-            String _query = "SELECT id, login, email FROM users WHERE id = ?";
+            String _query = "SELECT id, login, email FROM user WHERE id = ?";
             try (PreparedStatement _statement = _connection.prepareStatement(_query)) {
                 _statement.setInt(1, id);
                 try (ResultSet _resultSet = _statement.executeQuery()) {
                     if (_resultSet.next()) {
                         User _user = new User();
-                        _user.setId(_resultSet.getInt(1));
+                        _user.setId((Integer) _resultSet.getObject(1));
                         _user.setLogin(_resultSet.getString(2));
                         _user.setEmail(_resultSet.getString(3));
                         if (_resultSet.next()) {
@@ -126,8 +127,8 @@ public class GraphineUserRepository implements UserRepository {
                 }
             }
         }
-        catch (SQLException e) {
-            throw new GraphineException(e);
+        catch (SQLException _e) {
+            throw new GraphineException(_e);
         }
     }
 }
