@@ -47,6 +47,7 @@ public abstract class RepositoryMethodImplementationGenerator {
     public static final String QUERY_VARIABLE_NAME = uniqueize("query");
     public static final String STATEMENT_VARIABLE_NAME = uniqueize("statement");
     public static final String RESULT_SET_VARIABLE_NAME = uniqueize("resultSet");
+    private static final String EXCEPTION_VARIABLE_NAME = uniqueize("e");
 
     protected final EntityMetadataRegistry entityMetadataRegistry;
     protected final StatementMappingRenderer statementMappingRenderer;
@@ -82,8 +83,10 @@ public abstract class RepositoryMethodImplementationGenerator {
                         .add(renderQuery(method, query))
                         .add(renderStatement(method, query, entity))
                         .endControlFlow()
-                        .beginControlFlow("catch ($T e)", SQLException.class)
-                        .addStatement("throw new $T(e)", GraphineException.class)
+                        .beginControlFlow("catch ($T $L)",
+                                          SQLException.class, EXCEPTION_VARIABLE_NAME)
+                        .addStatement("throw new $T($L)",
+                                      GraphineException.class, EXCEPTION_VARIABLE_NAME)
                         .endControlFlow()
                         .build();
     }
