@@ -47,7 +47,7 @@ public abstract class RepositoryMethodImplementationGenerator {
     public static final String QUERY_VARIABLE_NAME = uniqueize("query");
     public static final String STATEMENT_VARIABLE_NAME = uniqueize("statement");
     public static final String RESULT_SET_VARIABLE_NAME = uniqueize("resultSet");
-    private static final String EXCEPTION_VARIABLE_NAME = uniqueize("e");
+    protected static final String EXCEPTION_VARIABLE_NAME = uniqueize("e");
 
     protected final EntityMetadataRegistry entityMetadataRegistry;
     protected final StatementMappingRenderer statementMappingRenderer;

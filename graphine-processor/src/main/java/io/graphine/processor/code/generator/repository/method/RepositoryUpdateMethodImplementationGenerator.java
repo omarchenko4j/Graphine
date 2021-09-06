@@ -24,7 +24,8 @@ import static io.graphine.processor.util.VariableNameUniqueizer.uniqueize;
 /**
  * @author Oleg Marchenko
  */
-public final class RepositoryUpdateMethodImplementationGenerator extends RepositoryMethodImplementationGenerator {
+public final class RepositoryUpdateMethodImplementationGenerator
+        extends RepositoryModifyingMethodImplementationGenerator {
     public RepositoryUpdateMethodImplementationGenerator(EntityMetadataRegistry entityMetadataRegistry,
                                                          StatementMappingRenderer statementMappingRenderer,
                                                          ResultSetMappingRenderer resultSetMappingRenderer) {

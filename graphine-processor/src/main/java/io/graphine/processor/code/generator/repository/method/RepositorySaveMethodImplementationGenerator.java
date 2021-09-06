@@ -31,7 +31,8 @@ import static io.graphine.processor.util.VariableNameUniqueizer.uniqueize;
 /**
  * @author Oleg Marchenko
  */
-public final class RepositorySaveMethodImplementationGenerator extends RepositoryMethodImplementationGenerator {
+public final class RepositorySaveMethodImplementationGenerator
+        extends RepositoryModifyingMethodImplementationGenerator {
     public static final String ITERATOR_VARIABLE_NAME = uniqueize("iterator");
 
     public RepositorySaveMethodImplementationGenerator(EntityMetadataRegistry entityMetadataRegistry,

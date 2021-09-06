@@ -28,7 +28,8 @@ import static java.util.Objects.isNull;
 /**
  * @author Oleg Marchenko
  */
-public final class RepositoryDeleteMethodImplementationGenerator extends RepositoryMethodImplementationGenerator {
+public final class RepositoryDeleteMethodImplementationGenerator
+        extends RepositoryModifyingMethodImplementationGenerator {
     public RepositoryDeleteMethodImplementationGenerator(EntityMetadataRegistry entityMetadataRegistry,
                                                          StatementMappingRenderer statementMappingRenderer,
                                                          ResultSetMappingRenderer resultSetMappingRenderer) {
