@@ -9,9 +9,7 @@ import javax.lang.model.element.ExecutableElement;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static io.graphine.processor.support.EnvironmentContext.messager;
 import static io.graphine.processor.util.StringUtils.isNotEmpty;
-import static javax.tools.Diagnostic.Kind;
 
 /**
  * @author Oleg Marchenko
@@ -42,13 +40,7 @@ public final class RepositoryMethodNameParser {
                 sorting = new SortingFragment(sortingFragment);
             }
         }
-        else {
-            messager.printMessage(Kind.ERROR,
-                                  "Method name could not be recognized. " +
-                                  "The following prefixes are supported: " +
-                                  "find(First|All)(By), countAll(By), save(All), update(All), delete(All)(By)",
-                                  methodElement);
-        }
+
         return new QueryableMethodName(qualifier, condition, sorting);
     }
 }

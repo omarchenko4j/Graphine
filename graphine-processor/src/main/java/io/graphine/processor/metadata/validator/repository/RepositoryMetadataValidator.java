@@ -53,24 +53,22 @@ public final class RepositoryMetadataValidator {
             return false;
         }
 
-        boolean valid = true;
-
         EntityMetadata entity = entityMetadataRegistry.getEntity(entityQualifiedName);
         if (isNull(entity)) return false; // Abort validation if the entity has no metadata.
+
+        boolean valid = true;
 
         List<MethodMetadata> methods = repository.getMethods();
         for (MethodMetadata method : methods) {
             QueryableMethodName queryableName = method.getQueryableName();
-
             QualifierFragment qualifier = queryableName.getQualifier();
-            if (isNull(qualifier)) continue; // Method validation is skipped! Error will be thrown in the parser.
 
-            RepositoryMethodMetadataValidator repositoryMethodMetadataValidator =
-                    methodValidators.get(qualifier.getMethodType());
-            if (!repositoryMethodMetadataValidator.validate(method, entity)) {
+            RepositoryMethodMetadataValidator methodValidator = methodValidators.get(qualifier.getMethodType());
+            if (!methodValidator.validate(method, entity)) {
                 valid = false;
             }
         }
+
         return valid;
     }
 }
