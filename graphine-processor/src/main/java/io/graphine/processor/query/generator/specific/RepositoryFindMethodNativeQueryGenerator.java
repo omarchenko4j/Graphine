@@ -3,7 +3,7 @@ package io.graphine.processor.query.generator.specific;
 import io.graphine.processor.metadata.model.entity.EmbeddableEntityMetadata;
 import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
-import io.graphine.processor.metadata.model.entity.attribute.EmbeddedAttribute;
+import io.graphine.processor.metadata.model.entity.attribute.EmbeddedAttributeMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.model.repository.method.name.QueryableMethodName;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.AttributeChain;
@@ -76,7 +76,7 @@ public final class RepositoryFindMethodNativeQueryGenerator extends RepositoryMe
             AttributeMetadata attribute = entity.getAttribute(attributeNames.get(0));
             for (int i = 1; i < attributeNames.size(); i++) {
                 prevAttribute = attribute;
-                if (attribute instanceof EmbeddedAttribute) {
+                if (attribute instanceof EmbeddedAttributeMetadata) {
                     EmbeddableEntityMetadata embeddableEntity =
                             entityMetadataRegistry.getEmbeddableEntity(attribute.getNativeType().toString());
                     attribute = embeddableEntity.getAttribute(attributeNames.get(i));
@@ -84,8 +84,9 @@ public final class RepositoryFindMethodNativeQueryGenerator extends RepositoryMe
             }
 
             List<String> columns = null;
-            if (prevAttribute instanceof EmbeddedAttribute) {
-                String column = ((EmbeddedAttribute) prevAttribute).overrideAttribute(attribute);
+            if (prevAttribute instanceof EmbeddedAttributeMetadata) {
+                EmbeddedAttributeMetadata embeddedAttribute = (EmbeddedAttributeMetadata) prevAttribute;
+                String column = embeddedAttribute.overrideAttribute(attribute);
                 if (nonNull(column)) {
                     columns = singletonList(column);
                 }

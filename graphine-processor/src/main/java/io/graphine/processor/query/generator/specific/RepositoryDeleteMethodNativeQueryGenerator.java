@@ -1,7 +1,7 @@
 package io.graphine.processor.query.generator.specific;
 
 import io.graphine.processor.metadata.model.entity.EntityMetadata;
-import io.graphine.processor.metadata.model.entity.attribute.IdentifierMetadata;
+import io.graphine.processor.metadata.model.entity.attribute.IdentifierAttributeMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.model.repository.method.name.QueryableMethodName;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment;
@@ -30,10 +30,10 @@ public final class RepositoryDeleteMethodNativeQueryGenerator extends Repository
 
         ConditionFragment condition = queryableName.getCondition();
         if (isNull(condition)) {
-            IdentifierMetadata identifier = entity.getIdentifier();
+            IdentifierAttributeMetadata identifierAttribute = entity.getIdentifier();
             queryBuilder
                     .append(" WHERE ")
-                    .append(identifier.getColumn());
+                    .append(identifierAttribute.getColumn());
 
             QualifierFragment qualifier = queryableName.getQualifier();
             switch (qualifier.getMethodForm()) {

@@ -13,11 +13,11 @@ import static java.util.Objects.nonNull;
 /**
  * @author Oleg Marchenko
  */
-public class EmbeddedAttribute extends AttributeMetadata {
+public class EmbeddedAttributeMetadata extends AttributeMetadata {
     private final Map<String, String> attributeNameToColumnNameMap;
 
-    public EmbeddedAttribute(VariableElement element,
-                             Map<String, String> attributeNameToColumnNameMap) {
+    public EmbeddedAttributeMetadata(VariableElement element,
+                                     Map<String, String> attributeNameToColumnNameMap) {
         super(element, null);
         this.attributeNameToColumnNameMap = attributeNameToColumnNameMap;
     }

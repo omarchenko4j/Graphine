@@ -1,7 +1,7 @@
 package io.graphine.processor.metadata.model.entity;
 
 import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
-import io.graphine.processor.metadata.model.entity.attribute.IdentifierMetadata;
+import io.graphine.processor.metadata.model.entity.attribute.IdentifierAttributeMetadata;
 import io.graphine.processor.support.element.NativeTypeElement;
 
 import javax.lang.model.element.TypeElement;
@@ -22,13 +22,13 @@ import static java.util.stream.Collectors.toUnmodifiableList;
 public class EntityMetadata extends NativeTypeElement {
     private final String schema;
     private final String table;
-    private final IdentifierMetadata identifier;
+    private final IdentifierAttributeMetadata identifier;
     private final Map<String, AttributeMetadata> attributes;
 
     public EntityMetadata(TypeElement element,
                           String schema,
                           String table,
-                          IdentifierMetadata identifier,
+                          IdentifierAttributeMetadata identifier,
                           List<AttributeMetadata> attributes) {
         super(element);
         this.schema = schema;
@@ -47,7 +47,7 @@ public class EntityMetadata extends NativeTypeElement {
         return table;
     }
 
-    public IdentifierMetadata getIdentifier() {
+    public IdentifierAttributeMetadata getIdentifier() {
         return identifier;
     }
 

@@ -1,7 +1,7 @@
 package io.graphine.processor.query.generator.specific;
 
 import io.graphine.processor.metadata.model.entity.EntityMetadata;
-import io.graphine.processor.metadata.model.entity.attribute.IdentifierMetadata;
+import io.graphine.processor.metadata.model.entity.attribute.IdentifierAttributeMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.model.repository.method.name.QueryableMethodName;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment;
@@ -20,11 +20,11 @@ public final class RepositoryCountMethodNativeQueryGenerator extends RepositoryM
 
     @Override
     protected String generateQuery(EntityMetadata entity, MethodMetadata method) {
-        IdentifierMetadata identifier = entity.getIdentifier();
+        IdentifierAttributeMetadata identifierAttribute = entity.getIdentifier();
 
         StringBuilder queryBuilder = new StringBuilder()
                 .append("SELECT COUNT(")
-                .append(identifier.getColumn())
+                .append(identifierAttribute.getColumn())
                 .append(") AS count")
                 .append(" FROM ")
                 .append(getIfNotEmpty(entity.getSchema(), () -> entity.getSchema() + '.'))

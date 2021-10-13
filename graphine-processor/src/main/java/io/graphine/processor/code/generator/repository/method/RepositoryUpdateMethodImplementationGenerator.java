@@ -6,7 +6,7 @@ import io.graphine.processor.code.renderer.mapping.ResultSetMappingRenderer;
 import io.graphine.processor.code.renderer.mapping.StatementMappingRenderer;
 import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
-import io.graphine.processor.metadata.model.entity.attribute.IdentifierMetadata;
+import io.graphine.processor.metadata.model.entity.attribute.IdentifierAttributeMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.model.repository.method.name.QueryableMethodName;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment;
@@ -69,12 +69,12 @@ public final class RepositoryUpdateMethodImplementationGenerator
                                                                              parameterIndexProvider));
         }
 
-        IdentifierMetadata identifier = entity.getIdentifier();
+        IdentifierAttributeMetadata identifierAttribute = entity.getIdentifier();
         snippetBuilder.add(
-                statementMappingRenderer.render(identifier.getNativeType(),
+                statementMappingRenderer.render(identifierAttribute.getNativeType(),
                                                 parameterIndexProvider.getParameterIndex(),
                                                 CodeBlock.of("$L.$L()",
-                                                             rootVariableName, getter(identifier)))
+                                                             rootVariableName, getter(identifierAttribute)))
         );
 
         if (qualifier.getMethodForm() == PLURAL) {

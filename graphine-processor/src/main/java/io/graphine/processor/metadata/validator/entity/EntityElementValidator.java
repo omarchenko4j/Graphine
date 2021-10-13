@@ -1,7 +1,7 @@
 package io.graphine.processor.metadata.validator.entity;
 
 import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
-import io.graphine.processor.metadata.model.entity.attribute.IdentifierMetadata;
+import io.graphine.processor.metadata.model.entity.attribute.IdentifierAttributeMetadata;
 import io.graphine.processor.support.AttributeDetectionStrategy;
 import io.graphine.processor.util.AccessorUtils;
 
@@ -45,7 +45,7 @@ public final class EntityElementValidator {
 
         long numberOfIdentifiers = fields
                 .stream()
-                .filter(IdentifierMetadata::isIdentifier)
+                .filter(IdentifierAttributeMetadata::isIdentifier)
                 .count();
         if (numberOfIdentifiers == 0) {
             valid = false;

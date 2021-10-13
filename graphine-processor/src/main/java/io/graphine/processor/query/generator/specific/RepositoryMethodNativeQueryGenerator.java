@@ -3,7 +3,7 @@ package io.graphine.processor.query.generator.specific;
 import io.graphine.processor.metadata.model.entity.EmbeddableEntityMetadata;
 import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
-import io.graphine.processor.metadata.model.entity.attribute.EmbeddedAttribute;
+import io.graphine.processor.metadata.model.entity.attribute.EmbeddedAttributeMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.AttributeChain;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment;
@@ -47,16 +47,17 @@ public abstract class RepositoryMethodNativeQueryGenerator {
     }
 
     protected List<String> getColumn(AttributeMetadata attribute) {
-        if (attribute instanceof EmbeddedAttribute) {
+        if (attribute instanceof EmbeddedAttributeMetadata) {
+            EmbeddedAttributeMetadata embeddedAttribute = (EmbeddedAttributeMetadata) attribute;
             EmbeddableEntityMetadata embeddableEntity =
                     entityMetadataRegistry.getEmbeddableEntity(attribute.getNativeType().toString());
             Collection<AttributeMetadata> embeddedAttributes = embeddableEntity.getAttributes();
 
             List<String> columns = new ArrayList<>(embeddedAttributes.size());
-            for (AttributeMetadata embeddedAttribute : embeddedAttributes) {
-                String column = ((EmbeddedAttribute) attribute).overrideAttribute(embeddedAttribute);
+            for (AttributeMetadata innerAttribute : embeddedAttributes) {
+                String column = embeddedAttribute.overrideAttribute(innerAttribute);
                 if (isNull(column)) {
-                    columns.addAll(getColumn(embeddedAttribute));
+                    columns.addAll(getColumn(innerAttribute));
                     continue;
                 }
                 columns.add(column);
@@ -82,7 +83,7 @@ public abstract class RepositoryMethodNativeQueryGenerator {
                 AttributeMetadata attribute = entity.getAttribute(attributeNames.get(0));
                 for (int i = 1; i < attributeNames.size(); i++) {
                     prevAttribute = attribute;
-                    if (attribute instanceof EmbeddedAttribute) {
+                    if (attribute instanceof EmbeddedAttributeMetadata) {
                         EmbeddableEntityMetadata embeddableEntity =
                                 entityMetadataRegistry.getEmbeddableEntity(attribute.getNativeType().toString());
                         attribute = embeddableEntity.getAttribute(attributeNames.get(i));
@@ -90,8 +91,9 @@ public abstract class RepositoryMethodNativeQueryGenerator {
                 }
 
                 List<String> columns = null;
-                if (prevAttribute instanceof EmbeddedAttribute) {
-                    String column = ((EmbeddedAttribute) prevAttribute).overrideAttribute(attribute);
+                if (prevAttribute instanceof EmbeddedAttributeMetadata) {
+                    EmbeddedAttributeMetadata embeddedAttribute = (EmbeddedAttributeMetadata) prevAttribute;
+                    String column = embeddedAttribute.overrideAttribute(attribute);
                     if (nonNull(column)) {
                         columns = singletonList(column);
                     }

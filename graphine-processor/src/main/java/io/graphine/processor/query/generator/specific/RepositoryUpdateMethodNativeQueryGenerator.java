@@ -1,7 +1,7 @@
 package io.graphine.processor.query.generator.specific;
 
 import io.graphine.processor.metadata.model.entity.EntityMetadata;
-import io.graphine.processor.metadata.model.entity.attribute.IdentifierMetadata;
+import io.graphine.processor.metadata.model.entity.attribute.IdentifierAttributeMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 
@@ -26,7 +26,7 @@ public final class RepositoryUpdateMethodNativeQueryGenerator extends Repository
                         .map(column -> column + " = ?")
                         .collect(Collectors.joining(", "));
 
-        IdentifierMetadata identifier = entity.getIdentifier();
+        IdentifierAttributeMetadata identifierAttribute = entity.getIdentifier();
         return new StringBuilder()
                 .append("UPDATE ")
                 .append(getIfNotEmpty(entity.getSchema(), () -> entity.getSchema() + '.'))
@@ -34,7 +34,7 @@ public final class RepositoryUpdateMethodNativeQueryGenerator extends Repository
                 .append(" SET ")
                 .append(joinedColumns)
                 .append(" WHERE ")
-                .append(identifier.getColumn()).append(" = ?")
+                .append(identifierAttribute.getColumn()).append(" = ?")
                 .toString();
     }
 

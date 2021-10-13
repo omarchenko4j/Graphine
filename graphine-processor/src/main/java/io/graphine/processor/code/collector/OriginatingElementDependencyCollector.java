@@ -3,7 +3,7 @@ package io.graphine.processor.code.collector;
 import io.graphine.processor.metadata.model.entity.EmbeddableEntityMetadata;
 import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
-import io.graphine.processor.metadata.model.entity.attribute.EmbeddedAttribute;
+import io.graphine.processor.metadata.model.entity.attribute.EmbeddedAttributeMetadata;
 import io.graphine.processor.metadata.model.repository.RepositoryMetadata;
 import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 
@@ -55,7 +55,7 @@ public final class OriginatingElementDependencyCollector {
     private Collection<Element> collect(Collection<AttributeMetadata> attributes) {
         List<Element> originatingElements = new ArrayList<>(attributes.size());
         for (AttributeMetadata attribute : attributes) {
-            if (attribute instanceof EmbeddedAttribute) {
+            if (attribute instanceof EmbeddedAttributeMetadata) {
                 EmbeddableEntityMetadata embeddableEntity =
                         entityMetadataRegistry.getEmbeddableEntity(attribute.getNativeType().toString());
                 originatingElements.addAll(collect(embeddableEntity));

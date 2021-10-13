@@ -5,7 +5,7 @@ import io.graphine.processor.code.renderer.index.ParameterIndexProvider;
 import io.graphine.processor.code.renderer.mapping.ResultSetMappingRenderer;
 import io.graphine.processor.metadata.model.entity.EmbeddableEntityMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
-import io.graphine.processor.metadata.model.entity.attribute.EmbeddedAttribute;
+import io.graphine.processor.metadata.model.entity.attribute.EmbeddedAttributeMetadata;
 import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 
 import java.util.Collection;
@@ -30,9 +30,10 @@ public final class AttributeFromResultSetMappingRenderer {
                                      AttributeMetadata attribute,
                                      ParameterIndexProvider parameterIndexProvider) {
         CodeBlock.Builder snippetBuilder = CodeBlock.builder();
-        if (attribute instanceof EmbeddedAttribute) {
+        if (attribute instanceof EmbeddedAttributeMetadata) {
+            EmbeddedAttributeMetadata embeddedAttribute = (EmbeddedAttributeMetadata) attribute;
             snippetBuilder
-                    .add(renderEmbeddedAttribute(rootVariableName, (EmbeddedAttribute) attribute, parameterIndexProvider));
+                    .add(renderEmbeddedAttribute(rootVariableName, embeddedAttribute, parameterIndexProvider));
         }
         else {
             String parameterIndex = parameterIndexProvider.getParameterIndex();
@@ -46,13 +47,13 @@ public final class AttributeFromResultSetMappingRenderer {
     }
 
     private CodeBlock renderEmbeddedAttribute(String rootVariableName,
-                                              EmbeddedAttribute attribute,
+                                              EmbeddedAttributeMetadata embeddedAttribute,
                                               ParameterIndexProvider parameterIndexProvider) {
         CodeBlock.Builder snippetBuilder = CodeBlock.builder();
 
         EmbeddableEntityMetadata embeddableEntity =
-                entityMetadataRegistry.getEmbeddableEntity(attribute.getNativeType().toString());
-        String variableName = uniqueize(attribute.getName());
+                entityMetadataRegistry.getEmbeddableEntity(embeddedAttribute.getNativeType().toString());
+        String variableName = uniqueize(embeddedAttribute.getName());
 
         snippetBuilder
                 .addStatement("$T $L = new $T()",
@@ -61,15 +62,15 @@ public final class AttributeFromResultSetMappingRenderer {
                               embeddableEntity.getNativeType());
 
         Collection<AttributeMetadata> embeddedAttributes = embeddableEntity.getAttributes();
-        for (AttributeMetadata embeddedAttribute : embeddedAttributes) {
+        for (AttributeMetadata attribute : embeddedAttributes) {
             snippetBuilder
-                    .add(renderAttribute(variableName, embeddedAttribute, parameterIndexProvider));
+                    .add(renderAttribute(variableName, attribute, parameterIndexProvider));
         }
 
         snippetBuilder
                 .addStatement("$L.$L($L)",
                               rootVariableName,
-                              setter(attribute),
+                              setter(embeddedAttribute),
                               variableName);
 
         return snippetBuilder.build();

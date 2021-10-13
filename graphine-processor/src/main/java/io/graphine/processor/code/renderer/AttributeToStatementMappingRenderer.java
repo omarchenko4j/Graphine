@@ -5,7 +5,7 @@ import io.graphine.processor.code.renderer.index.NumericParameterIndexProvider;
 import io.graphine.processor.code.renderer.mapping.StatementMappingRenderer;
 import io.graphine.processor.metadata.model.entity.EmbeddableEntityMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
-import io.graphine.processor.metadata.model.entity.attribute.EmbeddedAttribute;
+import io.graphine.processor.metadata.model.entity.attribute.EmbeddedAttributeMetadata;
 import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 
 import java.util.Collection;
@@ -32,8 +32,8 @@ public final class AttributeToStatementMappingRenderer {
                                      NumericParameterIndexProvider parameterIndexProvider) {
         CodeBlock.Builder snippetBuilder = CodeBlock.builder();
 
-        if (attribute instanceof EmbeddedAttribute) {
-            EmbeddedAttribute embeddedAttribute = (EmbeddedAttribute) attribute;
+        if (attribute instanceof EmbeddedAttributeMetadata) {
+            EmbeddedAttributeMetadata embeddedAttribute = (EmbeddedAttributeMetadata) attribute;
             snippetBuilder
                     .add(renderEmbeddedAttribute(rootVariableName, embeddedAttribute, parameterIndexProvider));
         }
@@ -50,17 +50,17 @@ public final class AttributeToStatementMappingRenderer {
     }
 
     private CodeBlock renderEmbeddedAttribute(String rootVariableName,
-                                              EmbeddedAttribute attribute,
+                                              EmbeddedAttributeMetadata embeddedAttribute,
                                               NumericParameterIndexProvider parameterIndexProvider) {
         CodeBlock.Builder snippetBuilder = CodeBlock.builder();
 
-        String variableName = uniqueize(attribute.getName());
+        String variableName = uniqueize(embeddedAttribute.getName());
         snippetBuilder
                 .addStatement("$T $L = $L.$L()",
-                              attribute.getNativeType(),
+                              embeddedAttribute.getNativeType(),
                               variableName,
                               rootVariableName,
-                              getter(attribute));
+                              getter(embeddedAttribute));
 
         NumericParameterIndexProvider clonedParameterIndexProvider =
                 new NumericParameterIndexProvider(parameterIndexProvider);
@@ -70,20 +70,20 @@ public final class AttributeToStatementMappingRenderer {
                 .beginControlFlow("if ($L != null)", variableName);
 
         EmbeddableEntityMetadata embeddableEntity =
-                entityMetadataRegistry.getEmbeddableEntity(attribute.getNativeType().toString());
+                entityMetadataRegistry.getEmbeddableEntity(embeddedAttribute.getNativeType().toString());
         Collection<AttributeMetadata> embeddedAttributes = embeddableEntity.getAttributes();
-        for (AttributeMetadata embeddedAttribute : embeddedAttributes) {
+        for (AttributeMetadata attribute : embeddedAttributes) {
             snippetBuilder
-                    .add(renderAttribute(variableName, embeddedAttribute, parameterIndexProvider));
+                    .add(renderAttribute(variableName, attribute, parameterIndexProvider));
         }
 
         snippetBuilder
                 .endControlFlow()
                 .beginControlFlow("else");
 
-        for (AttributeMetadata embeddedAttribute : embeddedAttributes) {
+        for (AttributeMetadata attribute : embeddedAttributes) {
             snippetBuilder
-                    .add(renderNullableAttribute(embeddedAttribute, clonedParameterIndexProvider));
+                    .add(renderNullableAttribute(attribute, clonedParameterIndexProvider));
         }
 
         snippetBuilder
@@ -96,7 +96,7 @@ public final class AttributeToStatementMappingRenderer {
                                               NumericParameterIndexProvider parameterIndexProvider) {
         CodeBlock.Builder snippetBuilder = CodeBlock.builder();
 
-        if (attribute instanceof EmbeddedAttribute) {
+        if (attribute instanceof EmbeddedAttributeMetadata) {
             EmbeddableEntityMetadata embeddableEntity =
                     entityMetadataRegistry.getEmbeddableEntity(attribute.getNativeType().toString());
             Collection<AttributeMetadata> embeddedAttributes = embeddableEntity.getAttributes();

@@ -3,7 +3,7 @@ package io.graphine.processor.metadata.factory.entity;
 import io.graphine.core.annotation.Entity;
 import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
-import io.graphine.processor.metadata.model.entity.attribute.IdentifierMetadata;
+import io.graphine.processor.metadata.model.entity.attribute.IdentifierAttributeMetadata;
 import io.graphine.processor.support.AttributeDetectionStrategy;
 import io.graphine.processor.support.naming.pipeline.TableNamingPipeline;
 
@@ -54,12 +54,12 @@ public final class EntityMetadataFactory {
                 .map(attributeMetadataFactory::createAttribute)
                 .collect(Collectors.toList());
 
-        IdentifierMetadata identifier = (IdentifierMetadata) attributes
+        IdentifierAttributeMetadata identifierAttribute = (IdentifierAttributeMetadata) attributes
                 .stream()
-                .filter(attribute -> attribute instanceof IdentifierMetadata)
+                .filter(attribute -> attribute instanceof IdentifierAttributeMetadata)
                 .findFirst()
                 .orElse(null);
 
-        return new EntityMetadata(entityElement, schema, table, identifier, attributes);
+        return new EntityMetadata(entityElement, schema, table, identifierAttribute, attributes);
     }
 }
