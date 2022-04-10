@@ -5,10 +5,7 @@ import io.graphine.core.annotation.Repository;
 import io.graphine.test.model.Film;
 import io.graphine.test.model.Rating;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Stream;
 
 /**
@@ -16,7 +13,7 @@ import java.util.stream.Stream;
  */
 @Repository
 public interface FilmRepository extends GraphineRepository<Film> {
-    Film findById(long id);
+    Film findById(UUID id);
     Optional<Film> findByImdbId(String imdbId);
     Film findFirstByBudgetGreaterThanEqualOrderByBudgetAsc(long budget);
     Optional<Film> findFirstOrderByYearDesc();
@@ -70,7 +67,7 @@ public interface FilmRepository extends GraphineRepository<Film> {
     void updateAll(List<Film> films);
     void updateAll(Set<Film> films);
     void delete(Film film);
-    void deleteById(long id);
+    void deleteById(UUID id);
     void deleteAll(Film... films);
     void deleteAll(Iterable<Film> films);
     void deleteAll(Collection<Film> films);

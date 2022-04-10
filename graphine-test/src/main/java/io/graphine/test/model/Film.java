@@ -6,6 +6,8 @@ import io.graphine.core.annotation.Entity;
 import io.graphine.core.annotation.Id;
 import lombok.*;
 
+import java.util.UUID;
+
 /**
  * @author Oleg Marchenko
  */
@@ -19,7 +21,8 @@ import lombok.*;
 @Entity
 public class Film {
     @Id
-    private Long id;
+    @Builder.Default
+    private UUID id = UUID.randomUUID();
     private String imdbId;
     private String title;
     private int year;

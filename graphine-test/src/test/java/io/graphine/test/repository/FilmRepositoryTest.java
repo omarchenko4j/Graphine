@@ -11,10 +11,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Stream;
 
 import static io.graphine.test.util.DataSourceProvider.DATA_SOURCE;
@@ -33,7 +30,7 @@ public class FilmRepositoryTest {
         @Cleanup Connection connection = DATA_SOURCE.getConnection();
         @Cleanup Statement statement = connection.createStatement();
         statement.executeQuery("CREATE TABLE public.film(" +
-                               "id BIGSERIAL NOT NULL PRIMARY KEY, " +
+                               "id UUID NOT NULL PRIMARY KEY, " +
                                "imdb_id TEXT NOT NULL, " +
                                "title TEXT NOT NULL, " +
                                "year INTEGER NOT NULL, " +
@@ -75,7 +72,7 @@ public class FilmRepositoryTest {
 
     @Test
     public void testFindByIdMethodReturnNull() {
-        Film film = filmRepository.findById(999);
+        Film film = filmRepository.findById(UUID.randomUUID());
         Assertions.assertNull(film);
     }
 
@@ -1078,7 +1075,7 @@ public class FilmRepositoryTest {
                 connection.prepareStatement("INSERT INTO public.film(id, imdb_id, title, year, rating_value, rating_count, budget, gross, tagline, was_released) " +
                                             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         int index = 1;
-        statement.setLong(index++, film.getId());
+        statement.setString(index++, film.getId().toString());
         statement.setString(index++, film.getImdbId());
         statement.setString(index++, film.getTitle());
         statement.setInt(index++, film.getYear());
@@ -1099,7 +1096,7 @@ public class FilmRepositoryTest {
                                             "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         for (Film film : films) {
             int index = 1;
-            statement.setLong(index++, film.getId());
+            statement.setString(index++, film.getId().toString());
             statement.setString(index++, film.getImdbId());
             statement.setString(index++, film.getTitle());
             statement.setInt(index++, film.getYear());
@@ -1115,17 +1112,17 @@ public class FilmRepositoryTest {
     }
 
     @SneakyThrows
-    public static Film selectFilmById(long id) {
+    public static Film selectFilmById(UUID id) {
         @Cleanup Connection connection = DATA_SOURCE.getConnection();
         @Cleanup PreparedStatement statement =
                 connection.prepareStatement("SELECT id, imdb_id, title, YEAR, rating_value, rating_count, budget, gross, tagline, was_released " +
                                             "FROM PUBLIC.film " +
                                             "WHERE id = ?");
-        statement.setLong(1, id);
+        statement.setString(1, id.toString());
         @Cleanup ResultSet resultSet = statement.executeQuery();
         if (resultSet.next()) {
             return Film.builder()
-                       .id(resultSet.getLong("id"))
+                       .id(UUID.fromString(resultSet.getString("id")))
                        .imdbId(resultSet.getString("imdb_id"))
                        .title(resultSet.getString("title"))
                        .year(resultSet.getInt("year"))
@@ -1145,7 +1142,6 @@ public class FilmRepositoryTest {
     public static final class MarvelFilms {
         public static Film incredibleHulk() {
             return Film.builder()
-                       .id(1L)
                        .imdbId("tt0800080")
                        .title("The Incredible Hulk")
                        .year(2008)
@@ -1162,7 +1158,6 @@ public class FilmRepositoryTest {
 
         public static Film ironMan() {
             return Film.builder()
-                       .id(2L)
                        .imdbId("tt0371746")
                        .title("Iron Man")
                        .year(2008)
@@ -1179,7 +1174,6 @@ public class FilmRepositoryTest {
 
         public static Film ironMan2() {
             return Film.builder()
-                       .id(3L)
                        .imdbId("tt1228705")
                        .title("Iron Man 2")
                        .year(2010)
@@ -1196,7 +1190,6 @@ public class FilmRepositoryTest {
 
         public static Film ironMan3() {
             return Film.builder()
-                       .id(4L)
                        .imdbId("tt1300854")
                        .title("Iron Man Three")
                        .year(2013)
