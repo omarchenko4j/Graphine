@@ -192,7 +192,8 @@ public abstract class RepositoryMethodImplementationGenerator {
 
                                     EmbeddableEntityMetadata embeddableEntity =
                                             entityMetadataRegistry.getEmbeddableEntity(parameterType.toString());
-                                    for (AttributeMetadata attribute : embeddableEntity.getAttributes()) {
+                                    List<AttributeMetadata> embeddedAttributes = embeddableEntity.getAttributes();
+                                    for (AttributeMetadata attribute : embeddedAttributes) {
                                         snippetBuilder
                                                 .add(attributeToStatementMappingRenderer.renderAttribute(parameterName, attribute, clonedParameterIndexProvider));
                                     }

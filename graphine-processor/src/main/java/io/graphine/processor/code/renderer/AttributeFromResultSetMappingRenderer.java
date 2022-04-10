@@ -8,7 +8,7 @@ import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.EmbeddedAttributeMetadata;
 import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 
-import java.util.Collection;
+import java.util.List;
 
 import static io.graphine.processor.util.AccessorUtils.setter;
 import static io.graphine.processor.util.VariableNameUniqueizer.uniqueize;
@@ -61,7 +61,7 @@ public final class AttributeFromResultSetMappingRenderer {
                               variableName,
                               embeddableEntity.getNativeType());
 
-        Collection<AttributeMetadata> embeddedAttributes = embeddableEntity.getAttributes();
+        List<AttributeMetadata> embeddedAttributes = embeddableEntity.getAttributes();
         for (AttributeMetadata attribute : embeddedAttributes) {
             snippetBuilder
                     .add(renderAttribute(variableName, attribute, parameterIndexProvider));

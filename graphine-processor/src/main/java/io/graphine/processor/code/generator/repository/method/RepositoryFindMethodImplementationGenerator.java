@@ -21,10 +21,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.Optional;
+import java.util.*;
 
 import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.MethodForm.PLURAL;
 import static io.graphine.processor.util.StringUtils.uncapitalize;
@@ -110,7 +107,7 @@ public final class RepositoryFindMethodImplementationGenerator extends Repositor
                               entity.getNativeType(),
                               entityVariableName,
                               entity.getNativeType());
-        Collection<AttributeMetadata> attributes = entity.getAttributes();
+        List<AttributeMetadata> attributes = entity.getAttributes();
         for (AttributeMetadata attribute : attributes) {
             snippetBuilder
                     .add(attributeFromResultSetMappingRenderer.renderAttribute(entityVariableName,

@@ -8,7 +8,7 @@ import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.EmbeddedAttributeMetadata;
 import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 
-import java.util.Collection;
+import java.util.List;
 
 import static io.graphine.processor.support.EnvironmentContext.typeUtils;
 import static io.graphine.processor.util.AccessorUtils.getter;
@@ -71,7 +71,7 @@ public final class AttributeToStatementMappingRenderer {
 
         EmbeddableEntityMetadata embeddableEntity =
                 entityMetadataRegistry.getEmbeddableEntity(embeddedAttribute.getNativeType().toString());
-        Collection<AttributeMetadata> embeddedAttributes = embeddableEntity.getAttributes();
+        List<AttributeMetadata> embeddedAttributes = embeddableEntity.getAttributes();
         for (AttributeMetadata attribute : embeddedAttributes) {
             snippetBuilder
                     .add(renderAttribute(variableName, attribute, parameterIndexProvider));
@@ -99,7 +99,7 @@ public final class AttributeToStatementMappingRenderer {
         if (attribute instanceof EmbeddedAttributeMetadata) {
             EmbeddableEntityMetadata embeddableEntity =
                     entityMetadataRegistry.getEmbeddableEntity(attribute.getNativeType().toString());
-            Collection<AttributeMetadata> embeddedAttributes = embeddableEntity.getAttributes();
+            List<AttributeMetadata> embeddedAttributes = embeddableEntity.getAttributes();
             for (AttributeMetadata embeddedAttribute : embeddedAttributes) {
                 snippetBuilder
                         .add(renderNullableAttribute(embeddedAttribute, parameterIndexProvider));

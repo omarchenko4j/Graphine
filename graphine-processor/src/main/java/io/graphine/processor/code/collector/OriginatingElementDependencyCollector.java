@@ -35,18 +35,18 @@ public final class OriginatingElementDependencyCollector {
     }
 
     public Collection<Element> collect(EntityMetadata entity) {
-        Collection<AttributeMetadata> attributes = entity.getAttributes();
+        List<AttributeMetadata> attributes = entity.getAttributes();
 
-        List<Element> originatingElements = new ArrayList<>(attributes.size());
+        List<Element> originatingElements = new ArrayList<>(attributes.size() + 1);
         originatingElements.add(entity.getNativeElement());
         originatingElements.addAll(collect(attributes));
         return originatingElements;
     }
 
     public Collection<Element> collect(EmbeddableEntityMetadata embeddableEntity) {
-        Collection<AttributeMetadata> attributes = embeddableEntity.getAttributes();
+        List<AttributeMetadata> attributes = embeddableEntity.getAttributes();
 
-        List<Element> originatingElements = new ArrayList<>(attributes.size());
+        List<Element> originatingElements = new ArrayList<>(attributes.size() + 1);
         originatingElements.add(embeddableEntity.getNativeElement());
         originatingElements.addAll(collect(attributes));
         return originatingElements;

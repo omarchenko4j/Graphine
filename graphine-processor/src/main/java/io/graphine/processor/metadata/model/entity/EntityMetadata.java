@@ -5,16 +5,13 @@ import io.graphine.processor.metadata.model.entity.attribute.IdentifierAttribute
 import io.graphine.processor.support.element.NativeTypeElement;
 
 import javax.lang.model.element.TypeElement;
-import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static io.graphine.processor.util.StringUtils.getIfNotEmpty;
-import static java.util.Collections.unmodifiableCollection;
-import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.toMap;
-import static java.util.stream.Collectors.toUnmodifiableList;
+import static java.util.Collections.unmodifiableList;
 
 /**
  * @author Oleg Marchenko
@@ -23,7 +20,9 @@ public class EntityMetadata extends NativeTypeElement {
     private final String schema;
     private final String table;
     private final IdentifierAttributeMetadata identifier;
-    private final Map<String, AttributeMetadata> attributes;
+    private final List<AttributeMetadata> attributes;
+    private final List<AttributeMetadata> unidentifiedAttributes;
+    private final Map<String, AttributeMetadata> attributeRegistry;
 
     public EntityMetadata(TypeElement element,
                           String schema,
@@ -34,9 +33,16 @@ public class EntityMetadata extends NativeTypeElement {
         this.schema = schema;
         this.table = table;
         this.identifier = identifier;
-        this.attributes = attributes
-                .stream()
-                .collect(toMap(AttributeMetadata::getName, identity(), (a1, a2) -> a1, LinkedHashMap::new));
+        this.attributes = attributes;
+        this.unidentifiedAttributes =
+                attributes
+                        .stream()
+                        .filter(attribute -> !(attribute instanceof IdentifierAttributeMetadata))
+                        .collect(Collectors.toList());
+        this.attributeRegistry =
+                attributes
+                        .stream()
+                        .collect(Collectors.toMap(AttributeMetadata::getName, Function.identity()));
     }
 
     public String getSchema() {
@@ -52,21 +58,15 @@ public class EntityMetadata extends NativeTypeElement {
     }
 
     public AttributeMetadata getAttribute(String attributeName) {
-        return attributes.get(attributeName);
+        return attributeRegistry.get(attributeName);
     }
 
-    public Collection<AttributeMetadata> getAttributes() {
-        return unmodifiableCollection(attributes.values());
+    public List<AttributeMetadata> getUnidentifiedAttributes() {
+        return unmodifiableList(unidentifiedAttributes);
     }
 
-    public Collection<AttributeMetadata> getAttributes(boolean excludeIdentifier) {
-        if (excludeIdentifier) {
-            return this.attributes.values()
-                                  .stream()
-                                  .filter(attribute -> !attribute.getName().equals(identifier.getName()))
-                                  .collect(toUnmodifiableList());
-        }
-        return getAttributes();
+    public List<AttributeMetadata> getAttributes() {
+        return unmodifiableList(attributes);
     }
 
     @Override

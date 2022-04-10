@@ -14,7 +14,7 @@ import io.graphine.processor.metadata.model.repository.method.parameter.Paramete
 import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 import io.graphine.processor.query.model.NativeQuery;
 
-import java.util.Collection;
+import java.util.List;
 
 import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.MethodForm.PLURAL;
 import static io.graphine.processor.util.AccessorUtils.getter;
@@ -61,7 +61,7 @@ public final class RepositoryUpdateMethodImplementationGenerator
 
         NumericParameterIndexProvider parameterIndexProvider = new NumericParameterIndexProvider();
 
-        Collection<AttributeMetadata> attributes = entity.getAttributes(true);
+        List<AttributeMetadata> attributes = entity.getUnidentifiedAttributes();
         for (AttributeMetadata attribute : attributes) {
             snippetBuilder
                     .add(attributeToStatementMappingRenderer.renderAttribute(rootVariableName,

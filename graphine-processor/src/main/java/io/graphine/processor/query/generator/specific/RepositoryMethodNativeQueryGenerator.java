@@ -11,7 +11,6 @@ import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 import io.graphine.processor.query.model.NativeQuery;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
@@ -51,7 +50,7 @@ public abstract class RepositoryMethodNativeQueryGenerator {
             EmbeddedAttributeMetadata embeddedAttribute = (EmbeddedAttributeMetadata) attribute;
             EmbeddableEntityMetadata embeddableEntity =
                     entityMetadataRegistry.getEmbeddableEntity(attribute.getNativeType().toString());
-            Collection<AttributeMetadata> embeddedAttributes = embeddableEntity.getAttributes();
+            List<AttributeMetadata> embeddedAttributes = embeddableEntity.getAttributes();
 
             List<String> columns = new ArrayList<>(embeddedAttributes.size());
             for (AttributeMetadata innerAttribute : embeddedAttributes) {

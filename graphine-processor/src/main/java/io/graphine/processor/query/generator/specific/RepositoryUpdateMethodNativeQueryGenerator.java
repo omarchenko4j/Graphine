@@ -40,7 +40,7 @@ public final class RepositoryUpdateMethodNativeQueryGenerator extends Repository
 
     @Override
     protected List<String> collectColumns(EntityMetadata entity) {
-        return entity.getAttributes(true)
+        return entity.getUnidentifiedAttributes()
                      .stream()
                      .flatMap(attribute -> getColumn(attribute).stream())
                      .collect(Collectors.toList());
