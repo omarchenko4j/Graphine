@@ -48,6 +48,7 @@ public abstract class RepositoryMethodImplementationGenerator {
     public static final String STATEMENT_VARIABLE_NAME = uniqueize("statement");
     public static final String RESULT_SET_VARIABLE_NAME = uniqueize("resultSet");
     protected static final String EXCEPTION_VARIABLE_NAME = uniqueize("e");
+    private static final String READ_ONLY_VARIABLE_NAME = uniqueize("readOnly");
 
     protected final EntityMetadataRegistry entityMetadataRegistry;
     protected final StatementMappingRenderer statementMappingRenderer;
@@ -80,8 +81,19 @@ public abstract class RepositoryMethodImplementationGenerator {
         return CodeBlock.builder()
                         .beginControlFlow("try ($T $L = dataSource.getConnection())",
                                           Connection.class, CONNECTION_VARIABLE_NAME)
+                        .addStatement("$T $L = $L.isReadOnly()",
+                                      boolean.class, READ_ONLY_VARIABLE_NAME, CONNECTION_VARIABLE_NAME)
+                        .beginControlFlow("if (!$L)", READ_ONLY_VARIABLE_NAME)
+                        .addStatement("$L.setReadOnly(true)", CONNECTION_VARIABLE_NAME)
+                        .endControlFlow()
+                        .beginControlFlow("try")
                         .add(renderQuery(method, query))
                         .add(renderStatement(method, query, entity))
+                        .endControlFlow()
+                        .beginControlFlow("finally")
+                        .addStatement("$L.setReadOnly($L)",
+                                      CONNECTION_VARIABLE_NAME, READ_ONLY_VARIABLE_NAME)
+                        .endControlFlow()
                         .endControlFlow()
                         .beginControlFlow("catch ($T $L)",
                                           SQLException.class, EXCEPTION_VARIABLE_NAME)
