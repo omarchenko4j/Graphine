@@ -4,6 +4,7 @@ import io.graphine.processor.metadata.model.entity.EmbeddableEntityMetadata;
 import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.EmbeddedAttributeMetadata;
+import io.graphine.processor.metadata.model.entity.attribute.EmbeddedIdentifierAttributeMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.model.repository.method.name.QueryableMethodName;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.AttributeChain;
@@ -96,6 +97,13 @@ public abstract class RepositoryMethodMetadataValidator {
                 valid = false;
                 messager.printMessage(Kind.ERROR,
                                       "Condition parameter (" + attributeName + ") not found as entity attribute",
+                                      method.getNativeElement());
+                continue;
+            }
+            if (attribute instanceof EmbeddedIdentifierAttributeMetadata && attributeNames.size() > 1) {
+                valid = false;
+                messager.printMessage(Kind.ERROR,
+                                      "Condition parameter (" + attributeName + ") is embedded identifier attribute which is atomic (nested attributes cannot be used)",
                                       method.getNativeElement());
                 continue;
             }

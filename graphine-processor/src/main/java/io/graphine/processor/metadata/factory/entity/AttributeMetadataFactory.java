@@ -5,6 +5,7 @@ import io.graphine.core.annotation.AttributeOverride;
 import io.graphine.core.annotation.AttributeOverrides;
 import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.EmbeddedAttributeMetadata;
+import io.graphine.processor.metadata.model.entity.attribute.EmbeddedIdentifierAttributeMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.IdentifierAttributeMetadata;
 import io.graphine.processor.support.naming.pipeline.ColumnNamingPipeline;
 
@@ -14,6 +15,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static io.graphine.processor.metadata.model.entity.attribute.EmbeddedAttributeMetadata.isEmbedded;
+import static io.graphine.processor.metadata.model.entity.attribute.EmbeddedIdentifierAttributeMetadata.isEmbeddedIdentifier;
 import static io.graphine.processor.metadata.model.entity.attribute.IdentifierAttributeMetadata.isIdentifier;
 import static io.graphine.processor.util.StringUtils.isEmpty;
 import static java.util.Collections.emptyMap;
@@ -31,42 +33,58 @@ public final class AttributeMetadataFactory {
     }
 
     public AttributeMetadata createAttribute(VariableElement fieldElement) {
+        if (isEmbeddedIdentifier(fieldElement)) {
+            return createEmbeddedIdentifierAttribute(fieldElement);
+        }
         if (isIdentifier(fieldElement)) {
-            return new IdentifierAttributeMetadata(fieldElement, getColumn(fieldElement));
+            return createIdentifierAttribute(fieldElement);
         }
         if (isEmbedded(fieldElement)) {
-            Map<String, String> attributeNameToColumnNameMap = emptyMap();
-
-            AttributeOverrides attributeOverrides =
-                    fieldElement.getAnnotation(AttributeOverrides.class);
-            if (nonNull(attributeOverrides)) {
-                attributeNameToColumnNameMap =
-                        Arrays.stream(attributeOverrides.value())
-                              .collect(Collectors.toMap(AttributeOverride::name,
-                                                        attributeOverride -> attributeOverride.attribute().column()));
-            }
-            else {
-                AttributeOverride attributeOverride =
-                        fieldElement.getAnnotation(AttributeOverride.class);
-                if (nonNull(attributeOverride)) {
-                    attributeNameToColumnNameMap = singletonMap(attributeOverride.name(),
-                                                                attributeOverride.attribute().column());
-                }
-            }
-            return new EmbeddedAttributeMetadata(fieldElement, attributeNameToColumnNameMap);
+            return createEmbeddedAttribute(fieldElement);
         }
         return new AttributeMetadata(fieldElement, getColumn(fieldElement));
     }
 
-    private String getColumn(VariableElement element) {
+    private EmbeddedIdentifierAttributeMetadata createEmbeddedIdentifierAttribute(VariableElement fieldElement) {
+        EmbeddedAttributeMetadata embeddedAttribute = createEmbeddedAttribute(fieldElement);
+        return new EmbeddedIdentifierAttributeMetadata(fieldElement, embeddedAttribute);
+    }
+
+    private IdentifierAttributeMetadata createIdentifierAttribute(VariableElement fieldElement) {
+        return new IdentifierAttributeMetadata(fieldElement, getColumn(fieldElement));
+    }
+
+    private EmbeddedAttributeMetadata createEmbeddedAttribute(VariableElement fieldElement) {
+        Map<String, String> attributeNameToColumnNameMap = emptyMap();
+
+        AttributeOverrides attributeOverrides =
+                fieldElement.getAnnotation(AttributeOverrides.class);
+        if (nonNull(attributeOverrides)) {
+            attributeNameToColumnNameMap =
+                    Arrays.stream(attributeOverrides.value())
+                          .collect(Collectors.toMap(AttributeOverride::name,
+                                                    attributeOverride -> attributeOverride.attribute().column()));
+        }
+        else {
+            AttributeOverride attributeOverride =
+                    fieldElement.getAnnotation(AttributeOverride.class);
+            if (nonNull(attributeOverride)) {
+                attributeNameToColumnNameMap = singletonMap(attributeOverride.name(),
+                                                            attributeOverride.attribute().column());
+            }
+        }
+        return new EmbeddedAttributeMetadata(fieldElement, attributeNameToColumnNameMap);
+    }
+
+    private String getColumn(VariableElement fieldElement) {
         String column = null;
 
-        Attribute attribute = element.getAnnotation(Attribute.class);
+        Attribute attribute = fieldElement.getAnnotation(Attribute.class);
         if (nonNull(attribute)) {
             column = attribute.column();
         }
         if (isEmpty(column)) {
-            String attributeName = element.getSimpleName().toString();
+            String attributeName = fieldElement.getSimpleName().toString();
             column = columnNamingPipeline.transform(attributeName);
         }
         return column;

@@ -131,8 +131,21 @@ public abstract class RepositoryMethodImplementationGenerator {
                             case "java.util.Collection":
                             case "java.util.List":
                             case "java.util.Set":
-                                unnamedParameterSnippets.add(CodeBlock.of("$T.repeat($L.size())",
-                                                                          UnnamedParameterRepeater.class, parameterName));
+                                TypeMirror genericType = declaredType.getTypeArguments().get(0);
+
+                                String qualifiedName = genericType.toString();
+                                if (entityMetadataRegistry.containsEmbeddableEntity(qualifiedName)) {
+                                    EmbeddableEntityMetadata embeddableEntity =
+                                            entityMetadataRegistry.getEmbeddableEntity(qualifiedName);
+                                    for (int i = 0; i < embeddableEntity.getAttributes().size(); i++) {
+                                        unnamedParameterSnippets.add(CodeBlock.of("$T.repeat($L.size())",
+                                                                                  UnnamedParameterRepeater.class, parameterName));
+                                    }
+                                }
+                                else {
+                                    unnamedParameterSnippets.add(CodeBlock.of("$T.repeat($L.size())",
+                                                                              UnnamedParameterRepeater.class, parameterName));
+                                }
                                 break;
                         }
                         break;

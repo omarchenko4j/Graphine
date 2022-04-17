@@ -4,6 +4,7 @@ import io.graphine.processor.metadata.model.entity.EmbeddableEntityMetadata;
 import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.EmbeddedAttributeMetadata;
+import io.graphine.processor.metadata.model.entity.attribute.EmbeddedIdentifierAttributeMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.AttributeChain;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment;
@@ -46,6 +47,10 @@ public abstract class RepositoryMethodNativeQueryGenerator {
     }
 
     protected List<String> getColumn(AttributeMetadata attribute) {
+        if (attribute instanceof EmbeddedIdentifierAttributeMetadata) {
+            EmbeddedIdentifierAttributeMetadata embeddedIdentifierAttribute = (EmbeddedIdentifierAttributeMetadata) attribute;
+            return getColumn(embeddedIdentifierAttribute.getEmbeddedAttribute());
+        }
         if (attribute instanceof EmbeddedAttributeMetadata) {
             EmbeddedAttributeMetadata embeddedAttribute = (EmbeddedAttributeMetadata) attribute;
             EmbeddableEntityMetadata embeddableEntity =

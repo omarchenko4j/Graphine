@@ -20,7 +20,6 @@ import java.sql.PreparedStatement;
 
 import static io.graphine.processor.code.renderer.index.IncrementalParameterIndexProvider.INDEX_VARIABLE_NAME;
 import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.MethodForm.PLURAL;
-import static io.graphine.processor.util.AccessorUtils.getter;
 import static io.graphine.processor.util.StringUtils.uncapitalize;
 import static io.graphine.processor.util.VariableNameUniqueizer.uniqueize;
 import static java.util.Objects.isNull;
@@ -82,11 +81,9 @@ public final class RepositoryDeleteMethodImplementationGenerator
 
             IdentifierAttributeMetadata identifierAttribute = entity.getIdentifier();
             snippetBuilder.add(
-                    statementMappingRenderer.render(identifierAttribute.getNativeType(),
-                                                    parameterIndexProvider.getParameterIndex(),
-                                                    CodeBlock.of("$L.$L()",
-                                                                 entityVariableName,
-                                                                 getter(identifierAttribute)))
+                    attributeToStatementMappingRenderer.renderAttribute(entityVariableName,
+                                                                        identifierAttribute,
+                                                                        parameterIndexProvider)
             );
 
             if (qualifier.getMethodForm() == PLURAL) {

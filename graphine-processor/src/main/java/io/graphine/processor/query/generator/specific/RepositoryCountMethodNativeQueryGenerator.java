@@ -1,6 +1,7 @@
 package io.graphine.processor.query.generator.specific;
 
 import io.graphine.processor.metadata.model.entity.EntityMetadata;
+import io.graphine.processor.metadata.model.entity.attribute.EmbeddedIdentifierAttributeMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.IdentifierAttributeMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.model.repository.method.name.QueryableMethodName;
@@ -24,7 +25,7 @@ public final class RepositoryCountMethodNativeQueryGenerator extends RepositoryM
 
         StringBuilder queryBuilder = new StringBuilder()
                 .append("SELECT COUNT(")
-                .append(identifierAttribute.getColumn())
+                .append(getIdentifierColumn(identifierAttribute))
                 .append(") AS count")
                 .append(" FROM ")
                 .append(getIfNotEmpty(entity.getSchema(), () -> entity.getSchema() + '.'))
@@ -37,5 +38,12 @@ public final class RepositoryCountMethodNativeQueryGenerator extends RepositoryM
         }
 
         return queryBuilder.toString();
+    }
+
+    private String getIdentifierColumn(IdentifierAttributeMetadata identifierAttribute) {
+        if (identifierAttribute instanceof EmbeddedIdentifierAttributeMetadata) {
+            return "*";
+        }
+        return identifierAttribute.getColumn();
     }
 }

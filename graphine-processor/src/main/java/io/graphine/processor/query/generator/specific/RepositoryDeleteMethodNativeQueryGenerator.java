@@ -1,12 +1,13 @@
 package io.graphine.processor.query.generator.specific;
 
 import io.graphine.processor.metadata.model.entity.EntityMetadata;
-import io.graphine.processor.metadata.model.entity.attribute.IdentifierAttributeMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.model.repository.method.name.QueryableMethodName;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment;
 import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
+
+import java.util.stream.Collectors;
 
 import static io.graphine.processor.util.StringUtils.getIfNotEmpty;
 import static java.util.Objects.isNull;
@@ -30,20 +31,24 @@ public final class RepositoryDeleteMethodNativeQueryGenerator extends Repository
 
         ConditionFragment condition = queryableName.getCondition();
         if (isNull(condition)) {
-            IdentifierAttributeMetadata identifierAttribute = entity.getIdentifier();
+            String joinedWhereColumn =
+                    getColumn(entity.getIdentifier())
+                            .stream()
+                            .map(column -> {
+                                QualifierFragment qualifier = queryableName.getQualifier();
+                                switch (qualifier.getMethodForm()) {
+                                    case SINGULAR:
+                                        return column + " = ?";
+                                    case PLURAL:
+                                        return column + " IN (%s)";
+                                    default:
+                                        return "";
+                                }
+                            })
+                            .collect(Collectors.joining(" AND "));
             queryBuilder
                     .append(" WHERE ")
-                    .append(identifierAttribute.getColumn());
-
-            QualifierFragment qualifier = queryableName.getQualifier();
-            switch (qualifier.getMethodForm()) {
-                case SINGULAR:
-                    queryBuilder.append(" = ?");
-                    break;
-                case PLURAL:
-                    queryBuilder.append(" IN (%s)");
-                    break;
-            }
+                    .append(joinedWhereColumn);
         }
         else {
             queryBuilder.append(generateWhereClause(entity, condition));

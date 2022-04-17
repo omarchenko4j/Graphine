@@ -6,6 +6,7 @@ import io.graphine.processor.code.renderer.mapping.ResultSetMappingRenderer;
 import io.graphine.processor.metadata.model.entity.EmbeddableEntityMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.EmbeddedAttributeMetadata;
+import io.graphine.processor.metadata.model.entity.attribute.EmbeddedIdentifierAttributeMetadata;
 import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 
 import java.util.List;
@@ -30,7 +31,12 @@ public final class AttributeFromResultSetMappingRenderer {
                                      AttributeMetadata attribute,
                                      ParameterIndexProvider parameterIndexProvider) {
         CodeBlock.Builder snippetBuilder = CodeBlock.builder();
-        if (attribute instanceof EmbeddedAttributeMetadata) {
+        if (attribute instanceof EmbeddedIdentifierAttributeMetadata) {
+            EmbeddedIdentifierAttributeMetadata embeddedIdentifierAttribute = (EmbeddedIdentifierAttributeMetadata) attribute;
+            snippetBuilder
+                    .add(renderEmbeddedAttribute(rootVariableName, embeddedIdentifierAttribute.getEmbeddedAttribute(), parameterIndexProvider));
+        }
+        else if (attribute instanceof EmbeddedAttributeMetadata) {
             EmbeddedAttributeMetadata embeddedAttribute = (EmbeddedAttributeMetadata) attribute;
             snippetBuilder
                     .add(renderEmbeddedAttribute(rootVariableName, embeddedAttribute, parameterIndexProvider));

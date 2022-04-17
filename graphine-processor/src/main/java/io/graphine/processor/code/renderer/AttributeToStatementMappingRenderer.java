@@ -2,10 +2,12 @@ package io.graphine.processor.code.renderer;
 
 import com.squareup.javapoet.CodeBlock;
 import io.graphine.processor.code.renderer.index.NumericParameterIndexProvider;
+import io.graphine.processor.code.renderer.index.ParameterIndexProvider;
 import io.graphine.processor.code.renderer.mapping.StatementMappingRenderer;
 import io.graphine.processor.metadata.model.entity.EmbeddableEntityMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.EmbeddedAttributeMetadata;
+import io.graphine.processor.metadata.model.entity.attribute.EmbeddedIdentifierAttributeMetadata;
 import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 
 import java.util.List;
@@ -29,10 +31,14 @@ public final class AttributeToStatementMappingRenderer {
 
     public CodeBlock renderAttribute(String rootVariableName,
                                      AttributeMetadata attribute,
-                                     NumericParameterIndexProvider parameterIndexProvider) {
+                                     ParameterIndexProvider parameterIndexProvider) {
         CodeBlock.Builder snippetBuilder = CodeBlock.builder();
-
-        if (attribute instanceof EmbeddedAttributeMetadata) {
+        if (attribute instanceof EmbeddedIdentifierAttributeMetadata) {
+            EmbeddedIdentifierAttributeMetadata embeddedIdentifierAttribute = (EmbeddedIdentifierAttributeMetadata) attribute;
+            snippetBuilder
+                    .add(renderEmbeddedAttribute(rootVariableName, embeddedIdentifierAttribute.getEmbeddedAttribute(), parameterIndexProvider));
+        }
+        else if (attribute instanceof EmbeddedAttributeMetadata) {
             EmbeddedAttributeMetadata embeddedAttribute = (EmbeddedAttributeMetadata) attribute;
             snippetBuilder
                     .add(renderEmbeddedAttribute(rootVariableName, embeddedAttribute, parameterIndexProvider));
@@ -45,13 +51,12 @@ public final class AttributeToStatementMappingRenderer {
                                                          CodeBlock.of("$L.$L()",
                                                                       rootVariableName, getter(attribute))));
         }
-
         return snippetBuilder.build();
     }
 
     private CodeBlock renderEmbeddedAttribute(String rootVariableName,
                                               EmbeddedAttributeMetadata embeddedAttribute,
-                                              NumericParameterIndexProvider parameterIndexProvider) {
+                                              ParameterIndexProvider parameterIndexProvider) {
         CodeBlock.Builder snippetBuilder = CodeBlock.builder();
 
         String variableName = uniqueize(embeddedAttribute.getName());
@@ -62,9 +67,11 @@ public final class AttributeToStatementMappingRenderer {
                               rootVariableName,
                               getter(embeddedAttribute));
 
-        NumericParameterIndexProvider clonedParameterIndexProvider =
-                new NumericParameterIndexProvider(parameterIndexProvider);
-
+        ParameterIndexProvider clonedParameterIndexProvider = parameterIndexProvider;
+        if (parameterIndexProvider instanceof NumericParameterIndexProvider) {
+            clonedParameterIndexProvider =
+                    new NumericParameterIndexProvider((NumericParameterIndexProvider) parameterIndexProvider);
+        }
 
         snippetBuilder
                 .beginControlFlow("if ($L != null)", variableName);
@@ -93,7 +100,7 @@ public final class AttributeToStatementMappingRenderer {
     }
 
     private CodeBlock renderNullableAttribute(AttributeMetadata attribute,
-                                              NumericParameterIndexProvider parameterIndexProvider) {
+                                              ParameterIndexProvider parameterIndexProvider) {
         CodeBlock.Builder snippetBuilder = CodeBlock.builder();
 
         if (attribute instanceof EmbeddedAttributeMetadata) {

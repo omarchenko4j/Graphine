@@ -1,7 +1,6 @@
 package io.graphine.processor.query.generator.specific;
 
 import io.graphine.processor.metadata.model.entity.EntityMetadata;
-import io.graphine.processor.metadata.model.entity.attribute.IdentifierAttributeMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 
@@ -20,21 +19,24 @@ public final class RepositoryUpdateMethodNativeQueryGenerator extends Repository
 
     @Override
     protected String generateQuery(EntityMetadata entity, MethodMetadata method) {
-        String joinedColumns =
+        String joinedSetColumns =
                 collectColumns(entity)
                         .stream()
                         .map(column -> column + " = ?")
                         .collect(Collectors.joining(", "));
-
-        IdentifierAttributeMetadata identifierAttribute = entity.getIdentifier();
+        String joinedWhereColumn =
+                getColumn(entity.getIdentifier())
+                        .stream()
+                        .map(column -> column + " = ?")
+                        .collect(Collectors.joining(" AND "));
         return new StringBuilder()
                 .append("UPDATE ")
                 .append(getIfNotEmpty(entity.getSchema(), () -> entity.getSchema() + '.'))
                 .append(entity.getTable())
                 .append(" SET ")
-                .append(joinedColumns)
+                .append(joinedSetColumns)
                 .append(" WHERE ")
-                .append(identifierAttribute.getColumn()).append(" = ?")
+                .append(joinedWhereColumn)
                 .toString();
     }
 

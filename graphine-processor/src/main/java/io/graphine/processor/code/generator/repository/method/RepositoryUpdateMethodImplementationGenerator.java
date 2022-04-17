@@ -17,7 +17,6 @@ import io.graphine.processor.query.model.NativeQuery;
 import java.util.List;
 
 import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.MethodForm.PLURAL;
-import static io.graphine.processor.util.AccessorUtils.getter;
 import static io.graphine.processor.util.StringUtils.uncapitalize;
 import static io.graphine.processor.util.VariableNameUniqueizer.uniqueize;
 
@@ -71,10 +70,9 @@ public final class RepositoryUpdateMethodImplementationGenerator
 
         IdentifierAttributeMetadata identifierAttribute = entity.getIdentifier();
         snippetBuilder.add(
-                statementMappingRenderer.render(identifierAttribute.getNativeType(),
-                                                parameterIndexProvider.getParameterIndex(),
-                                                CodeBlock.of("$L.$L()",
-                                                             rootVariableName, getter(identifierAttribute)))
+                attributeToStatementMappingRenderer.renderAttribute(rootVariableName,
+                                                                    identifierAttribute,
+                                                                    parameterIndexProvider)
         );
 
         if (qualifier.getMethodForm() == PLURAL) {
