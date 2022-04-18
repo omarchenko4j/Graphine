@@ -3,7 +3,7 @@ package io.graphine.processor.code.generator.repository.method;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
 import io.graphine.core.GraphineException;
-import io.graphine.core.util.UnnamedParameterRepeater;
+import io.graphine.core.util.WildcardParameterRepeater;
 import io.graphine.processor.code.renderer.AttributeFromResultSetMappingRenderer;
 import io.graphine.processor.code.renderer.AttributeToStatementMappingRenderer;
 import io.graphine.processor.code.renderer.index.IncrementalParameterIndexProvider;
@@ -111,22 +111,22 @@ public abstract class RepositoryMethodImplementationGenerator {
                             .build();
         }
         else {
-            List<CodeBlock> unnamedParameterSnippets = new ArrayList<>(deferredParameters.size());
+            List<CodeBlock> wildcardParameterSnippets = new ArrayList<>(deferredParameters.size());
             for (ParameterMetadata parameter : deferredParameters) {
                 String parameterName = parameter.getName();
                 TypeMirror parameterType = parameter.getNativeType();
                 switch (parameterType.getKind()) {
                     case ARRAY:
-                        unnamedParameterSnippets.add(CodeBlock.of("$T.repeat($L.length)",
-                                                                  UnnamedParameterRepeater.class, parameterName));
+                        wildcardParameterSnippets.add(CodeBlock.of("$T.repeat($L.length)",
+                                                                   WildcardParameterRepeater.class, parameterName));
                         break;
                     case DECLARED:
                         DeclaredType declaredType = (DeclaredType) parameterType;
                         TypeElement typeElement = (TypeElement) declaredType.asElement();
                         switch (typeElement.getQualifiedName().toString()) {
                             case "java.lang.Iterable":
-                                unnamedParameterSnippets.add(CodeBlock.of("$T.repeatFor($L)",
-                                                                          UnnamedParameterRepeater.class, parameterName));
+                                wildcardParameterSnippets.add(CodeBlock.of("$T.repeatFor($L)",
+                                                                           WildcardParameterRepeater.class, parameterName));
                                 break;
                             case "java.util.Collection":
                             case "java.util.List":
@@ -138,13 +138,13 @@ public abstract class RepositoryMethodImplementationGenerator {
                                     EmbeddableEntityMetadata embeddableEntity =
                                             entityMetadataRegistry.getEmbeddableEntity(qualifiedName);
                                     for (int i = 0; i < embeddableEntity.getAttributes().size(); i++) {
-                                        unnamedParameterSnippets.add(CodeBlock.of("$T.repeat($L.size())",
-                                                                                  UnnamedParameterRepeater.class, parameterName));
+                                        wildcardParameterSnippets.add(CodeBlock.of("$T.repeat($L.size())",
+                                                                                   WildcardParameterRepeater.class, parameterName));
                                     }
                                 }
                                 else {
-                                    unnamedParameterSnippets.add(CodeBlock.of("$T.repeat($L.size())",
-                                                                              UnnamedParameterRepeater.class, parameterName));
+                                    wildcardParameterSnippets.add(CodeBlock.of("$T.repeat($L.size())",
+                                                                               WildcardParameterRepeater.class, parameterName));
                                 }
                                 break;
                         }
@@ -154,7 +154,7 @@ public abstract class RepositoryMethodImplementationGenerator {
             return CodeBlock.builder()
                             .addStatement("$T $L = $T.format($S, $L)",
                                           String.class, QUERY_VARIABLE_NAME, String.class, query.getValue(),
-                                          CodeBlock.join(unnamedParameterSnippets, ", "))
+                                          CodeBlock.join(wildcardParameterSnippets, ", "))
                             .build();
         }
     }

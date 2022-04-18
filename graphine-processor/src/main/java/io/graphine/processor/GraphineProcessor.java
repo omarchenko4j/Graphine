@@ -2,7 +2,7 @@ package io.graphine.processor;
 
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.TypeSpec;
-import io.graphine.core.util.UnnamedParameterRepeater;
+import io.graphine.core.util.WildcardParameterRepeater;
 import io.graphine.processor.code.collector.OriginatingElementDependencyCollector;
 import io.graphine.processor.code.generator.repository.RepositoryImplementationGenerator;
 import io.graphine.processor.code.renderer.mapping.ResultSetMappingRenderer;
@@ -169,7 +169,7 @@ public class GraphineProcessor extends AbstractProcessor {
                                         .skipJavaLangImports(true)
                                         .indent("\t")
                                         // TODO: imported even if not used
-                                        .addStaticImport(UnnamedParameterRepeater.class, "repeat", "repeatFor")
+                                        .addStaticImport(WildcardParameterRepeater.class, "repeat", "repeatFor")
                                         .build();
             try {
                 javaFile.writeTo(filer);
