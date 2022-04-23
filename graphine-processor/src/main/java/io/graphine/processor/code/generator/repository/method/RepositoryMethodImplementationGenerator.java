@@ -25,8 +25,8 @@ import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 import io.graphine.processor.query.model.NativeQuery;
 
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -36,6 +36,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static io.graphine.processor.code.renderer.index.IncrementalParameterIndexProvider.INDEX_VARIABLE_NAME;
+import static io.graphine.processor.util.AccessorUtils.getter;
+import static io.graphine.processor.util.StringUtils.uncapitalize;
 import static io.graphine.processor.util.VariableNameUniqueizer.uniqueize;
 import static java.util.Objects.nonNull;
 
@@ -117,8 +119,20 @@ public abstract class RepositoryMethodImplementationGenerator {
                 TypeMirror parameterType = parameter.getNativeType();
                 switch (parameterType.getKind()) {
                     case ARRAY:
-                        wildcardParameterSnippets.add(CodeBlock.of("$T.repeat($L.length)",
-                                                                   WildcardParameterRepeater.class, parameterName));
+                        ArrayType arrayType = (ArrayType) parameterType;
+                        TypeMirror componentType = arrayType.getComponentType();
+                        if (entityMetadataRegistry.containsEmbeddableEntity(componentType.toString())) {
+                            EmbeddableEntityMetadata embeddableEntity =
+                                    entityMetadataRegistry.getEmbeddableEntity(componentType.toString());
+                            for (int i = 0; i < embeddableEntity.getAttributes().size(); i++) {
+                                wildcardParameterSnippets.add(CodeBlock.of("$T.repeat($L.length)",
+                                                                           WildcardParameterRepeater.class, parameterName));
+                            }
+                        }
+                        else {
+                            wildcardParameterSnippets.add(CodeBlock.of("$T.repeat($L.length)",
+                                                                       WildcardParameterRepeater.class, parameterName));
+                        }
                         break;
                     case DECLARED:
                         DeclaredType declaredType = (DeclaredType) parameterType;
@@ -202,50 +216,219 @@ public abstract class RepositoryMethodImplementationGenerator {
                             ParameterMetadata parameter = parameters.get(j);
 
                             String parameterName = parameter.getName();
-                            TypeMirror parameterType = parameter.getNativeType();
-                            if (parameterType.getKind() == TypeKind.DECLARED) {
-                                // TODO: define embeddable entities in method parameters earlier
-                                if (entityMetadataRegistry.containsEmbeddableEntity(parameterType.toString())) {
-                                    NumericParameterIndexProvider clonedParameterIndexProvider;
-                                    if (parameterIndexProvider instanceof NumericParameterIndexProvider) {
-                                        clonedParameterIndexProvider =
-                                                (NumericParameterIndexProvider) parameterIndexProvider;
-                                    }
-                                    else {
-                                        clonedParameterIndexProvider = new NumericParameterIndexProvider();
-                                    }
-
-                                    EmbeddableEntityMetadata embeddableEntity =
-                                            entityMetadataRegistry.getEmbeddableEntity(parameterType.toString());
-                                    List<AttributeMetadata> embeddedAttributes = embeddableEntity.getAttributes();
-                                    for (AttributeMetadata attribute : embeddedAttributes) {
-                                        snippetBuilder
-                                                .add(attributeToStatementMappingRenderer.renderAttribute(parameterName, attribute, clonedParameterIndexProvider));
-                                    }
-                                    continue;
-                                }
-                            }
 
                             CodeBlock parameterValue;
-                            switch (operator) {
-                                case STARTING_WITH:
-                                    parameterValue = CodeBlock.of("$L + '%'", parameterName);
+                            String parameterIndex;
+
+                            TypeMirror parameterType = parameter.getNativeType();
+                            switch (parameterType.getKind()) {
+                                case ARRAY:
+                                    ArrayType arrayType = (ArrayType) parameterType;
+                                    TypeMirror componentType = arrayType.getComponentType();
+                                    if (entityMetadataRegistry.containsEmbeddableEntity(componentType.toString())) {
+                                        EmbeddableEntityMetadata embeddableEntity =
+                                                entityMetadataRegistry.getEmbeddableEntity(componentType.toString());
+
+                                        snippetBuilder
+                                                .addStatement("int $L = $L.length",
+                                                              uniqueize("length"), parameter.getName());
+
+                                        String entityVariableName = uniqueize(uncapitalize(embeddableEntity.getName()));
+                                        snippetBuilder
+                                                .beginControlFlow("for ($T $L : $L)",
+                                                                  embeddableEntity.getNativeType(), entityVariableName, parameter.getName());
+
+                                        List<AttributeMetadata> embeddedAttributes = embeddableEntity.getAttributes();
+                                        if (embeddedAttributes.size() >= 1) {
+                                            AttributeMetadata attribute = embeddedAttributes.get(0);
+                                            snippetBuilder
+                                                    .add(statementMappingRenderer.render(attribute.getNativeType(),
+                                                                                         INDEX_VARIABLE_NAME,
+                                                                                         CodeBlock.of("$L.$L()",
+                                                                                                      entityVariableName, getter(attribute))));
+                                        }
+                                        if (embeddedAttributes.size() >= 2) {
+                                            AttributeMetadata attribute = embeddedAttributes.get(1);
+                                            snippetBuilder
+                                                    .add(statementMappingRenderer.render(attribute.getNativeType(),
+                                                                                         INDEX_VARIABLE_NAME + " + " + uniqueize("length"),
+                                                                                         CodeBlock.of("$L.$L()",
+                                                                                                      entityVariableName, getter(attribute))));
+                                        }
+                                        for (int k = 2; k < embeddedAttributes.size(); k++) {
+                                            AttributeMetadata attribute = embeddedAttributes.get(k);
+                                            snippetBuilder
+                                                    .add(statementMappingRenderer.render(attribute.getNativeType(),
+                                                                                         INDEX_VARIABLE_NAME + " + (" + uniqueize("length") + " * " + k + ")",
+                                                                                         CodeBlock.of("$L.$L()",
+                                                                                                      entityVariableName, getter(attribute))));
+                                        }
+
+                                        snippetBuilder
+                                                .addStatement("$L++", INDEX_VARIABLE_NAME)
+                                                .endControlFlow();
+                                        break;
+                                    }
+
+                                    switch (operator) {
+                                        case STARTING_WITH:
+                                            parameterValue = CodeBlock.of("$L + '%'", parameterName);
+                                            break;
+                                        case ENDING_WITH:
+                                            parameterValue = CodeBlock.of("'%' + $L", parameterName);
+                                            break;
+                                        case CONTAINING:
+                                        case NOT_CONTAINING:
+                                            parameterValue = CodeBlock.of("'%' + $L + '%'", parameterName);
+                                            break;
+                                        default:
+                                            parameterValue = CodeBlock.of(parameterName);
+                                            break;
+                                    }
+
+                                    parameterIndex = parameterIndexProvider.getParameterIndex();
+                                    snippetBuilder
+                                            .add(statementMappingRenderer.render(parameterType, parameterIndex, parameterValue));
                                     break;
-                                case ENDING_WITH:
-                                    parameterValue = CodeBlock.of("'%' + $L", parameterName);
-                                    break;
-                                case CONTAINING:
-                                case NOT_CONTAINING:
-                                    parameterValue = CodeBlock.of("'%' + $L + '%'", parameterName);
+                                case DECLARED:
+                                    DeclaredType declaredType = (DeclaredType) parameterType;
+                                    TypeElement typeElement = (TypeElement) declaredType.asElement();
+                                    switch (typeElement.getQualifiedName().toString()) {
+                                        case "java.lang.Iterable":
+                                        case "java.util.Collection":
+                                        case "java.util.List":
+                                        case "java.util.Set":
+                                            TypeMirror genericType = declaredType.getTypeArguments().get(0);
+                                            if (entityMetadataRegistry.containsEmbeddableEntity(genericType.toString())) {
+                                                EmbeddableEntityMetadata embeddableEntity =
+                                                        entityMetadataRegistry.getEmbeddableEntity(genericType.toString());
+
+                                                snippetBuilder
+                                                        .addStatement("int $L = $L.size()",
+                                                                      uniqueize("size"), parameter.getName());
+
+                                                String entityVariableName = uniqueize(uncapitalize(embeddableEntity.getName()));
+                                                snippetBuilder
+                                                        .beginControlFlow("for ($T $L : $L)",
+                                                                          embeddableEntity.getNativeType(), entityVariableName, parameter.getName());
+
+                                                List<AttributeMetadata> embeddedAttributes = embeddableEntity.getAttributes();
+                                                if (embeddedAttributes.size() >= 1) {
+                                                    AttributeMetadata attribute = embeddedAttributes.get(0);
+                                                    snippetBuilder
+                                                            .add(statementMappingRenderer.render(attribute.getNativeType(),
+                                                                                                 INDEX_VARIABLE_NAME,
+                                                                                                 CodeBlock.of("$L.$L()",
+                                                                                                              entityVariableName, getter(attribute))));
+                                                }
+                                                if (embeddedAttributes.size() >= 2) {
+                                                    AttributeMetadata attribute = embeddedAttributes.get(1);
+                                                    snippetBuilder
+                                                            .add(statementMappingRenderer.render(attribute.getNativeType(),
+                                                                                                 INDEX_VARIABLE_NAME + " + " + uniqueize("size"),
+                                                                                                 CodeBlock.of("$L.$L()",
+                                                                                                              entityVariableName, getter(attribute))));
+                                                }
+                                                for (int k = 2; k < embeddedAttributes.size(); k++) {
+                                                    AttributeMetadata attribute = embeddedAttributes.get(k);
+                                                    snippetBuilder
+                                                            .add(statementMappingRenderer.render(attribute.getNativeType(),
+                                                                                                 INDEX_VARIABLE_NAME + " + (" + uniqueize("size") + " * " + k + ")",
+                                                                                                 CodeBlock.of("$L.$L()",
+                                                                                                              entityVariableName, getter(attribute))));
+                                                }
+
+                                                snippetBuilder
+                                                        .addStatement("$L++", INDEX_VARIABLE_NAME)
+                                                        .endControlFlow();
+                                                break;
+                                            }
+
+                                            switch (operator) {
+                                                case STARTING_WITH:
+                                                    parameterValue = CodeBlock.of("$L + '%'", parameterName);
+                                                    break;
+                                                case ENDING_WITH:
+                                                    parameterValue = CodeBlock.of("'%' + $L", parameterName);
+                                                    break;
+                                                case CONTAINING:
+                                                case NOT_CONTAINING:
+                                                    parameterValue = CodeBlock.of("'%' + $L + '%'", parameterName);
+                                                    break;
+                                                default:
+                                                    parameterValue = CodeBlock.of(parameterName);
+                                                    break;
+                                            }
+
+                                            parameterIndex = parameterIndexProvider.getParameterIndex();
+                                            snippetBuilder
+                                                    .add(statementMappingRenderer.render(parameterType, parameterIndex, parameterValue));
+                                            break;
+                                        default:
+                                            if (entityMetadataRegistry.containsEmbeddableEntity(parameterType.toString())) {
+                                                NumericParameterIndexProvider clonedParameterIndexProvider;
+                                                if (parameterIndexProvider instanceof NumericParameterIndexProvider) {
+                                                    clonedParameterIndexProvider =
+                                                            (NumericParameterIndexProvider) parameterIndexProvider;
+                                                }
+                                                else {
+                                                    clonedParameterIndexProvider = new NumericParameterIndexProvider();
+                                                }
+
+                                                EmbeddableEntityMetadata embeddableEntity =
+                                                        entityMetadataRegistry.getEmbeddableEntity(parameterType.toString());
+                                                List<AttributeMetadata> embeddedAttributes = embeddableEntity.getAttributes();
+                                                for (AttributeMetadata attribute : embeddedAttributes) {
+                                                    snippetBuilder
+                                                            .add(attributeToStatementMappingRenderer.renderAttribute(parameterName, attribute, clonedParameterIndexProvider));
+                                                }
+                                                break;
+                                            }
+
+                                            switch (operator) {
+                                                case STARTING_WITH:
+                                                    parameterValue = CodeBlock.of("$L + '%'", parameterName);
+                                                    break;
+                                                case ENDING_WITH:
+                                                    parameterValue = CodeBlock.of("'%' + $L", parameterName);
+                                                    break;
+                                                case CONTAINING:
+                                                case NOT_CONTAINING:
+                                                    parameterValue = CodeBlock.of("'%' + $L + '%'", parameterName);
+                                                    break;
+                                                default:
+                                                    parameterValue = CodeBlock.of(parameterName);
+                                                    break;
+                                            }
+
+                                            parameterIndex = parameterIndexProvider.getParameterIndex();
+                                            snippetBuilder
+                                                    .add(statementMappingRenderer.render(parameterType, parameterIndex, parameterValue));
+                                            break;
+                                    }
                                     break;
                                 default:
-                                    parameterValue = CodeBlock.of(parameterName);
+                                    switch (operator) {
+                                        case STARTING_WITH:
+                                            parameterValue = CodeBlock.of("$L + '%'", parameterName);
+                                            break;
+                                        case ENDING_WITH:
+                                            parameterValue = CodeBlock.of("'%' + $L", parameterName);
+                                            break;
+                                        case CONTAINING:
+                                        case NOT_CONTAINING:
+                                            parameterValue = CodeBlock.of("'%' + $L + '%'", parameterName);
+                                            break;
+                                        default:
+                                            parameterValue = CodeBlock.of(parameterName);
+                                            break;
+                                    }
+
+                                    parameterIndex = parameterIndexProvider.getParameterIndex();
+                                    snippetBuilder
+                                            .add(statementMappingRenderer.render(parameterType, parameterIndex, parameterValue));
                                     break;
                             }
-
-                            String parameterIndex = parameterIndexProvider.getParameterIndex();
-                            snippetBuilder
-                                    .add(statementMappingRenderer.render(parameterType, parameterIndex, parameterValue));
                         }
 
                         i += operator.getParameterCount();

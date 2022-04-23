@@ -18,6 +18,7 @@ public interface FilmRepository extends GraphineRepository<Film> {
     Film findFirstByBudgetGreaterThanEqualOrderByBudgetAsc(long budget);
     Optional<Film> findFirstOrderByYearDesc();
     Iterable<Film> findAll();
+    Iterable<Film> findAllByIdIn(UUID... ids);
     Collection<Film> findAllByYear(int year);
     Collection<Film> findAllByYearIsNot(int year);
     Collection<Film> findAllByBudgetBetween(long budget1, long budget2);
@@ -47,12 +48,14 @@ public interface FilmRepository extends GraphineRepository<Film> {
     List<Film> findAllByYearLessThanEqualOrderByYearAsc(int year);
     List<Film> findAllByYearGreaterThanAndTaglineIsNotEmptyOrderByYearDesc(int year);
     Film findFirstByRating(Rating rating);
+    List<Film> findAllByRatingIn(Collection<Rating> ratings);
     List<Film> findAllByRating_valueGreaterThanEqualAndRating_countGreaterThanEqual(float ratingValue,
                                                                                     long ratingCount);
     List<Film> findAllByRating_valueLessThanEqual(float ratingValue);
     List<Film> findAllByRating_valueGreaterThanEqualOrderByRating_count(float ratingValue);
     int countAll();
     long countAllByYear(int year);
+    long countAllByRatingIn(Rating... ratings);
     Long countAllByGrossGreaterThanEqual(long gross);
     void save(Film film);
     void saveAll(Film... films);
@@ -74,4 +77,5 @@ public interface FilmRepository extends GraphineRepository<Film> {
     void deleteAll(List<Film> films);
     void deleteAll(Set<Film> films);
     void deleteAllByYearIn(Set<Integer> years);
+    void deleteAllByRatingIn(Rating[] ratings);
 }

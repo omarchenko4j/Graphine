@@ -163,6 +163,32 @@ public class FilmRepositoryTest {
     }
 
     @Test
+    public void testFindAllByIdInMethodReturnResults() {
+        Film film1 = MarvelFilms.ironMan();
+        Film film2 = MarvelFilms.ironMan3();
+        Collection<Film> films = List.of(film1, MarvelFilms.ironMan2(), film2);
+        insertFilms(films);
+
+        Iterable<Film> foundFilms = filmRepository.findAllByIdIn(film1.getId(), film2.getId());
+        Assertions.assertNotNull(foundFilms);
+        Assertions.assertEquals(2, stream(foundFilms.spliterator(), false).count());
+
+        Assertions.assertTrue(stream(foundFilms.spliterator(), false)
+                                      .allMatch(foundFilm -> foundFilm.equals(film1) || foundFilm.equals(film2)));
+    }
+
+    @Test
+    public void testFindAllByIdInMethodReturnEmptyResult() {
+        Film film = MarvelFilms.ironMan3();
+        Collection<Film> films = List.of(MarvelFilms.ironMan(), MarvelFilms.ironMan2());
+        insertFilms(films);
+
+        Iterable<Film> foundFilms = filmRepository.findAllByIdIn(film.getId());
+        Assertions.assertNotNull(foundFilms);
+        Assertions.assertEquals(0, stream(foundFilms.spliterator(), false).count());
+    }
+
+    @Test
     public void testFindAllByYearMethodReturnResults() {
         Collection<Film> films = List.of(MarvelFilms.incredibleHulk(), MarvelFilms.ironMan());
         insertFilms(films);
@@ -533,6 +559,20 @@ public class FilmRepositoryTest {
     }
 
     @Test
+    public void testFindAllByRatingInMethodReturnResults() {
+        Film film1 = MarvelFilms.ironMan();
+        Film film2 = MarvelFilms.ironMan2();
+        List<Film> films = List.of(film1, film2, MarvelFilms.ironMan3());
+        insertFilms(films);
+
+        List<Film> foundFilms = filmRepository.findAllByRatingIn(List.of(film1.getRating(), film2.getRating()));
+        Assertions.assertNotNull(foundFilms);
+        Assertions.assertEquals(2, foundFilms.size());
+        Assertions.assertTrue(foundFilms.contains(film1));
+        Assertions.assertTrue(foundFilms.contains(film2));
+    }
+
+    @Test
     public void testFindAllByRating_valueGreaterThanEqualAndRating_countGreaterThanEqualMethodReturnResults() {
         List<Film> films = List.of(MarvelFilms.ironMan(), MarvelFilms.ironMan2(), MarvelFilms.ironMan3());
         insertFilms(films);
@@ -589,6 +629,27 @@ public class FilmRepositoryTest {
     @Test
     public void testCountAllByYearMethodReturnZero() {
         long numberOfFilms = filmRepository.countAllByYear(2000);
+        Assertions.assertEquals(0, numberOfFilms);
+    }
+
+    @Test
+    public void testCountAllByRatingInMethodReturnNonZero() {
+        Film film1 = MarvelFilms.ironMan();
+        Film film2 = MarvelFilms.ironMan2();
+        List<Film> films = List.of(film1, film2, MarvelFilms.ironMan3());
+        insertFilms(films);
+
+        long numberOfFilms = filmRepository.countAllByRatingIn(film1.getRating(), film2.getRating());
+        Assertions.assertEquals(2, numberOfFilms);
+    }
+
+    @Test
+    public void testCountAllByRatingInMethodReturnZero() {
+        Film film1 = MarvelFilms.ironMan();
+        List<Film> films = List.of(MarvelFilms.ironMan2(), MarvelFilms.ironMan3());
+        insertFilms(films);
+
+        long numberOfFilms = filmRepository.countAllByRatingIn(film1.getRating());
         Assertions.assertEquals(0, numberOfFilms);
     }
 
@@ -1066,6 +1127,25 @@ public class FilmRepositoryTest {
             Film foundFilm = selectFilmById(film.getId());
             Assertions.assertNull(foundFilm);
         });
+    }
+
+    @Test
+    public void testDeleteAllByRatingInMethod() {
+        Film film1 = MarvelFilms.ironMan();
+        Film film2 = MarvelFilms.ironMan2();
+        Film film3 = MarvelFilms.ironMan3();
+        insertFilms(List.of(film1, film2, film3));
+
+        filmRepository.deleteAllByRatingIn(new Rating[] { film1.getRating(), film2.getRating() });
+
+        Film foundFilm1 = selectFilmById(film1.getId());
+        Assertions.assertNull(foundFilm1);
+
+        Film foundFilm2 = selectFilmById(film2.getId());
+        Assertions.assertNull(foundFilm2);
+
+        Film foundFilm3 = selectFilmById(film3.getId());
+        Assertions.assertNotNull(foundFilm3);
     }
 
     @SneakyThrows
