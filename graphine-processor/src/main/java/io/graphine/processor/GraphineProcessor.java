@@ -4,6 +4,7 @@ import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.TypeSpec;
 import io.graphine.core.util.WildcardParameterRepeater;
 import io.graphine.processor.code.collector.OriginatingElementDependencyCollector;
+import io.graphine.processor.code.generator.entity.AttributeMappingGenerator;
 import io.graphine.processor.code.generator.repository.RepositoryImplementationGenerator;
 import io.graphine.processor.code.renderer.mapping.ResultSetMappingRenderer;
 import io.graphine.processor.code.renderer.mapping.StatementMappingRenderer;
@@ -92,7 +93,10 @@ public class GraphineProcessor extends AbstractProcessor {
                                   .forEach(query -> messager.printMessage(Kind.NOTE,
                                                                           "Generated query: " + query.getValue()));
 
-        // Step 5. Generating repository implementations
+        // Step 5. Generating infrastructure code
+        generateInfrastructureCode();
+
+        // Step 6. Generating repository implementations
         generateRepositoryImplementation(nativeQueryRegistryStorage.getRegistries(), entityMetadataRegistry);
 
         return ANNOTATIONS_CLAIMED;
@@ -147,6 +151,11 @@ public class GraphineProcessor extends AbstractProcessor {
         return repositoryNativeQueryGenerator.generate(repositories);
     }
 
+    private void generateInfrastructureCode() {
+        AttributeMappingGenerator attributeMappingGenerator = new AttributeMappingGenerator();
+        attributeMappingGenerator.generate();
+    }
+
     private void generateRepositoryImplementation(List<RepositoryNativeQueryRegistry> nativeQueryRegistries,
                                                   EntityMetadataRegistry entityMetadataRegistry) {
         OriginatingElementDependencyCollector originatingElementDependencyCollector =
@@ -165,6 +174,7 @@ public class GraphineProcessor extends AbstractProcessor {
                                                           resultSetMappingRenderer);
             TypeSpec typeSpec = repositoryImplementationGenerator.generate(repository);
 
+            // TODO: move to a separate helper method
             JavaFile javaFile = JavaFile.builder(repository.getPackageName(), typeSpec)
                                         .skipJavaLangImports(true)
                                         .indent("\t")

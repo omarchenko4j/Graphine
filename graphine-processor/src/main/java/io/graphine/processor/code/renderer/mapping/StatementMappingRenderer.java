@@ -6,11 +6,8 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
-import java.math.BigDecimal;
-import java.sql.Date;
-import java.sql.Time;
-import java.sql.Timestamp;
 
+import static io.graphine.processor.code.generator.entity.AttributeMappingGenerator.AttributeMappers;
 import static io.graphine.processor.code.generator.repository.method.RepositoryMethodImplementationGenerator.STATEMENT_VARIABLE_NAME;
 import static javax.lang.model.element.ElementKind.ENUM;
 import static javax.lang.model.type.TypeKind.BYTE;
@@ -27,46 +24,46 @@ public final class StatementMappingRenderer {
         switch (type.getKind()) {
             case BOOLEAN:
                 return CodeBlock.builder()
-                                .addStatement("$L.setBoolean($L, $L)",
-                                              STATEMENT_VARIABLE_NAME, index, valueSnippet)
+                                .addStatement("$T.setBoolean($L, $L, $L)",
+                                              AttributeMappers, STATEMENT_VARIABLE_NAME, index, valueSnippet)
                                 .build();
             case BYTE:
                 return CodeBlock.builder()
-                                .addStatement("$L.setByte($L, $L)",
-                                              STATEMENT_VARIABLE_NAME, index, valueSnippet)
+                                .addStatement("$T.setByte($L, $L, $L)",
+                                              AttributeMappers, STATEMENT_VARIABLE_NAME, index, valueSnippet)
                                 .build();
             case SHORT:
                 return CodeBlock.builder()
-                                .addStatement("$L.setShort($L, $L)",
-                                              STATEMENT_VARIABLE_NAME, index, valueSnippet)
+                                .addStatement("$T.setShort($L, $L, $L)",
+                                              AttributeMappers, STATEMENT_VARIABLE_NAME, index, valueSnippet)
                                 .build();
             case INT:
                 return CodeBlock.builder()
-                                .addStatement("$L.setInt($L, $L)",
-                                              STATEMENT_VARIABLE_NAME, index, valueSnippet)
+                                .addStatement("$T.setInt($L, $L, $L)",
+                                              AttributeMappers, STATEMENT_VARIABLE_NAME, index, valueSnippet)
                                 .build();
             case LONG:
                 return CodeBlock.builder()
-                                .addStatement("$L.setLong($L, $L)",
-                                              STATEMENT_VARIABLE_NAME, index, valueSnippet)
+                                .addStatement("$T.setLong($L, $L, $L)",
+                                              AttributeMappers, STATEMENT_VARIABLE_NAME, index, valueSnippet)
                                 .build();
             case FLOAT:
                 return CodeBlock.builder()
-                                .addStatement("$L.setFloat($L, $L)",
-                                              STATEMENT_VARIABLE_NAME, index, valueSnippet)
+                                .addStatement("$T.setFloat($L, $L, $L)",
+                                              AttributeMappers, STATEMENT_VARIABLE_NAME, index, valueSnippet)
                                 .build();
             case DOUBLE:
                 return CodeBlock.builder()
-                                .addStatement("$L.setDouble($L, $L)",
-                                              STATEMENT_VARIABLE_NAME, index, valueSnippet)
+                                .addStatement("$T.setDouble($L, $L, $L)",
+                                              AttributeMappers, STATEMENT_VARIABLE_NAME, index, valueSnippet)
                                 .build();
             case ARRAY:
                 ArrayType arrayType = (ArrayType) type;
                 TypeMirror componentType = arrayType.getComponentType();
                 if (componentType.getKind() == BYTE) {
                     return CodeBlock.builder()
-                                    .addStatement("$L.setBytes($L, $L)",
-                                                  STATEMENT_VARIABLE_NAME, index, valueSnippet)
+                                    .addStatement("$T.setBytes($L, $L, $L)",
+                                                  AttributeMappers, STATEMENT_VARIABLE_NAME, index, valueSnippet)
                                     .build();
                 }
                 return CodeBlock.builder()
@@ -79,65 +76,101 @@ public final class StatementMappingRenderer {
                 DeclaredType declaredType = (DeclaredType) type;
                 TypeElement typeElement = (TypeElement) declaredType.asElement();
                 switch (typeElement.getQualifiedName().toString()) {
-                    case "java.lang.String":
+                    case "java.lang.Boolean":
                         return CodeBlock.builder()
-                                        .addStatement("$L.setString($L, $L)",
-                                                      STATEMENT_VARIABLE_NAME, index, valueSnippet)
+                                .addStatement("$T.setBooleanWrapper($L, $L, $L)",
+                                            AttributeMappers, STATEMENT_VARIABLE_NAME, index, valueSnippet)
+                                .build();
+                    case "java.lang.Byte":
+                        return CodeBlock.builder()
+                                .addStatement("$T.setByteWrapper($L, $L, $L)",
+                                            AttributeMappers, STATEMENT_VARIABLE_NAME, index, valueSnippet)
+                                .build();
+                    case "java.lang.Short":
+                        return CodeBlock.builder()
+                                .addStatement("$T.setShortWrapper($L, $L, $L)",
+                                            AttributeMappers, STATEMENT_VARIABLE_NAME, index, valueSnippet)
+                                .build();
+                    case "java.lang.Integer":
+                        return CodeBlock.builder()
+                                .addStatement("$T.setIntWrapper($L, $L, $L)",
+                                            AttributeMappers, STATEMENT_VARIABLE_NAME, index, valueSnippet)
                                         .build();
-                    case "java.math.BigInteger":
+                    case "java.lang.Long":
                         return CodeBlock.builder()
-                                        .addStatement("$L.setBigDecimal($L, new $T($L))",
-                                                      STATEMENT_VARIABLE_NAME, index, BigDecimal.class, valueSnippet)
+                                .addStatement("$T.setLongWrapper($L, $L, $L)",
+                                            AttributeMappers, STATEMENT_VARIABLE_NAME, index, valueSnippet)
+                                        .build();
+                    case "java.lang.Float":
+                        return CodeBlock.builder()
+                                .addStatement("$T.setFloatWrapper($L, $L, $L)",
+                                            AttributeMappers, STATEMENT_VARIABLE_NAME, index, valueSnippet)
+                                        .build();
+                    case "java.lang.Double":
+                        return CodeBlock.builder()
+                                .addStatement("$T.setDoubleWrapper($L, $L, $L)",
+                                            AttributeMappers, STATEMENT_VARIABLE_NAME, index, valueSnippet)
                                         .build();
                     case "java.math.BigDecimal":
                         return CodeBlock.builder()
-                                        .addStatement("$L.setBigDecimal($L, $L)",
-                                                      STATEMENT_VARIABLE_NAME, index, valueSnippet)
+                                .addStatement("$T.setBigDecimal($L, $L, $L)",
+                                            AttributeMappers, STATEMENT_VARIABLE_NAME, index, valueSnippet)
+                                        .build();
+                    case "java.math.BigInteger":
+                        return CodeBlock.builder()
+                                .addStatement("$T.setBigInteger($L, $L, $L)",
+                                            AttributeMappers, STATEMENT_VARIABLE_NAME, index, valueSnippet)
+                                        .build();
+
+                    case "java.lang.String":
+                        return CodeBlock.builder()
+                                        .addStatement("$T.setString($L, $L, $L)",
+                                                      AttributeMappers, STATEMENT_VARIABLE_NAME, index, valueSnippet)
                                         .build();
                     case "java.sql.Date":
                         return CodeBlock.builder()
-                                        .addStatement("$L.setDate($L, $L)",
-                                                      STATEMENT_VARIABLE_NAME, index, valueSnippet)
+                                        .addStatement("$T.setDate($L, $L, $L)",
+                                                      AttributeMappers, STATEMENT_VARIABLE_NAME, index, valueSnippet)
                                         .build();
                     case "java.sql.Time":
                         return CodeBlock.builder()
-                                        .addStatement("$L.setTime($L, $L)",
-                                                      STATEMENT_VARIABLE_NAME, index, valueSnippet)
+                                        .addStatement("$T.setTime($L, $L, $L)",
+                                                      AttributeMappers, STATEMENT_VARIABLE_NAME, index, valueSnippet)
                                         .build();
                     case "java.sql.Timestamp":
                         return CodeBlock.builder()
-                                        .addStatement("$L.setTimestamp($L, $L)",
-                                                      STATEMENT_VARIABLE_NAME, index, valueSnippet)
+                                        .addStatement("$T.setTimestamp($L, $L, $L)",
+                                                      AttributeMappers, STATEMENT_VARIABLE_NAME, index, valueSnippet)
                                         .build();
                     case "java.time.Instant":
                         return CodeBlock.builder()
-                                        .addStatement("$L.setTimestamp($L, $L != null ? $T.from($L) : null)",
-                                                      STATEMENT_VARIABLE_NAME,
-                                                      index, valueSnippet, Timestamp.class, valueSnippet)
+                                        .addStatement("$T.setInstant($L, $L, $L)",
+                                                      AttributeMappers, STATEMENT_VARIABLE_NAME,
+                                                      index, valueSnippet)
                                         .build();
                     case "java.time.LocalDate":
                         return CodeBlock.builder()
-                                        .addStatement("$L.setDate($L, $L != null ? $T.valueOf($L) : null)",
-                                                      STATEMENT_VARIABLE_NAME,
-                                                      index, valueSnippet, Date.class, valueSnippet)
+                                        .addStatement("$T.setLocalDate($L, $L, $L)",
+                                                      AttributeMappers, STATEMENT_VARIABLE_NAME,
+                                                      index, valueSnippet)
                                         .build();
                     case "java.time.LocalTime":
                         return CodeBlock.builder()
-                                        .addStatement("$L.setTime($L, $L != null ? $T.valueOf($L) : null)",
-                                                      STATEMENT_VARIABLE_NAME,
-                                                      index, valueSnippet, Time.class, valueSnippet)
+                                        .addStatement("$T.setLocalTime($L, $L, $L)",
+                                                      AttributeMappers, STATEMENT_VARIABLE_NAME,
+                                                      index, valueSnippet)
                                         .build();
                     case "java.time.LocalDateTime":
                         return CodeBlock.builder()
-                                        .addStatement("$L.setTimestamp($L, $L != null ? $T.valueOf($L) : null)",
-                                                      STATEMENT_VARIABLE_NAME,
-                                                      index, valueSnippet, Timestamp.class, valueSnippet)
+                                        .addStatement("$T.setLocalDateTime($L, $L, $L)",
+                                                      AttributeMappers, STATEMENT_VARIABLE_NAME,
+                                                      index, valueSnippet)
                                         .build();
                     case "java.util.UUID":
                         return CodeBlock.builder()
-                                        .addStatement("$L.setString($L, $L != null ? $L.toString() : null)",
-                                                      STATEMENT_VARIABLE_NAME,
-                                                      index, valueSnippet, valueSnippet)
+                                        .addStatement("$T.setUuid($L, $L, $L)",
+                                                      AttributeMappers, STATEMENT_VARIABLE_NAME,
+                                                      index, valueSnippet)
                                         .build();
                     case "java.lang.Iterable":
                     case "java.util.Collection":
@@ -153,9 +186,9 @@ public final class StatementMappingRenderer {
                     default:
                         if (typeElement.getKind() == ENUM) {
                             return CodeBlock.builder()
-                                            .addStatement("$L.setString($L, $L != null ? $L.name() : null)",
-                                                          STATEMENT_VARIABLE_NAME,
-                                                          index, valueSnippet, valueSnippet)
+                                            .addStatement("$T.setEnum($L, $L, $L)",
+                                                          AttributeMappers, STATEMENT_VARIABLE_NAME,
+                                                          index, valueSnippet)
                                             .build();
                         }
                         return CodeBlock.builder()
@@ -165,9 +198,8 @@ public final class StatementMappingRenderer {
                 }
             case NULL:
                 return CodeBlock.builder()
-                                // TODO: switch to using PreparedStatement.setNull(..)
-                                .addStatement("$L.setObject($L, null)",
-                                              STATEMENT_VARIABLE_NAME, index)
+                                .addStatement("$T.setNull($L, $L)",
+                                              AttributeMappers, STATEMENT_VARIABLE_NAME, index)
                                 .build();
             default:
                 return CodeBlock.builder().build();

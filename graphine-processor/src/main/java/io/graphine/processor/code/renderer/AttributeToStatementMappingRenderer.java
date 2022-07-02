@@ -14,6 +14,7 @@ import java.util.List;
 
 import static io.graphine.processor.support.EnvironmentContext.typeUtils;
 import static io.graphine.processor.util.AccessorUtils.getter;
+import static io.graphine.processor.util.StringUtils.EMPTY;
 import static io.graphine.processor.util.VariableNameUniqueizer.uniqueize;
 
 /**
@@ -116,7 +117,7 @@ public final class AttributeToStatementMappingRenderer {
             snippetBuilder
                     .add(statementMappingRenderer.render(typeUtils.getNullType(),
                                                          parameterIndexProvider.getParameterIndex(),
-                                                         CodeBlock.of("")));
+                                                         EMPTY));
         }
 
         return snippetBuilder.build();
