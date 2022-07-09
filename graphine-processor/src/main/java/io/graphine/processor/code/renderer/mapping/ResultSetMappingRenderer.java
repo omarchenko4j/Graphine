@@ -102,6 +102,21 @@ public final class ResultSetMappingRenderer {
                     case "java.time.LocalDateTime":
                         return CodeBlock.of("$T.getLocalDateTime($L, $L)",
                                             AttributeMappers, RESULT_SET_VARIABLE_NAME, index);
+                    case "java.time.Year":
+                        return CodeBlock.of("$T.getYear($L, $L)",
+                                            AttributeMappers, RESULT_SET_VARIABLE_NAME, index);
+                    case "java.time.YearMonth":
+                        return CodeBlock.of("$T.getYearMonth($L, $L)",
+                                            AttributeMappers, RESULT_SET_VARIABLE_NAME, index);
+                    case "java.time.MonthDay":
+                        return CodeBlock.of("$T.getMonthDay($L, $L)",
+                                            AttributeMappers, RESULT_SET_VARIABLE_NAME, index);
+                    case "java.time.Period":
+                        return CodeBlock.of("$T.getPeriod($L, $L)",
+                                            AttributeMappers, RESULT_SET_VARIABLE_NAME, index);
+                    case "java.time.Duration":
+                        return CodeBlock.of("$T.getDuration($L, $L)",
+                                            AttributeMappers, RESULT_SET_VARIABLE_NAME, index);
                     case "java.util.UUID":
                         return CodeBlock.of("$T.getUuid($L, $L)",
                                             AttributeMappers, RESULT_SET_VARIABLE_NAME, index);

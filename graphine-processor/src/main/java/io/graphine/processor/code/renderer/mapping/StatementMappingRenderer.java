@@ -166,6 +166,36 @@ public final class StatementMappingRenderer {
                                                       AttributeMappers, STATEMENT_VARIABLE_NAME,
                                                       index, valueSnippet)
                                         .build();
+                    case "java.time.Year":
+                        return CodeBlock.builder()
+                                        .addStatement("$T.setYear($L, $L, $L)",
+                                                      AttributeMappers, STATEMENT_VARIABLE_NAME,
+                                                      index, valueSnippet)
+                                        .build();
+                    case "java.time.YearMonth":
+                        return CodeBlock.builder()
+                                        .addStatement("$T.setYearMonth($L, $L, $L)",
+                                                      AttributeMappers, STATEMENT_VARIABLE_NAME,
+                                                      index, valueSnippet)
+                                        .build();
+                    case "java.time.MonthDay":
+                        return CodeBlock.builder()
+                                        .addStatement("$T.setMonthDay($L, $L, $L)",
+                                                      AttributeMappers, STATEMENT_VARIABLE_NAME,
+                                                      index, valueSnippet)
+                                        .build();
+                    case "java.time.Period":
+                        return CodeBlock.builder()
+                                        .addStatement("$T.setPeriod($L, $L, $L)",
+                                                      AttributeMappers, STATEMENT_VARIABLE_NAME,
+                                                      index, valueSnippet)
+                                        .build();
+                    case "java.time.Duration":
+                        return CodeBlock.builder()
+                                        .addStatement("$T.setDuration($L, $L, $L)",
+                                                      AttributeMappers, STATEMENT_VARIABLE_NAME,
+                                                      index, valueSnippet)
+                                        .build();
                     case "java.util.UUID":
                         return CodeBlock.builder()
                                         .addStatement("$T.setUuid($L, $L, $L)",

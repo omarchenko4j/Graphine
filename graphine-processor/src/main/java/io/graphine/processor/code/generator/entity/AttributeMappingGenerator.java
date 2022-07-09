@@ -1,30 +1,18 @@
 package io.graphine.processor.code.generator.entity;
 
-import static io.graphine.processor.support.EnvironmentContext.filer;
-import static io.graphine.processor.support.EnvironmentContext.messager;
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.JavaFile;
-import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.ParameterizedTypeName;
-import com.squareup.javapoet.TypeSpec;
-import com.squareup.javapoet.TypeVariableName;
+import com.squareup.javapoet.*;
+
 import javax.lang.model.element.Modifier;
 import javax.tools.Diagnostic;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.sql.Date;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.sql.Types;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
+import java.sql.*;
+import java.time.*;
 import java.util.UUID;
+
+import static io.graphine.processor.support.EnvironmentContext.filer;
+import static io.graphine.processor.support.EnvironmentContext.messager;
 
 /**
  * TODO: quick sketch - refactoring candidate
@@ -373,6 +361,61 @@ public class AttributeMappingGenerator {
                         .endControlFlow()
                         .addStatement("return null");
         classBuilder.addMethod(getLocalDateTimeMethodBuilder.build());
+
+        MethodSpec.Builder getYearMethodBuilder =
+                MethodSpec.methodBuilder("getYear")
+                          .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                          .returns(Year.class)
+                          .addParameter(ResultSet.class, "resultSet")
+                          .addParameter(int.class, "columnIndex")
+                          .addException(SQLException.class)
+                          .addStatement("$T columnValue = resultSet.getInt(columnIndex)", int.class)
+                          .addStatement("return $T.of(columnValue)", Year.class);
+        classBuilder.addMethod(getYearMethodBuilder.build());
+
+        MethodSpec.Builder getYearMonthMethodBuilder =
+                MethodSpec.methodBuilder("getYearMonth")
+                          .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                          .returns(YearMonth.class)
+                          .addParameter(ResultSet.class, "resultSet")
+                          .addParameter(int.class, "columnIndex")
+                          .addException(SQLException.class)
+                          .addStatement("$T columnValue = resultSet.getString(columnIndex)", String.class)
+                          .addStatement("return $T.parse(columnValue)", YearMonth.class);
+        classBuilder.addMethod(getYearMonthMethodBuilder.build());
+
+        MethodSpec.Builder getMonthDayMethodBuilder =
+                MethodSpec.methodBuilder("getMonthDay")
+                          .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                          .returns(MonthDay.class)
+                          .addParameter(ResultSet.class, "resultSet")
+                          .addParameter(int.class, "columnIndex")
+                          .addException(SQLException.class)
+                          .addStatement("$T columnValue = resultSet.getString(columnIndex)", String.class)
+                          .addStatement("return $T.parse(columnValue)", MonthDay.class);
+        classBuilder.addMethod(getMonthDayMethodBuilder.build());
+
+        MethodSpec.Builder getPeriodMethodBuilder =
+                MethodSpec.methodBuilder("getPeriod")
+                          .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                          .returns(Period.class)
+                          .addParameter(ResultSet.class, "resultSet")
+                          .addParameter(int.class, "columnIndex")
+                          .addException(SQLException.class)
+                          .addStatement("$T columnValue = resultSet.getInt(columnIndex)", int.class)
+                          .addStatement("return $T.ofDays(columnValue)", Period.class);
+        classBuilder.addMethod(getPeriodMethodBuilder.build());
+
+        MethodSpec.Builder getDurationMethodBuilder =
+                MethodSpec.methodBuilder("getDuration")
+                          .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                          .returns(Duration.class)
+                          .addParameter(ResultSet.class, "resultSet")
+                          .addParameter(int.class, "columnIndex")
+                          .addException(SQLException.class)
+                          .addStatement("$T columnValue = resultSet.getLong(columnIndex)", long.class)
+                          .addStatement("return $T.ofSeconds(columnValue)", Duration.class);
+        classBuilder.addMethod(getDurationMethodBuilder.build());
 
         MethodSpec.Builder getUuidMethodBuilder =
                 MethodSpec.methodBuilder("getUuid")
@@ -753,6 +796,85 @@ public class AttributeMappingGenerator {
                         .addStatement("statement.setNull(columnIndex, $T.TIMESTAMP)", Types.class)
                         .endControlFlow();
         classBuilder.addMethod(setLocalDateTimeMethodBuilder.build());
+
+        MethodSpec.Builder setYearMethodBuilder =
+                MethodSpec.methodBuilder("setYear")
+                          .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                          .returns(void.class)
+                          .addParameter(PreparedStatement.class, "statement")
+                          .addParameter(int.class, "columnIndex")
+                          .addParameter(Year.class, "value")
+                          .addException(SQLException.class)
+                          .beginControlFlow("if (value != null)")
+                          .addStatement("statement.setInt(columnIndex, value.getValue())")
+                          .nextControlFlow("else")
+                          .addStatement("statement.setNull(columnIndex, $T.INTEGER)", Types.class)
+                          .endControlFlow();
+        classBuilder.addMethod(setYearMethodBuilder.build());
+
+        MethodSpec.Builder setYearMonthMethodBuilder =
+                MethodSpec.methodBuilder("setYearMonth")
+                          .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                          .returns(void.class)
+                          .addParameter(PreparedStatement.class, "statement")
+                          .addParameter(int.class, "columnIndex")
+                          .addParameter(YearMonth.class, "value")
+                          .addException(SQLException.class)
+                          .beginControlFlow("if (value != null)")
+                          .addStatement("$T preparedValue = value.getYear() + $S + value.getMonthValue()",
+                                        String.class, "-")
+                          .addStatement("statement.setString(columnIndex, preparedValue)")
+                          .nextControlFlow("else")
+                          .addStatement("statement.setNull(columnIndex, $T.VARCHAR)", Types.class)
+                          .endControlFlow();
+        classBuilder.addMethod(setYearMonthMethodBuilder.build());
+
+        MethodSpec.Builder setMonthDayMethodBuilder =
+                MethodSpec.methodBuilder("setMonthDay")
+                          .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                          .returns(void.class)
+                          .addParameter(PreparedStatement.class, "statement")
+                          .addParameter(int.class, "columnIndex")
+                          .addParameter(MonthDay.class, "value")
+                          .addException(SQLException.class)
+                          .beginControlFlow("if (value != null)")
+                          .addStatement("$T preparedValue = $S + value.getMonthValue() + $S + value.getDayOfMonth()",
+                                        String.class, "--", "-")
+                          .addStatement("statement.setString(columnIndex, preparedValue)")
+                          .nextControlFlow("else")
+                          .addStatement("statement.setNull(columnIndex, $T.VARCHAR)", Types.class)
+                          .endControlFlow();
+        classBuilder.addMethod(setMonthDayMethodBuilder.build());
+
+        MethodSpec.Builder setPeriodMethodBuilder =
+                MethodSpec.methodBuilder("setPeriod")
+                          .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                          .returns(void.class)
+                          .addParameter(PreparedStatement.class, "statement")
+                          .addParameter(int.class, "columnIndex")
+                          .addParameter(Period.class, "value")
+                          .addException(SQLException.class)
+                          .beginControlFlow("if (value != null)")
+                          .addStatement("statement.setInt(columnIndex, value.getDays())")
+                          .nextControlFlow("else")
+                          .addStatement("statement.setNull(columnIndex, $T.INTEGER)", Types.class)
+                          .endControlFlow();
+        classBuilder.addMethod(setPeriodMethodBuilder.build());
+
+        MethodSpec.Builder setDurationMethodBuilder =
+                MethodSpec.methodBuilder("setDuration")
+                          .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                          .returns(void.class)
+                          .addParameter(PreparedStatement.class, "statement")
+                          .addParameter(int.class, "columnIndex")
+                          .addParameter(Duration.class, "value")
+                          .addException(SQLException.class)
+                          .beginControlFlow("if (value != null)")
+                          .addStatement("statement.setLong(columnIndex, value.getSeconds())")
+                          .nextControlFlow("else")
+                          .addStatement("statement.setNull(columnIndex, $T.BIGINT)", Types.class)
+                          .endControlFlow();
+        classBuilder.addMethod(setDurationMethodBuilder.build());
 
         MethodSpec.Builder setUuidMethodBuilder =
                 MethodSpec.methodBuilder("setUuid")
