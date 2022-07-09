@@ -13,10 +13,14 @@ import io.graphine.processor.metadata.model.repository.method.parameter.Paramete
 import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.ArrayType;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.PrimitiveType;
-import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.*;
+import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -79,8 +83,8 @@ public abstract class RepositoryMethodMetadataValidator {
         if (numberOfConditionParameters != numberOfMethodParameters) {
             messager.printMessage(Kind.ERROR,
                                   "Number of condition parameters (" + numberOfConditionParameters +
-                                  ") is not equal to the number of method parameters (" +
-                                  numberOfMethodParameters + ")",
+                                          ") is not equal to the number of method parameters (" +
+                                          numberOfMethodParameters + ")",
                                   method.getNativeElement());
             return false;
         }
@@ -145,63 +149,34 @@ public abstract class RepositoryMethodMetadataValidator {
                 ParameterMetadata methodParameter = methodParameters.get(parameterIndex);
                 TypeMirror parameterType = methodParameter.getNativeType();
 
-                if (operator == OperatorType.IN || operator == OperatorType.NOT_IN) {
-                    switch (parameterType.getKind()) {
-                        case ARRAY:
-                            ArrayType arrayType = (ArrayType) parameterType;
-                            parameterType = arrayType.getComponentType();
-                            if (!typeUtils.isSameType(parameterType, attributeType)) {
-                                if (parameterType.getKind().isPrimitive()) {
-                                    PrimitiveType primitiveType = typeUtils.getPrimitiveType(parameterType.getKind());
-                                    parameterType = typeUtils.boxedClass(primitiveType).asType();
-                                    if (!typeUtils.isSameType(parameterType, attributeType)) {
-                                        valid = false;
-                                        messager.printMessage(Kind.ERROR,
-                                                              "Method parameter (" + methodParameter.getName() +
-                                                              ") has an incompatible array type with entity attribute type (" +
-                                                              attributeName + ")",
-                                                              methodParameter.getNativeElement());
-                                    }
-                                }
-                                else if (attributeType.getKind().isPrimitive()) {
-                                    PrimitiveType primitiveType = typeUtils.getPrimitiveType(attributeType.getKind());
-                                    attributeType = typeUtils.boxedClass(primitiveType).asType();
-                                    if (!typeUtils.isSameType(parameterType, attributeType)) {
-                                        valid = false;
-                                        messager.printMessage(Kind.ERROR,
-                                                              "Method parameter (" + methodParameter.getName() +
-                                                              ") has an incompatible array type with entity attribute type (" +
-                                                              attributeName + ")",
-                                                              methodParameter.getNativeElement());
-                                    }
-                                }
-                                else {
-                                    valid = false;
-                                    messager.printMessage(Kind.ERROR,
-                                                          "Method parameter (" + methodParameter.getName() +
-                                                          ") has an incompatible array type with entity attribute type (" +
-                                                          attributeName + ")",
-                                                          methodParameter.getNativeElement());
-                                }
-                            }
-                            break;
-                        case DECLARED:
-                            DeclaredType declaredType = (DeclaredType) parameterType;
-                            String qualifiedName = ((TypeElement) declaredType.asElement()).getQualifiedName().toString();
-                            if (qualifiedName.equals(Iterable.class.getName()) ||
-                                qualifiedName.equals(Collection.class.getName()) ||
-                                qualifiedName.equals(List.class.getName()) ||
-                                qualifiedName.equals(Set.class.getName())) {
-                                parameterType = declaredType.getTypeArguments().get(0);
+                switch (operator) {
+                    case IN:
+                    case NOT_IN:
+                        switch (parameterType.getKind()) {
+                            case ARRAY:
+                                ArrayType arrayType = (ArrayType) parameterType;
+                                parameterType = arrayType.getComponentType();
                                 if (!typeUtils.isSameType(parameterType, attributeType)) {
-                                    if (attributeType.getKind().isPrimitive()) {
+                                    if (parameterType.getKind().isPrimitive()) {
+                                        PrimitiveType primitiveType = typeUtils.getPrimitiveType(parameterType.getKind());
+                                        parameterType = typeUtils.boxedClass(primitiveType).asType();
+                                        if (!typeUtils.isSameType(parameterType, attributeType)) {
+                                            valid = false;
+                                            messager.printMessage(Kind.ERROR,
+                                                                  "Method parameter (" + methodParameter.getName() +
+                                                                  ") has an incompatible array type with entity attribute type (" +
+                                                                  attributeName + ")",
+                                                                  methodParameter.getNativeElement());
+                                        }
+                                    }
+                                    else if (attributeType.getKind().isPrimitive()) {
                                         PrimitiveType primitiveType = typeUtils.getPrimitiveType(attributeType.getKind());
                                         attributeType = typeUtils.boxedClass(primitiveType).asType();
                                         if (!typeUtils.isSameType(parameterType, attributeType)) {
                                             valid = false;
                                             messager.printMessage(Kind.ERROR,
                                                                   "Method parameter (" + methodParameter.getName() +
-                                                                  ") has an incompatible argument type in collection with entity attribute type (" +
+                                                                  ") has an incompatible array type with entity attribute type (" +
                                                                   attributeName + ")",
                                                                   methodParameter.getNativeElement());
                                         }
@@ -210,74 +185,215 @@ public abstract class RepositoryMethodMetadataValidator {
                                         valid = false;
                                         messager.printMessage(Kind.ERROR,
                                                               "Method parameter (" + methodParameter.getName() +
-                                                              ") has an incompatible argument type in collection with entity attribute type (" +
+                                                              ") has an incompatible array type with entity attribute type (" +
                                                               attributeName + ")",
                                                               methodParameter.getNativeElement());
                                     }
                                 }
-                            }
-                            else {
+                                break;
+                            case DECLARED:
+                                DeclaredType declaredType = (DeclaredType) parameterType;
+                                String qualifiedName = ((TypeElement) declaredType.asElement()).getQualifiedName().toString();
+                                if (qualifiedName.equals(Iterable.class.getName()) ||
+                                        qualifiedName.equals(Collection.class.getName()) ||
+                                        qualifiedName.equals(List.class.getName()) ||
+                                        qualifiedName.equals(Set.class.getName())) {
+                                    parameterType = declaredType.getTypeArguments().get(0);
+                                    if (!typeUtils.isSameType(parameterType, attributeType)) {
+                                        if (attributeType.getKind().isPrimitive()) {
+                                            PrimitiveType primitiveType = typeUtils.getPrimitiveType(attributeType.getKind());
+                                            attributeType = typeUtils.boxedClass(primitiveType).asType();
+                                            if (!typeUtils.isSameType(parameterType, attributeType)) {
+                                                valid = false;
+                                                messager.printMessage(Kind.ERROR,
+                                                                      "Method parameter (" + methodParameter.getName() +
+                                                                      ") has an incompatible argument type in collection with entity attribute type (" +
+                                                                      attributeName + ")",
+                                                                      methodParameter.getNativeElement());
+                                            }
+                                        }
+                                        else {
+                                            valid = false;
+                                            messager.printMessage(Kind.ERROR,
+                                                                  "Method parameter (" + methodParameter.getName() +
+                                                                  ") has an incompatible argument type in collection with entity attribute type (" +
+                                                                  attributeName + ")",
+                                                                  methodParameter.getNativeElement());
+                                        }
+                                    }
+                                }
+                                else {
+                                    valid = false;
+                                    messager.printMessage(Kind.ERROR,
+                                                          "Condition parameter with the predicate (" + operator.getKeyword() +
+                                                          ") must match the array or collection type in the method parameter",
+                                                          methodParameter.getNativeElement());
+                                }
+                                break;
+                            default:
                                 valid = false;
                                 messager.printMessage(Kind.ERROR,
                                                       "Condition parameter with the predicate (" + operator.getKeyword() +
                                                       ") must match the array or collection type in the method parameter",
                                                       methodParameter.getNativeElement());
-                            }
-                            break;
-                        default:
-                            valid = false;
-                            messager.printMessage(Kind.ERROR,
-                                                  "Condition parameter with the predicate (" + operator.getKeyword() +
-                                                  ") must match the array or collection type in the method parameter",
-                                                  methodParameter.getNativeElement());
-                            break;
-                    }
-                }
-                else {
-                    if (!typeUtils.isSameType(parameterType, attributeType)) {
-                        if (parameterType.getKind().isPrimitive()) {
-                            PrimitiveType primitiveType = typeUtils.getPrimitiveType(parameterType.getKind());
-                            parameterType = typeUtils.boxedClass(primitiveType).asType();
-                            if (!typeUtils.isSameType(parameterType, attributeType)) {
-                                valid = false;
-                                messager.printMessage(Kind.ERROR,
-                                                      "Method parameter (" + methodParameter.getName() +
-                                                      ") has an incompatible type with entity attribute type (" +
-                                                      attributeName + ")",
-                                                      methodParameter.getNativeElement());
-                            }
+                                break;
                         }
-                        else if (attributeType.getKind().isPrimitive()) {
-                            PrimitiveType primitiveType = typeUtils.getPrimitiveType(attributeType.getKind());
-                            attributeType = typeUtils.boxedClass(primitiveType).asType();
-                            if (!typeUtils.isSameType(parameterType, attributeType)) {
-                                valid = false;
-                                messager.printMessage(Kind.ERROR,
-                                                      "Method parameter (" + methodParameter.getName() +
-                                                      ") has an incompatible type with entity attribute type (" +
-                                                      attributeName + ")",
-                                                      methodParameter.getNativeElement());
-                            }
-                            else {
+                        break;
+                    case STARTING_WITH:
+                    case ENDING_WITH:
+                    case CONTAINING:
+                    case NOT_CONTAINING:
+                    case LIKE:
+                    case NOT_LIKE:
+                        if (attributeType.getKind() == TypeKind.DECLARED) {
+                            DeclaredType declaredType = (DeclaredType) attributeType;
+                            String qualifiedName = ((TypeElement) declaredType.asElement()).getQualifiedName().toString();
+                            if (!qualifiedName.equals(String.class.getName())) {
                                 messager.printMessage(Kind.MANDATORY_WARNING,
-                                                      "Method parameter (" + methodParameter.getName() +
-                                                      ") can be primitive because entity attribute (" +
-                                                      attributeName + ") is primitive",
-                                                      methodParameter.getNativeElement());
+                                                      "Operator '" + operator.getKeyword() +
+                                                      "' cannot be used with not string entity attribute (" +
+                                                      attributeType + " " + attributeName + ")",
+                                                      method.getNativeElement());
                             }
                         }
                         else {
-                            valid = false;
-                            messager.printMessage(Kind.ERROR,
-                                                  "Method parameter (" + methodParameter.getName() +
-                                                  ") has an incompatible type with entity attribute type (" +
-                                                  attributeName + ")",
-                                                  methodParameter.getNativeElement());
+                            messager.printMessage(Kind.MANDATORY_WARNING,
+                                                  "Operator '" + operator.getKeyword() +
+                                                  "' cannot be used with not string entity attribute (" +
+                                                  attributeType + " " + attributeName + ")",
+                                                  method.getNativeElement());
                         }
-                    }
+                        break;
+                    case BEFORE:
+                    case AFTER:
+                        if (attributeType.getKind() == TypeKind.DECLARED) {
+                            DeclaredType declaredType = (DeclaredType) attributeType;
+                            String qualifiedName = ((TypeElement) declaredType.asElement()).getQualifiedName().toString();
+                            if (!qualifiedName.equals(Date.class.getName()) &&
+                                !qualifiedName.equals(Time.class.getName()) &&
+                                !qualifiedName.equals(Timestamp.class.getName()) &&
+                                !qualifiedName.equals(Instant.class.getName()) &&
+                                !qualifiedName.equals(LocalDate.class.getName()) &&
+                                !qualifiedName.equals(LocalTime.class.getName()) &&
+                                !qualifiedName.equals(LocalDateTime.class.getName())) {
+                                messager.printMessage(Kind.MANDATORY_WARNING,
+                                                      "Operator '" + operator.getKeyword() +
+                                                      "' cannot be used with not temporary entity attribute (" +
+                                                      attributeType + " " + attributeName + ")",
+                                                      method.getNativeElement());
+                            }
+                        }
+                        else {
+                            messager.printMessage(Kind.MANDATORY_WARNING,
+                                                  "Operator '" + operator.getKeyword() +
+                                                  "' cannot be used with not temporary entity attribute (" +
+                                                  attributeType + " " + attributeName + ")",
+                                                  method.getNativeElement());
+                        }
+                        break;
+                    default:
+                        if (!typeUtils.isSameType(parameterType, attributeType)) {
+                            if (parameterType.getKind().isPrimitive()) {
+                                PrimitiveType primitiveType = typeUtils.getPrimitiveType(parameterType.getKind());
+                                parameterType = typeUtils.boxedClass(primitiveType).asType();
+                                if (!typeUtils.isSameType(parameterType, attributeType)) {
+                                    valid = false;
+                                    messager.printMessage(Kind.ERROR,
+                                                          "Method parameter (" + methodParameter.getName() +
+                                                          ") has an incompatible type with entity attribute type (" +
+                                                          attributeName + ")",
+                                                          methodParameter.getNativeElement());
+                                }
+                            }
+                            else if (attributeType.getKind().isPrimitive()) {
+                                PrimitiveType primitiveType = typeUtils.getPrimitiveType(attributeType.getKind());
+                                attributeType = typeUtils.boxedClass(primitiveType).asType();
+                                if (!typeUtils.isSameType(parameterType, attributeType)) {
+                                    valid = false;
+                                    messager.printMessage(Kind.ERROR,
+                                                          "Method parameter (" + methodParameter.getName() +
+                                                          ") has an incompatible type with entity attribute type (" +
+                                                          attributeName + ")",
+                                                          methodParameter.getNativeElement());
+                                }
+                                else {
+                                    messager.printMessage(Kind.MANDATORY_WARNING,
+                                                          "Method parameter (" + methodParameter.getName() +
+                                                          ") can be primitive because entity attribute (" +
+                                                          attributeName + ") is primitive",
+                                                          methodParameter.getNativeElement());
+                                }
+                            }
+                            else {
+                                valid = false;
+                                messager.printMessage(Kind.ERROR,
+                                                      "Method parameter (" + methodParameter.getName() +
+                                                      ") has an incompatible type with entity attribute type (" +
+                                                      attributeName + ")",
+                                                      methodParameter.getNativeElement());
+                            }
+                        }
+                        break;
                 }
 
                 parameterIndex++;
+            }
+
+            switch (operator) {
+                case EMPTY:
+                case NOT_EMPTY:
+                    if (attributeType.getKind() == TypeKind.DECLARED) {
+                        DeclaredType declaredType = (DeclaredType) attributeType;
+                        String qualifiedName = ((TypeElement) declaredType.asElement()).getQualifiedName().toString();
+                        if (!qualifiedName.equals(String.class.getName())) {
+                            messager.printMessage(Kind.MANDATORY_WARNING,
+                                                  "Operator '" + operator.getKeyword() +
+                                                  "' cannot be used with not string entity attribute (" +
+                                                  attributeType + " " + attributeName + ")",
+                                                  method.getNativeElement());
+                        }
+                    }
+                    else {
+                        messager.printMessage(Kind.MANDATORY_WARNING,
+                                              "Operator '" + operator.getKeyword() +
+                                              "' cannot be used with not string entity attribute (" +
+                                              attributeType + " " + attributeName + ")",
+                                              method.getNativeElement());
+                    }
+                    break;
+                case TRUE:
+                case FALSE:
+                    if (attributeType.getKind() != TypeKind.BOOLEAN) {
+                        if (attributeType.getKind() == TypeKind.DECLARED) {
+                            DeclaredType declaredType = (DeclaredType) attributeType;
+                            String qualifiedName = ((TypeElement) declaredType.asElement()).getQualifiedName().toString();
+                            if (!qualifiedName.equals(Boolean.class.getName())) {
+                                messager.printMessage(Kind.MANDATORY_WARNING,
+                                                      "Operator '" + operator.getKeyword() +
+                                                      "' cannot be used with not boolean entity attribute (" +
+                                                      attributeType + " " + attributeName + ")",
+                                                      method.getNativeElement());
+                            }
+                        }
+                        else {
+                            messager.printMessage(Kind.MANDATORY_WARNING,
+                                                  "Operator '" + operator.getKeyword() +
+                                                  "' cannot be used with not boolean entity attribute (" +
+                                                  attributeType + " " + attributeName + ")",
+                                                  method.getNativeElement());
+                        }
+                    }
+                    break;
+                case NULL:
+                case NOT_NULL:
+                    if (attributeType.getKind().isPrimitive()) {
+                        messager.printMessage(Kind.MANDATORY_WARNING,
+                                              "Operator '" + operator.getKeyword() +
+                                              "' cannot be used with primitive entity attribute (" +
+                                              attributeType + " " + attributeName + ")",
+                                              method.getNativeElement());
+                    }
+                    break;
             }
         }
         return valid;
