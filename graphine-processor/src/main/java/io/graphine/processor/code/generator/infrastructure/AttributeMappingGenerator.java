@@ -2,6 +2,7 @@ package io.graphine.processor.code.generator.infrastructure;
 
 import com.squareup.javapoet.*;
 
+import javax.annotation.processing.Generated;
 import javax.lang.model.element.Modifier;
 import javax.tools.Diagnostic;
 import java.io.IOException;
@@ -25,6 +26,9 @@ public class AttributeMappingGenerator {
     public void generate() {
         TypeSpec.Builder classBuilder = TypeSpec
                 .classBuilder(AttributeMappers)
+                .addAnnotation(AnnotationSpec.builder(Generated.class)
+                                             .addMember("value", "$S", "io.graphine.processor.GraphineProcessor")
+                                             .build())
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
                 .addMethod(MethodSpec.constructorBuilder()
                                    .addModifiers(Modifier.PRIVATE)

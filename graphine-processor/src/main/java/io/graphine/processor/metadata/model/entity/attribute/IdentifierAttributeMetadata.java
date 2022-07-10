@@ -1,6 +1,6 @@
 package io.graphine.processor.metadata.model.entity.attribute;
 
-import io.graphine.core.annotation.Id;
+import io.graphine.annotation.Id;
 
 import javax.lang.model.element.VariableElement;
 

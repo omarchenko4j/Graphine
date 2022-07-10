@@ -1,10 +1,8 @@
 package io.graphine.processor.code.generator.infrastructure;
 
-import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.JavaFile;
-import com.squareup.javapoet.MethodSpec;
-import com.squareup.javapoet.TypeSpec;
+import com.squareup.javapoet.*;
 
+import javax.annotation.processing.Generated;
 import javax.lang.model.element.Modifier;
 import javax.tools.Diagnostic;
 import java.io.IOException;
@@ -49,6 +47,9 @@ public class GeneralExceptionGenerator {
     private TypeSpec generateGraphineException() {
         return TypeSpec
                 .classBuilder(GraphineException)
+                .addAnnotation(AnnotationSpec.builder(Generated.class)
+                                             .addMember("value", "$S", "io.graphine.processor.GraphineProcessor")
+                                             .build())
                 .addModifiers(Modifier.PUBLIC)
                 .superclass(RuntimeException.class)
                 .addMethod(MethodSpec.constructorBuilder()
@@ -67,6 +68,9 @@ public class GeneralExceptionGenerator {
     private TypeSpec generateNonUniqueResultException() {
         return TypeSpec
                 .classBuilder(NonUniqueResultException)
+                .addAnnotation(AnnotationSpec.builder(Generated.class)
+                                             .addMember("value", "$S", "io.graphine.processor.GraphineProcessor")
+                                             .build())
                 .superclass(GraphineException)
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
                 .addMethod(MethodSpec.constructorBuilder()

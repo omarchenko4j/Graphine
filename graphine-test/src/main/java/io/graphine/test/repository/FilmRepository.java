@@ -1,6 +1,6 @@
 package io.graphine.test.repository;
 
-import io.graphine.core.annotation.Repository;
+import io.graphine.annotation.Repository;
 import io.graphine.test.model.Film;
 import io.graphine.test.model.Rating;
 

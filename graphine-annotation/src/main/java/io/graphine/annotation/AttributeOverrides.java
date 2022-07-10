@@ -1,4 +1,4 @@
-package io.graphine.core.annotation;
+package io.graphine.annotation;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;

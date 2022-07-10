@@ -1,8 +1,8 @@
 package io.graphine.processor.metadata.model.entity.attribute;
 
-import io.graphine.core.annotation.Attribute;
-import io.graphine.core.annotation.Embeddable;
-import io.graphine.core.annotation.Id;
+import io.graphine.annotation.Attribute;
+import io.graphine.annotation.Embeddable;
+import io.graphine.annotation.Id;
 import io.graphine.processor.support.element.NativeElement;
 
 import javax.lang.model.element.VariableElement;

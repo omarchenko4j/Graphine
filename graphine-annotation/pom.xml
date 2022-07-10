@@ -10,10 +10,10 @@
     <version>0.4.0-SNAPSHOT</version>
   </parent>
 
-  <groupId>io.graphine.core</groupId>
-  <artifactId>graphine-core</artifactId>
+  <groupId>io.graphine.annotation</groupId>
+  <artifactId>graphine-annotation</artifactId>
   <packaging>jar</packaging>
 
-  <name>graphine-core</name>
-  <description>Graphine core module</description>
+  <name>graphine-annotation</name>
+  <description>Graphine annotation module</description>
 </project>

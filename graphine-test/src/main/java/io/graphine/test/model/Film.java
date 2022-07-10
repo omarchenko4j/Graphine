@@ -1,9 +1,9 @@
 package io.graphine.test.model;
 
-import io.graphine.core.annotation.Attribute;
-import io.graphine.core.annotation.AttributeOverride;
-import io.graphine.core.annotation.Entity;
-import io.graphine.core.annotation.Id;
+import io.graphine.annotation.Attribute;
+import io.graphine.annotation.AttributeOverride;
+import io.graphine.annotation.Entity;
+import io.graphine.annotation.Id;
 import lombok.*;
 
 import java.util.UUID;

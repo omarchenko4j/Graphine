@@ -1,6 +1,6 @@
 package io.graphine.processor.metadata.model.entity.attribute;
 
-import io.graphine.core.annotation.Embeddable;
+import io.graphine.annotation.Embeddable;
 
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;

@@ -1,6 +1,6 @@
 package io.graphine.processor.metadata.collector;
 
-import io.graphine.core.annotation.Repository;
+import io.graphine.annotation.Repository;
 import io.graphine.processor.metadata.factory.repository.RepositoryMetadataFactory;
 import io.graphine.processor.metadata.model.repository.RepositoryMetadata;
 import io.graphine.processor.metadata.registry.RepositoryMetadataRegistry;

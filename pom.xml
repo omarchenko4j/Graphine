@@ -13,7 +13,7 @@
   <description>Graphine root module</description>
 
   <modules>
-    <module>graphine-core</module>
+    <module>graphine-annotation</module>
     <module>graphine-processor</module>
     <module>graphine-test</module>
   </modules>

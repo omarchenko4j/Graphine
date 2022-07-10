@@ -1,5 +1,6 @@
-package io.graphine.core.annotation;
+package io.graphine.annotation;
 
+import java.lang.annotation.Repeatable;
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
@@ -11,5 +12,8 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
  */
 @Retention(SOURCE)
 @Target(FIELD)
-public @interface Id {
+@Repeatable(AttributeOverrides.class)
+public @interface AttributeOverride {
+    String name();
+    Attribute attribute();
 }

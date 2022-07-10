@@ -28,11 +28,6 @@
 
   <dependencies>
     <dependency>
-      <groupId>io.graphine.core</groupId>
-      <artifactId>graphine-core</artifactId>
-      <version>${graphine.version}</version>
-    </dependency>
-    <dependency>
       <groupId>net.ttddyy</groupId>
       <artifactId>datasource-proxy</artifactId>
       <version>${datasource-proxy.version}</version>
@@ -53,6 +48,12 @@
       <artifactId>junit-jupiter</artifactId>
       <version>${junit-jupiter.version}</version>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>io.graphine.annotation</groupId>
+      <artifactId>graphine-annotation</artifactId>
+      <version>${graphine.version}</version>
+      <scope>provided</scope>
     </dependency>
     <dependency>
       <groupId>org.projectlombok</groupId>

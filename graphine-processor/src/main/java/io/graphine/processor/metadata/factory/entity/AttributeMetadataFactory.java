@@ -1,8 +1,8 @@
 package io.graphine.processor.metadata.factory.entity;
 
-import io.graphine.core.annotation.Attribute;
-import io.graphine.core.annotation.AttributeOverride;
-import io.graphine.core.annotation.AttributeOverrides;
+import io.graphine.annotation.Attribute;
+import io.graphine.annotation.AttributeOverride;
+import io.graphine.annotation.AttributeOverrides;
 import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.EmbeddedAttributeMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.EmbeddedIdentifierAttributeMetadata;

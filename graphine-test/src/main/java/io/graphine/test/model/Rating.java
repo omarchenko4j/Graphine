@@ -1,6 +1,6 @@
 package io.graphine.test.model;
 
-import io.graphine.core.annotation.Embeddable;
+import io.graphine.annotation.Embeddable;
 import lombok.*;
 
 /**

@@ -1,7 +1,7 @@
 package io.graphine.processor.metadata.collector;
 
-import io.graphine.core.annotation.Embeddable;
-import io.graphine.core.annotation.Entity;
+import io.graphine.annotation.Embeddable;
+import io.graphine.annotation.Entity;
 import io.graphine.processor.metadata.factory.entity.EmbeddableEntityMetadataFactory;
 import io.graphine.processor.metadata.factory.entity.EntityMetadataFactory;
 import io.graphine.processor.metadata.model.entity.EmbeddableEntityMetadata;

@@ -1,6 +1,6 @@
 package io.graphine.processor.util;
 
-import io.graphine.core.annotation.Repository;
+import io.graphine.annotation.Repository;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;

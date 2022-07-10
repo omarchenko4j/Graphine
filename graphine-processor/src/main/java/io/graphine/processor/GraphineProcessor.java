@@ -46,7 +46,7 @@ import static javax.tools.Diagnostic.Kind;
 /**
  * @author Oleg Marchenko
  */
-@SupportedAnnotationTypes("io.graphine.core.annotation.Repository")
+@SupportedAnnotationTypes("io.graphine.annotation.Repository")
 @SupportedSourceVersion(RELEASE_11)
 public class GraphineProcessor extends AbstractProcessor {
     private static final boolean ANNOTATIONS_CLAIMED = true;
