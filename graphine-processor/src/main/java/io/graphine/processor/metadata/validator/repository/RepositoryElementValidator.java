@@ -1,18 +1,14 @@
 package io.graphine.processor.metadata.validator.repository;
 
-import io.graphine.core.GraphineRepository;
-
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.DeclaredType;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 
 import static io.graphine.processor.metadata.parser.RepositoryMethodNameParser.METHOD_NAME_PATTERN;
 import static io.graphine.processor.support.EnvironmentContext.messager;
-import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static javax.lang.model.element.ElementKind.INTERFACE;
 import static javax.lang.model.element.Modifier.DEFAULT;
@@ -34,26 +30,6 @@ public final class RepositoryElementValidator {
         if (!repositoryElement.getModifiers().contains(PUBLIC)) {
             valid = false;
             messager.printMessage(Kind.ERROR, "Repository interface must be public", repositoryElement);
-        }
-
-        DeclaredType graphineRepositoryInterface =
-                repositoryElement.getInterfaces()
-                                 .stream()
-                                 .map(interfaceType -> (DeclaredType) interfaceType)
-                                 .filter(interfaceType -> {
-                                     TypeElement interfaceElement = (TypeElement) interfaceType.asElement();
-                                     return interfaceElement.getQualifiedName()
-                                                            .contentEquals(GraphineRepository.class.getName());
-                                 })
-                                 .findFirst()
-                                 .orElse(null);
-        if (isNull(graphineRepositoryInterface)) {
-            messager.printMessage(Kind.ERROR, "Repository interface should extend GraphineRepository interface", repositoryElement);
-            return false;
-        }
-        if (graphineRepositoryInterface.getTypeArguments().isEmpty()) {
-            valid = false;
-            messager.printMessage(Kind.ERROR, "GraphineRepository interface must be parameterized by the entity class", repositoryElement);
         }
 
         List<ExecutableElement> methodElements = methodsIn(repositoryElement.getEnclosedElements());

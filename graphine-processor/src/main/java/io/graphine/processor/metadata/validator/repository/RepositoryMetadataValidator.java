@@ -8,6 +8,9 @@ import io.graphine.processor.metadata.model.repository.method.name.fragment.Qual
 import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 import io.graphine.processor.metadata.validator.repository.method.*;
 
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
+import javax.lang.model.element.TypeElement;
 import java.util.Collection;
 import java.util.EnumMap;
 import java.util.List;
@@ -15,6 +18,8 @@ import java.util.Map;
 
 import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.MethodType;
 import static io.graphine.processor.support.EnvironmentContext.messager;
+import static io.graphine.processor.util.RepositoryAnnotationUtils.getRepositoryAnnotation;
+import static io.graphine.processor.util.RepositoryAnnotationUtils.getRepositoryAnnotationValue;
 import static java.util.Objects.isNull;
 import static javax.tools.Diagnostic.Kind;
 
@@ -49,7 +54,13 @@ public final class RepositoryMetadataValidator {
     public boolean validate(RepositoryMetadata repository) {
         String entityQualifiedName = repository.getEntityQualifiedName();
         if (!entityMetadataRegistry.containsEntity(entityQualifiedName)) {
-            messager.printMessage(Kind.ERROR, "Entity class not found", repository.getNativeElement());
+            TypeElement repositoryElement = repository.getNativeElement();
+            AnnotationMirror repositoryAnnotation = getRepositoryAnnotation(repositoryElement);
+            AnnotationValue repositoryAnnotationValue = getRepositoryAnnotationValue(repositoryElement);
+            messager.printMessage(Kind.ERROR,
+                                  "Class '" + repositoryAnnotationValue.getValue().toString() +
+                                  "' must be annotated with @Entity",
+                                  repositoryElement, repositoryAnnotation, repositoryAnnotationValue);
             return false;
         }
 
