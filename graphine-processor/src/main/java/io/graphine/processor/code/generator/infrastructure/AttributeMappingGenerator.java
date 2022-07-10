@@ -1,4 +1,4 @@
-package io.graphine.processor.code.generator.entity;
+package io.graphine.processor.code.generator.infrastructure;
 
 import com.squareup.javapoet.*;
 

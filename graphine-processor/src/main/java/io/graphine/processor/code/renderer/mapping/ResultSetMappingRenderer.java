@@ -7,7 +7,7 @@ import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 
-import static io.graphine.processor.code.generator.entity.AttributeMappingGenerator.AttributeMappers;
+import static io.graphine.processor.code.generator.infrastructure.AttributeMappingGenerator.AttributeMappers;
 import static io.graphine.processor.code.generator.repository.method.RepositoryMethodImplementationGenerator.RESULT_SET_VARIABLE_NAME;
 import static javax.lang.model.element.ElementKind.ENUM;
 import static javax.lang.model.type.TypeKind.BYTE;

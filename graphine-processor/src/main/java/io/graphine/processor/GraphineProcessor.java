@@ -2,9 +2,10 @@ package io.graphine.processor;
 
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.TypeSpec;
-import io.graphine.core.util.WildcardParameterRepeater;
 import io.graphine.processor.code.collector.OriginatingElementDependencyCollector;
-import io.graphine.processor.code.generator.entity.AttributeMappingGenerator;
+import io.graphine.processor.code.generator.infrastructure.AttributeMappingGenerator;
+import io.graphine.processor.code.generator.infrastructure.GeneralExceptionGenerator;
+import io.graphine.processor.code.generator.infrastructure.WildcardRepeaterGenerator;
 import io.graphine.processor.code.generator.repository.RepositoryImplementationGenerator;
 import io.graphine.processor.code.renderer.mapping.ResultSetMappingRenderer;
 import io.graphine.processor.code.renderer.mapping.StatementMappingRenderer;
@@ -154,6 +155,12 @@ public class GraphineProcessor extends AbstractProcessor {
     private void generateInfrastructureCode() {
         AttributeMappingGenerator attributeMappingGenerator = new AttributeMappingGenerator();
         attributeMappingGenerator.generate();
+
+        WildcardRepeaterGenerator wildcardRepeaterGenerator = new WildcardRepeaterGenerator();
+        wildcardRepeaterGenerator.generate();
+
+        GeneralExceptionGenerator generalExceptionGenerator = new GeneralExceptionGenerator();
+        generalExceptionGenerator.generate();
     }
 
     private void generateRepositoryImplementation(List<RepositoryNativeQueryRegistry> nativeQueryRegistries,
@@ -178,8 +185,6 @@ public class GraphineProcessor extends AbstractProcessor {
             JavaFile javaFile = JavaFile.builder(repository.getPackageName(), typeSpec)
                                         .skipJavaLangImports(true)
                                         .indent("\t")
-                                        // TODO: imported even if not used
-                                        .addStaticImport(WildcardParameterRepeater.class, "repeat", "repeatFor")
                                         .build();
             try {
                 javaFile.writeTo(filer);

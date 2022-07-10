@@ -2,8 +2,6 @@ package io.graphine.processor.code.generator.repository.method;
 
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.MethodSpec;
-import io.graphine.core.GraphineException;
-import io.graphine.core.util.WildcardParameterRepeater;
 import io.graphine.processor.code.renderer.AttributeFromResultSetMappingRenderer;
 import io.graphine.processor.code.renderer.AttributeToStatementMappingRenderer;
 import io.graphine.processor.code.renderer.index.IncrementalParameterIndexProvider;
@@ -35,6 +33,8 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static io.graphine.processor.code.generator.infrastructure.GeneralExceptionGenerator.GraphineException;
+import static io.graphine.processor.code.generator.infrastructure.WildcardRepeaterGenerator.WildcardRepeater;
 import static io.graphine.processor.code.renderer.index.IncrementalParameterIndexProvider.INDEX_VARIABLE_NAME;
 import static io.graphine.processor.util.AccessorUtils.getter;
 import static io.graphine.processor.util.StringUtils.uncapitalize;
@@ -100,7 +100,7 @@ public abstract class RepositoryMethodImplementationGenerator {
                         .beginControlFlow("catch ($T $L)",
                                           SQLException.class, EXCEPTION_VARIABLE_NAME)
                         .addStatement("throw new $T($L)",
-                                      GraphineException.class, EXCEPTION_VARIABLE_NAME)
+                                      GraphineException, EXCEPTION_VARIABLE_NAME)
                         .endControlFlow()
                         .build();
     }
@@ -126,12 +126,12 @@ public abstract class RepositoryMethodImplementationGenerator {
                                     entityMetadataRegistry.getEmbeddableEntity(componentType.toString());
                             for (int i = 0; i < embeddableEntity.getAttributes().size(); i++) {
                                 wildcardParameterSnippets.add(CodeBlock.of("$T.repeat($L.length)",
-                                                                           WildcardParameterRepeater.class, parameterName));
+                                                                           WildcardRepeater, parameterName));
                             }
                         }
                         else {
                             wildcardParameterSnippets.add(CodeBlock.of("$T.repeat($L.length)",
-                                                                       WildcardParameterRepeater.class, parameterName));
+                                                                       WildcardRepeater, parameterName));
                         }
                         break;
                     case DECLARED:
@@ -140,7 +140,7 @@ public abstract class RepositoryMethodImplementationGenerator {
                         switch (typeElement.getQualifiedName().toString()) {
                             case "java.lang.Iterable":
                                 wildcardParameterSnippets.add(CodeBlock.of("$T.repeatFor($L)",
-                                                                           WildcardParameterRepeater.class, parameterName));
+                                                                           WildcardRepeater, parameterName));
                                 break;
                             case "java.util.Collection":
                             case "java.util.List":
@@ -153,12 +153,12 @@ public abstract class RepositoryMethodImplementationGenerator {
                                             entityMetadataRegistry.getEmbeddableEntity(qualifiedName);
                                     for (int i = 0; i < embeddableEntity.getAttributes().size(); i++) {
                                         wildcardParameterSnippets.add(CodeBlock.of("$T.repeat($L.size())",
-                                                                                   WildcardParameterRepeater.class, parameterName));
+                                                                                   WildcardRepeater, parameterName));
                                     }
                                 }
                                 else {
                                     wildcardParameterSnippets.add(CodeBlock.of("$T.repeat($L.size())",
-                                                                               WildcardParameterRepeater.class, parameterName));
+                                                                               WildcardRepeater, parameterName));
                                 }
                                 break;
                         }

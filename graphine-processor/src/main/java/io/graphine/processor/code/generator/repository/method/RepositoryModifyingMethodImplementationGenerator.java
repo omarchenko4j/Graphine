@@ -1,7 +1,6 @@
 package io.graphine.processor.code.generator.repository.method;
 
 import com.squareup.javapoet.CodeBlock;
-import io.graphine.core.GraphineException;
 import io.graphine.processor.code.renderer.mapping.ResultSetMappingRenderer;
 import io.graphine.processor.code.renderer.mapping.StatementMappingRenderer;
 import io.graphine.processor.metadata.model.entity.EntityMetadata;
@@ -12,6 +11,7 @@ import io.graphine.processor.query.model.NativeQuery;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import static io.graphine.processor.code.generator.infrastructure.GeneralExceptionGenerator.GraphineException;
 import static io.graphine.processor.util.VariableNameUniqueizer.uniqueize;
 
 /**
@@ -54,7 +54,7 @@ public abstract class RepositoryModifyingMethodImplementationGenerator extends R
                         .beginControlFlow("catch ($T $L)",
                                           SQLException.class, EXCEPTION_VARIABLE_NAME)
                         .addStatement("throw new $T($L)",
-                                      GraphineException.class, EXCEPTION_VARIABLE_NAME)
+                                      GraphineException, EXCEPTION_VARIABLE_NAME)
                         .endControlFlow()
                         .build();
     }

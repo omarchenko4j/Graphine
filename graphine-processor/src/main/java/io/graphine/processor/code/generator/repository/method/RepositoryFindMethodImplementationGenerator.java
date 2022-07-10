@@ -4,7 +4,6 @@ import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
-import io.graphine.core.NonUniqueResultException;
 import io.graphine.processor.code.renderer.index.NumericParameterIndexProvider;
 import io.graphine.processor.code.renderer.index.ParameterIndexProvider;
 import io.graphine.processor.code.renderer.mapping.ResultSetMappingRenderer;
@@ -23,6 +22,7 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
 import java.util.*;
 
+import static io.graphine.processor.code.generator.infrastructure.GeneralExceptionGenerator.NonUniqueResultException;
 import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.MethodForm.PLURAL;
 import static io.graphine.processor.util.StringUtils.uncapitalize;
 import static io.graphine.processor.util.VariableNameUniqueizer.uniqueize;
@@ -141,7 +141,7 @@ public final class RepositoryFindMethodImplementationGenerator extends Repositor
                         if (!qualifier.hasFirstSpecifier()) {
                             snippetBuilder
                                     .beginControlFlow("if ($L.next())", RESULT_SET_VARIABLE_NAME)
-                                    .addStatement("throw new $T()", NonUniqueResultException.class)
+                                    .addStatement("throw new $T()", NonUniqueResultException)
                                     .endControlFlow();
                         }
 
