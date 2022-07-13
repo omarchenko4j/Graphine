@@ -42,7 +42,7 @@
       <scope>provided</scope>
     </dependency>
     <dependency>
-      <groupId>io.graphine</groupId>
+      <groupId>io.github.omarchenko4j</groupId>
       <artifactId>graphine-annotation</artifactId>
       <version>${graphine.version}</version>
       <scope>provided</scope>
@@ -80,7 +80,7 @@
               <version>${lombok.version}</version>
             </path>
             <path>
-              <groupId>io.graphine</groupId>
+              <groupId>io.github.omarchenko4j</groupId>
               <artifactId>graphine-processor</artifactId>
               <version>${graphine.version}</version>
             </path>

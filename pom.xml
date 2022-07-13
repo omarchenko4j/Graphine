@@ -20,37 +20,4 @@
 
   <name>graphine-project</name>
   <description>Graphine project root module</description>
-  <url>https://github.com/omarchenko4j/Graphine</url>
-
-  <licenses>
-    <license>
-      <name>The Apache Software License, Version 2.0</name>
-      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-      <distribution>repo</distribution>
-    </license>
-  </licenses>
-
-  <developers>
-    <developer>
-      <id>omarchenko</id>
-      <name>Oleh Marchenko</name>
-      <email>omarchenko.150@gmail.com</email>
-      <roles>
-        <role>architect</role>
-        <role>developer</role>
-      </roles>
-      <timezone>+2</timezone>
-    </developer>
-  </developers>
-
-  <issueManagement>
-    <system>GitHub</system>
-    <url>https://github.com/omarchenko4j/Graphine/issues</url>
-  </issueManagement>
-
-  <scm>
-    <url>https://github.com/omarchenko4j/Graphine</url>
-    <connection>scm:git:git@github.com:omarchenko4j/Graphine.git</connection>
-    <developerConnection>scm:git:git@github.com:omarchenko4j/Graphine.git</developerConnection>
-  </scm>
 </project>

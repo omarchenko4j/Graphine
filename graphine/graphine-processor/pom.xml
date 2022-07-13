@@ -8,14 +8,14 @@
   <packaging>jar</packaging>
 
   <parent>
-    <groupId>io.graphine</groupId>
+    <groupId>io.github.omarchenko4j</groupId> <!-- temporary group id (migrate to io.graphine) -->
     <artifactId>graphine</artifactId>
     <version>0.4.0</version>
   </parent>
 
   <dependencies>
     <dependency>
-      <groupId>io.graphine</groupId>
+      <groupId>io.github.omarchenko4j</groupId>
       <artifactId>graphine-annotation</artifactId>
       <version>${graphine.version}</version>
     </dependency>
