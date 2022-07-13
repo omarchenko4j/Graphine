@@ -5,84 +5,35 @@
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>io.graphine</groupId>
-  <artifactId>graphine</artifactId>
+  <artifactId>graphine-project</artifactId>
   <version>0.4.0-SNAPSHOT</version>
   <packaging>pom</packaging>
 
-  <name>Graphine</name>
-  <description>Graphine root module</description>
-
   <modules>
-    <module>graphine-annotation</module>
-    <module>graphine-processor</module>
+    <module>graphine</module>
     <module>graphine-test</module>
   </modules>
 
   <properties>
-    <project.java.version>11</project.java.version>
-    <project.encoding>UTF-8</project.encoding>
-
-    <maven-clean-plugin.version>3.1.0</maven-clean-plugin.version>
-    <maven-resources-plugin.version>3.2.0</maven-resources-plugin.version>
-    <maven-compiler-plugin.version>3.8.1</maven-compiler-plugin.version>
-    <maven-surefire-plugin.version>2.22.2</maven-surefire-plugin.version>
-    <maven-install-plugin.version>2.5.2</maven-install-plugin.version>
+    <maven.compiler.release>11</maven.compiler.release>
   </properties>
 
-  <build>
-    <pluginManagement>
-      <plugins>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-clean-plugin</artifactId>
-          <version>${maven-clean-plugin.version}</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-resources-plugin</artifactId>
-          <version>${maven-resources-plugin.version}</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-compiler-plugin</artifactId>
-          <version>${maven-compiler-plugin.version}</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-surefire-plugin</artifactId>
-          <version>${maven-surefire-plugin.version}</version>
-        </plugin>
-        <plugin>
-          <groupId>org.apache.maven.plugins</groupId>
-          <artifactId>maven-install-plugin</artifactId>
-          <version>${maven-install-plugin.version}</version>
-        </plugin>
-      </plugins>
-    </pluginManagement>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-resources-plugin</artifactId>
-        <configuration>
-          <encoding>${project.encoding}</encoding>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <source>${project.java.version}</source>
-          <target>${project.java.version}</target>
-          <encoding>${project.encoding}</encoding>
-        </configuration>
-      </plugin>
-    </plugins>
-  </build>
+  <name>graphine-project</name>
+  <description>Graphine project root module</description>
+  <url>https://github.com/omarchenko4j/Graphine</url>
+
+  <licenses>
+    <license>
+      <name>The Apache Software License, Version 2.0</name>
+      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+      <distribution>repo</distribution>
+    </license>
+  </licenses>
 
   <developers>
     <developer>
       <id>omarchenko</id>
-      <name>Oleg Marchenko</name>
+      <name>Oleh Marchenko</name>
       <email>omarchenko.150@gmail.com</email>
       <roles>
         <role>architect</role>
@@ -92,22 +43,14 @@
     </developer>
   </developers>
 
-  <scm>
-    <url>https://github.com/MarchenkoProjects/Graphine</url>
-    <connection>scm:git:git@github.com:MarchenkoProjects/Graphine.git</connection>
-    <developerConnection>scm:git:git@github.com:MarchenkoProjects/Graphine.git</developerConnection>
-  </scm>
-
   <issueManagement>
     <system>GitHub</system>
-    <url>https://github.com/MarchenkoProjects/Graphine/issues</url>
+    <url>https://github.com/omarchenko4j/Graphine/issues</url>
   </issueManagement>
 
-  <licenses>
-    <license>
-      <name>The Apache Software License, Version 2.0</name>
-      <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-      <distribution>repo</distribution>
-    </license>
-  </licenses>
+  <scm>
+    <url>https://github.com/omarchenko4j/Graphine</url>
+    <connection>scm:git:git@github.com:omarchenko4j/Graphine.git</connection>
+    <developerConnection>scm:git:git@github.com:omarchenko4j/Graphine.git</developerConnection>
+  </scm>
 </project>
