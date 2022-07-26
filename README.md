@@ -35,7 +35,7 @@ Graphine requires **Java 11** or later.
 
 ```xml
 <properties>
-  <graphine.version>0.4.0</graphine.version> <!-- Latest version -->
+  <graphine.version>0.4.1</graphine.version> <!-- Latest version -->
 </properties>
 
 <dependency>
