@@ -10,7 +10,7 @@
   <parent>
     <groupId>io.github.omarchenko4j</groupId> <!-- temporary group id (migrate to io.graphine) -->
     <artifactId>graphine</artifactId>
-    <version>0.4.1-SNAPSHOT</version>
+    <version>0.4.1</version>
   </parent>
 
   <name>graphine-annotation</name>
