@@ -4,6 +4,8 @@ import java.util.Collection;
 import java.util.StringJoiner;
 import java.util.function.Supplier;
 
+import static java.lang.Character.*;
+
 /**
  * @author Oleg Marchenko
  */
@@ -19,11 +21,19 @@ public final class StringUtils {
     }
 
     public static String capitalize(String str) {
-        return Character.toUpperCase(str.charAt(0)) + str.substring(1);
+        char firstLetter = str.charAt(0);
+        if (isUpperCase(firstLetter)) {
+            return str;
+        }
+        return toUpperCase(firstLetter) + str.substring(1);
     }
 
     public static String uncapitalize(String str) {
-        return Character.toLowerCase(str.charAt(0)) + str.substring(1);
+        char firstLetter = str.charAt(0);
+        if (isLowerCase(firstLetter)) {
+            return str;
+        }
+        return toLowerCase(firstLetter) + str.substring(1);
     }
 
     public static String join(Object[] elements, String delimiter) {
