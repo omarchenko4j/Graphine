@@ -19,6 +19,7 @@ import io.graphine.processor.metadata.model.repository.method.name.fragment.Cond
 import io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment.OperatorType;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment.OrPredicate;
 import io.graphine.processor.metadata.model.repository.method.parameter.ParameterMetadata;
+import io.graphine.processor.metadata.registry.AttributeMapperMetadataRegistry;
 import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 import io.graphine.processor.query.model.NativeQuery;
 
@@ -60,6 +61,7 @@ public abstract class RepositoryMethodImplementationGenerator {
     protected final AttributeFromResultSetMappingRenderer attributeFromResultSetMappingRenderer;
 
     protected RepositoryMethodImplementationGenerator(EntityMetadataRegistry entityMetadataRegistry,
+                                                      AttributeMapperMetadataRegistry attributeMapperMetadataRegistry,
                                                       StatementMappingRenderer statementMappingRenderer,
                                                       ResultSetMappingRenderer resultSetMappingRenderer) {
         this.entityMetadataRegistry = entityMetadataRegistry;
@@ -67,9 +69,13 @@ public abstract class RepositoryMethodImplementationGenerator {
         this.resultSetMappingRenderer = resultSetMappingRenderer;
 
         this.attributeToStatementMappingRenderer =
-                new AttributeToStatementMappingRenderer(entityMetadataRegistry, statementMappingRenderer);
+                new AttributeToStatementMappingRenderer(entityMetadataRegistry,
+                                                        attributeMapperMetadataRegistry,
+                                                        statementMappingRenderer);
         this.attributeFromResultSetMappingRenderer =
-                new AttributeFromResultSetMappingRenderer(entityMetadataRegistry, resultSetMappingRenderer);
+                new AttributeFromResultSetMappingRenderer(entityMetadataRegistry,
+                                                          attributeMapperMetadataRegistry,
+                                                          resultSetMappingRenderer);
     }
 
     public final MethodSpec generate(MethodMetadata method, NativeQuery query, String entityQualifiedName) {

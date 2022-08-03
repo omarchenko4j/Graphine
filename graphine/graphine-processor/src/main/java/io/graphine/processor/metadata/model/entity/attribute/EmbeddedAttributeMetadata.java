@@ -17,8 +17,9 @@ public class EmbeddedAttributeMetadata extends AttributeMetadata {
     private final Map<String, String> attributeNameToColumnNameMap;
 
     public EmbeddedAttributeMetadata(VariableElement element,
-                                     Map<String, String> attributeNameToColumnNameMap) {
-        super(element, null);
+                                     Map<String, String> attributeNameToColumnNameMap,
+                                     String mapper) {
+        super(element, null, mapper);
         this.attributeNameToColumnNameMap = attributeNameToColumnNameMap;
     }
 

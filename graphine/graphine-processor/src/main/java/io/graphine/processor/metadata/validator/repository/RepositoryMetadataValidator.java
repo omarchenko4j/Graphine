@@ -1,5 +1,6 @@
 package io.graphine.processor.metadata.validator.repository;
 
+import io.graphine.annotation.Repository;
 import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.model.repository.RepositoryMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
@@ -18,8 +19,8 @@ import java.util.Map;
 
 import static io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment.MethodType;
 import static io.graphine.processor.support.EnvironmentContext.messager;
-import static io.graphine.processor.util.RepositoryAnnotationUtils.getRepositoryAnnotation;
-import static io.graphine.processor.util.RepositoryAnnotationUtils.getRepositoryAnnotationValue;
+import static io.graphine.processor.util.AnnotationUtils.findAnnotation;
+import static io.graphine.processor.util.AnnotationUtils.findAnnotationValue;
 import static java.util.Objects.isNull;
 import static javax.tools.Diagnostic.Kind;
 
@@ -55,17 +56,20 @@ public final class RepositoryMetadataValidator {
         String entityQualifiedName = repository.getEntityQualifiedName();
         if (!entityMetadataRegistry.containsEntity(entityQualifiedName)) {
             TypeElement repositoryElement = repository.getNativeElement();
-            AnnotationMirror repositoryAnnotation = getRepositoryAnnotation(repositoryElement);
-            AnnotationValue repositoryAnnotationValue = getRepositoryAnnotationValue(repositoryElement);
+            AnnotationMirror repositoryAnnotation =
+                    findAnnotation(repositoryElement, Repository.class.getName()).get();
+            AnnotationValue repositoryAnnotationValue =
+                    findAnnotationValue(repositoryAnnotation, "value").get();
             messager.printMessage(Kind.ERROR,
-                                  "Class '" + repositoryAnnotationValue.getValue().toString() +
-                                  "' must be annotated with @Entity",
+                                  "Class '" + entityQualifiedName + "' must be annotated with @Entity",
                                   repositoryElement, repositoryAnnotation, repositoryAnnotationValue);
             return false;
         }
 
         EntityMetadata entity = entityMetadataRegistry.getEntity(entityQualifiedName);
-        if (isNull(entity)) return false; // Abort validation if the entity has no metadata.
+        if (isNull(entity)) {
+            return false; // Abort validation if the entity has no metadata.
+        }
 
         boolean valid = true;
 

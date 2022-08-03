@@ -12,6 +12,7 @@ import io.graphine.processor.metadata.model.repository.RepositoryMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.model.repository.method.name.QueryableMethodName;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment;
+import io.graphine.processor.metadata.registry.AttributeMapperMetadataRegistry;
 import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 import io.graphine.processor.query.model.NativeQuery;
 import io.graphine.processor.query.registry.RepositoryNativeQueryRegistry;
@@ -42,6 +43,7 @@ public final class RepositoryImplementationGenerator {
             OriginatingElementDependencyCollector originatingElementDependencyCollector,
             RepositoryNativeQueryRegistry repositoryNativeQueryRegistry,
             EntityMetadataRegistry entityMetadataRegistry,
+            AttributeMapperMetadataRegistry attributeMapperMetadataRegistry,
             StatementMappingRenderer statementMappingRenderer,
             ResultSetMappingRenderer resultSetMappingRenderer) {
         this.originatingElementDependencyCollector = originatingElementDependencyCollector;
@@ -50,22 +52,27 @@ public final class RepositoryImplementationGenerator {
         this.methodGenerators = new EnumMap<>(MethodType.class);
         this.methodGenerators.put(MethodType.FIND,
                                   new RepositoryFindMethodImplementationGenerator(entityMetadataRegistry,
+                                                                                  attributeMapperMetadataRegistry,
                                                                                   statementMappingRenderer,
                                                                                   resultSetMappingRenderer));
         this.methodGenerators.put(MethodType.COUNT,
                                   new RepositoryCountMethodImplementationGenerator(entityMetadataRegistry,
+                                                                                   attributeMapperMetadataRegistry,
                                                                                    statementMappingRenderer,
                                                                                    resultSetMappingRenderer));
         this.methodGenerators.put(MethodType.SAVE,
                                   new RepositorySaveMethodImplementationGenerator(entityMetadataRegistry,
+                                                                                  attributeMapperMetadataRegistry,
                                                                                   statementMappingRenderer,
                                                                                   resultSetMappingRenderer));
         this.methodGenerators.put(MethodType.UPDATE,
                                   new RepositoryUpdateMethodImplementationGenerator(entityMetadataRegistry,
+                                                                                    attributeMapperMetadataRegistry,
                                                                                     statementMappingRenderer,
                                                                                     resultSetMappingRenderer));
         this.methodGenerators.put(MethodType.DELETE,
                                   new RepositoryDeleteMethodImplementationGenerator(entityMetadataRegistry,
+                                                                                    attributeMapperMetadataRegistry,
                                                                                     statementMappingRenderer,
                                                                                     resultSetMappingRenderer));
     }

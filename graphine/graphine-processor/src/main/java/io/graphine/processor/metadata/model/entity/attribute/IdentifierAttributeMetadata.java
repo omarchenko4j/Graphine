@@ -10,8 +10,13 @@ import static java.util.Objects.nonNull;
  * @author Oleg Marchenko
  */
 public class IdentifierAttributeMetadata extends AttributeMetadata {
-    public IdentifierAttributeMetadata(VariableElement element, String column) {
-        super(element, column);
+    public IdentifierAttributeMetadata(VariableElement element, String column, String mapper) {
+        super(element, column, mapper);
+    }
+
+    @Override
+    public String toString() {
+        return name + " [" + column + "] (key)";
     }
 
     public static boolean isIdentifier(VariableElement fieldElement) {

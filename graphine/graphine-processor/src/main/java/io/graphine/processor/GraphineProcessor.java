@@ -9,19 +9,25 @@ import io.graphine.processor.code.generator.infrastructure.WildcardRepeaterGener
 import io.graphine.processor.code.generator.repository.RepositoryImplementationGenerator;
 import io.graphine.processor.code.renderer.mapping.ResultSetMappingRenderer;
 import io.graphine.processor.code.renderer.mapping.StatementMappingRenderer;
+import io.graphine.processor.metadata.collector.AttributeMapperMetadataCollector;
 import io.graphine.processor.metadata.collector.EntityMetadataCollector;
 import io.graphine.processor.metadata.collector.RepositoryMetadataCollector;
+import io.graphine.processor.metadata.factory.entity.AttributeMapperMetadataFactory;
 import io.graphine.processor.metadata.factory.entity.AttributeMetadataFactory;
 import io.graphine.processor.metadata.factory.entity.EmbeddableEntityMetadataFactory;
 import io.graphine.processor.metadata.factory.entity.EntityMetadataFactory;
 import io.graphine.processor.metadata.factory.repository.MethodMetadataFactory;
 import io.graphine.processor.metadata.factory.repository.RepositoryMetadataFactory;
+import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.model.repository.RepositoryMetadata;
 import io.graphine.processor.metadata.parser.RepositoryMethodNameParser;
+import io.graphine.processor.metadata.registry.AttributeMapperMetadataRegistry;
 import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 import io.graphine.processor.metadata.registry.RepositoryMetadataRegistry;
+import io.graphine.processor.metadata.validator.entity.AttributeMapperElementValidator;
 import io.graphine.processor.metadata.validator.entity.EmbeddableEntityElementValidator;
 import io.graphine.processor.metadata.validator.entity.EntityElementValidator;
+import io.graphine.processor.metadata.validator.entity.EntityMetadataValidator;
 import io.graphine.processor.metadata.validator.repository.RepositoryElementValidator;
 import io.graphine.processor.metadata.validator.repository.RepositoryMetadataValidator;
 import io.graphine.processor.query.generator.RepositoryNativeQueryGenerator;
@@ -68,29 +74,40 @@ public class GraphineProcessor extends AbstractProcessor {
             return ANNOTATIONS_CLAIMED;
         }
 
+        // Step 0. Collecting attribute mapper metadata
+        AttributeMapperMetadataRegistry attributeMapperMetadataRegistry = collectAttributeMapperMetadata(roundEnv);
+
         // Step 1. Collecting entity metadata
         EntityMetadataRegistry entityMetadataRegistry = collectEntityMetadata(roundEnv);
-        entityMetadataRegistry.getEntities()
-                              .forEach(entity -> messager.printMessage(Kind.NOTE, "Found entity: " + entity));
 
         // Step 2. Collecting repository metadata
         RepositoryMetadataRegistry repositoryMetadataRegistry = collectRepositoryMetadata(roundEnv);
 
-        // Step 3. Validating repository metadata
-        if (!validateRepositoryMetadata(repositoryMetadataRegistry.getRepositories(), entityMetadataRegistry)) {
+        // Step 3. Validating entity and repository metadata
+        boolean allEntitiesAreValid =
+                validateEntityMetadata(entityMetadataRegistry.getEntities(), attributeMapperMetadataRegistry);
+        boolean allRepositoriesAreValid =
+                validateRepositoryMetadata(repositoryMetadataRegistry.getRepositories(), entityMetadataRegistry);
+        // If at least one entity or repository has validation errors then query and code generation is aborted.
+        if (!allEntitiesAreValid || !allRepositoriesAreValid) {
             return ANNOTATIONS_CLAIMED;
         }
-
-        repositoryMetadataRegistry.getRepositories()
-                                  .forEach(repository -> messager.printMessage(Kind.NOTE, "Found repository: " + repository));
 
         // Step 4. Generating repository native queries
         RepositoryNativeQueryRegistryStorage nativeQueryRegistryStorage =
                 generateNativeQueries(repositoryMetadataRegistry.getRepositories(), entityMetadataRegistry);
 
+        // TODO: Hide logging behind flag option (like graphine.debug=true/false)
+        attributeMapperMetadataRegistry.getAttributeMappers()
+                                       .forEach(attributeMapper -> messager.printMessage(Kind.NOTE, "Found attribute mapper: " + attributeMapper));
+        entityMetadataRegistry.getEntities()
+                              .forEach(entity -> messager.printMessage(Kind.NOTE, "Found entity: " + entity));
+        repositoryMetadataRegistry.getRepositories()
+                                  .forEach(repository -> messager.printMessage(Kind.NOTE, "Found repository: " + repository));
         nativeQueryRegistryStorage.getRegistries()
                                   .stream()
-                                  .flatMap(registry -> registry.getQueries().stream())
+                                  .map(RepositoryNativeQueryRegistry::getQueries)
+                                  .flatMap(Collection::stream)
                                   .forEach(query -> messager.printMessage(Kind.NOTE,
                                                                           "Generated query: " + query.getValue()));
 
@@ -98,9 +115,21 @@ public class GraphineProcessor extends AbstractProcessor {
         generateInfrastructureCode();
 
         // Step 6. Generating repository implementations
-        generateRepositoryImplementation(nativeQueryRegistryStorage.getRegistries(), entityMetadataRegistry);
+        generateRepositoryImplementation(nativeQueryRegistryStorage.getRegistries(),
+                                         entityMetadataRegistry,
+                                         attributeMapperMetadataRegistry);
 
         return ANNOTATIONS_CLAIMED;
+    }
+
+    private AttributeMapperMetadataRegistry collectAttributeMapperMetadata(RoundEnvironment roundEnv) {
+        AttributeMapperElementValidator attributeMapperElementValidator =
+                new AttributeMapperElementValidator();
+        AttributeMapperMetadataFactory attributeMapperMetadataFactory =
+                new AttributeMapperMetadataFactory();
+        AttributeMapperMetadataCollector attributeMapperMetadataCollector =
+                new AttributeMapperMetadataCollector(attributeMapperElementValidator, attributeMapperMetadataFactory);
+        return attributeMapperMetadataCollector.collect(roundEnv);
     }
 
     private EntityMetadataRegistry collectEntityMetadata(RoundEnvironment roundEnv) {
@@ -122,6 +151,13 @@ public class GraphineProcessor extends AbstractProcessor {
                 new EntityMetadataCollector(entityElementValidator, entityMetadataFactory,
                                             embeddableEntityElementValidator, embeddableEntityMetadataFactory);
         return entityMetadataCollector.collect(roundEnv);
+    }
+
+    private boolean validateEntityMetadata(Collection<EntityMetadata> entities,
+                                           AttributeMapperMetadataRegistry attributeMapperMetadataRegistry) {
+        EntityMetadataValidator entityMetadataValidator =
+                new EntityMetadataValidator(attributeMapperMetadataRegistry);
+        return entityMetadataValidator.validate(entities);
     }
 
     private RepositoryMetadataRegistry collectRepositoryMetadata(RoundEnvironment roundEnv) {
@@ -164,9 +200,10 @@ public class GraphineProcessor extends AbstractProcessor {
     }
 
     private void generateRepositoryImplementation(List<RepositoryNativeQueryRegistry> nativeQueryRegistries,
-                                                  EntityMetadataRegistry entityMetadataRegistry) {
+                                                  EntityMetadataRegistry entityMetadataRegistry,
+                                                  AttributeMapperMetadataRegistry attributeMapperMetadataRegistry) {
         OriginatingElementDependencyCollector originatingElementDependencyCollector =
-                new OriginatingElementDependencyCollector(entityMetadataRegistry);
+                new OriginatingElementDependencyCollector(entityMetadataRegistry, attributeMapperMetadataRegistry);
         StatementMappingRenderer statementMappingRenderer = new StatementMappingRenderer();
         ResultSetMappingRenderer resultSetMappingRenderer = new ResultSetMappingRenderer();
 
@@ -177,6 +214,7 @@ public class GraphineProcessor extends AbstractProcessor {
                     new RepositoryImplementationGenerator(originatingElementDependencyCollector,
                                                           nativeQueryRegistry,
                                                           entityMetadataRegistry,
+                                                          attributeMapperMetadataRegistry,
                                                           statementMappingRenderer,
                                                           resultSetMappingRenderer);
             TypeSpec typeSpec = repositoryImplementationGenerator.generate(repository);

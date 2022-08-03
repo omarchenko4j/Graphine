@@ -2,10 +2,12 @@ package io.graphine.processor.code.collector;
 
 import io.graphine.processor.metadata.model.entity.EmbeddableEntityMetadata;
 import io.graphine.processor.metadata.model.entity.EntityMetadata;
+import io.graphine.processor.metadata.model.entity.attribute.AttributeMapperMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.EmbeddedAttributeMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.EmbeddedIdentifierAttributeMetadata;
 import io.graphine.processor.metadata.model.repository.RepositoryMetadata;
+import io.graphine.processor.metadata.registry.AttributeMapperMetadataRegistry;
 import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 
 import javax.lang.model.element.Element;
@@ -13,14 +15,19 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import static java.util.Objects.nonNull;
+
 /**
  * @author Oleg Marchenko
  */
 public final class OriginatingElementDependencyCollector {
     private final EntityMetadataRegistry entityMetadataRegistry;
+    private final AttributeMapperMetadataRegistry attributeMapperMetadataRegistry;
 
-    public OriginatingElementDependencyCollector(EntityMetadataRegistry entityMetadataRegistry) {
+    public OriginatingElementDependencyCollector(EntityMetadataRegistry entityMetadataRegistry,
+                                                 AttributeMapperMetadataRegistry attributeMapperMetadataRegistry) {
         this.entityMetadataRegistry = entityMetadataRegistry;
+        this.attributeMapperMetadataRegistry = attributeMapperMetadataRegistry;
     }
 
     public Collection<Element> collect(RepositoryMetadata repository) {
@@ -60,6 +67,17 @@ public final class OriginatingElementDependencyCollector {
                 EmbeddableEntityMetadata embeddableEntity =
                         entityMetadataRegistry.getEmbeddableEntity(attribute.getNativeType().toString());
                 originatingElements.addAll(collect(embeddableEntity));
+            }
+            else {
+                // Custom attribute mappers are also dependencies for the repository implementation.
+                String mapperName = attribute.getMapper();
+                if (nonNull(mapperName)) {
+                    AttributeMapperMetadata attributeMapper =
+                            attributeMapperMetadataRegistry.getAttributeMapper(mapperName);
+                    originatingElements.add(attributeMapper.getNativeElement());
+
+                    // TODO: Attribute mappers support any types that should be as dependencies for the repository implementation.
+                }
             }
         }
         return originatingElements;

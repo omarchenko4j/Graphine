@@ -2,6 +2,7 @@ package io.graphine.test.repository;
 
 import io.graphine.core.NonUniqueResultException;
 import io.graphine.test.model.Film;
+import io.graphine.test.model.Genres;
 import io.graphine.test.model.Rating;
 import lombok.Cleanup;
 import lombok.SneakyThrows;
@@ -12,10 +13,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static io.graphine.test.util.DataSourceProvider.DATA_SOURCE;
 import static io.graphine.test.util.DataSourceProvider.PROXY_DATA_SOURCE;
+import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.StreamSupport.stream;
 
@@ -34,6 +37,7 @@ public class FilmRepositoryTest {
                                "imdb_id TEXT NOT NULL, " +
                                "title TEXT NOT NULL, " +
                                "year INTEGER NOT NULL, " +
+                               "genres TEXT, " +
                                "rating_value FLOAT NOT NULL, " +
                                "rating_count BIGINT NOT NULL, " +
                                "budget BIGINT, " +
@@ -676,6 +680,7 @@ public class FilmRepositoryTest {
                         .imdbId("tt9419884")
                         .title("Doctor Strange in the Multiverse of Madness")
                         .year(2022)
+                        .genres(new Genres("Action", "Adventure", "Fantasy"))
                         .rating(Rating.builder().build())
                         .wasReleased(false)
                         .build();
@@ -693,6 +698,7 @@ public class FilmRepositoryTest {
                          .imdbId("tt9419884")
                          .title("Doctor Strange in the Multiverse of Madness")
                          .year(2022)
+                         .genres(new Genres("Action", "Adventure", "Fantasy"))
                          .rating(Rating.builder().build())
                          .wasReleased(false)
                          .build();
@@ -700,6 +706,7 @@ public class FilmRepositoryTest {
                          .imdbId("tt10648342")
                          .title("Thor: Love and Thunder")
                          .year(2022)
+                         .genres(new Genres("Action", "Adventure", "Comedy"))
                          .rating(Rating.builder().build())
                          .wasReleased(false)
                          .build();
@@ -720,6 +727,7 @@ public class FilmRepositoryTest {
                          .imdbId("tt9419884")
                          .title("Doctor Strange in the Multiverse of Madness")
                          .year(2022)
+                         .genres(new Genres("Action", "Adventure", "Fantasy"))
                          .rating(Rating.builder().build())
                          .wasReleased(false)
                          .build();
@@ -727,6 +735,7 @@ public class FilmRepositoryTest {
                          .imdbId("tt10648342")
                          .title("Thor: Love and Thunder")
                          .year(2022)
+                         .genres(new Genres("Action", "Adventure", "Comedy"))
                          .rating(Rating.builder().build())
                          .wasReleased(false)
                          .build();
@@ -747,6 +756,7 @@ public class FilmRepositoryTest {
                          .imdbId("tt9419884")
                          .title("Doctor Strange in the Multiverse of Madness")
                          .year(2022)
+                         .genres(new Genres("Action", "Adventure", "Fantasy"))
                          .rating(Rating.builder().build())
                          .wasReleased(false)
                          .build();
@@ -754,6 +764,7 @@ public class FilmRepositoryTest {
                          .imdbId("tt10648342")
                          .title("Thor: Love and Thunder")
                          .year(2022)
+                         .genres(new Genres("Action", "Adventure", "Comedy"))
                          .rating(Rating.builder().build())
                          .wasReleased(false)
                          .build();
@@ -774,6 +785,7 @@ public class FilmRepositoryTest {
                          .imdbId("tt9419884")
                          .title("Doctor Strange in the Multiverse of Madness")
                          .year(2022)
+                         .genres(new Genres("Action", "Adventure", "Fantasy"))
                          .rating(Rating.builder().build())
                          .wasReleased(false)
                          .build();
@@ -781,6 +793,7 @@ public class FilmRepositoryTest {
                          .imdbId("tt10648342")
                          .title("Thor: Love and Thunder")
                          .year(2022)
+                         .genres(new Genres("Action", "Adventure", "Comedy"))
                          .rating(Rating.builder().build())
                          .wasReleased(false)
                          .build();
@@ -801,6 +814,7 @@ public class FilmRepositoryTest {
                          .imdbId("tt9419884")
                          .title("Doctor Strange in the Multiverse of Madness")
                          .year(2022)
+                         .genres(new Genres("Action", "Adventure", "Fantasy"))
                          .rating(Rating.builder().build())
                          .wasReleased(false)
                          .build();
@@ -808,6 +822,7 @@ public class FilmRepositoryTest {
                          .imdbId("tt10648342")
                          .title("Thor: Love and Thunder")
                          .year(2022)
+                         .genres(new Genres("Action", "Adventure", "Comedy"))
                          .rating(Rating.builder().build())
                          .wasReleased(false)
                          .build();
@@ -1152,13 +1167,14 @@ public class FilmRepositoryTest {
     public static void insertFilm(Film film) {
         @Cleanup Connection connection = DATA_SOURCE.getConnection();
         @Cleanup PreparedStatement statement =
-                connection.prepareStatement("INSERT INTO public.film(id, imdb_id, title, year, rating_value, rating_count, budget, gross, tagline, was_released) " +
-                                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                connection.prepareStatement("INSERT INTO public.film(id, imdb_id, title, year, genres, rating_value, rating_count, budget, gross, tagline, was_released) " +
+                                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         int index = 1;
         statement.setString(index++, film.getId().toString());
         statement.setString(index++, film.getImdbId());
         statement.setString(index++, film.getTitle());
         statement.setInt(index++, film.getYear());
+        statement.setString(index++, mapFilmGenresToString(film.getGenres()));
         statement.setFloat(index++, film.getRating().getValue());
         statement.setLong(index++, film.getRating().getCount());
         statement.setObject(index++, film.getBudget());
@@ -1172,14 +1188,15 @@ public class FilmRepositoryTest {
     public static void insertFilms(Iterable<Film> films) {
         @Cleanup Connection connection = DATA_SOURCE.getConnection();
         @Cleanup PreparedStatement statement =
-                connection.prepareStatement("INSERT INTO public.film(id, imdb_id, title, year, rating_value, rating_count, budget, gross, tagline, was_released) " +
-                                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
+                connection.prepareStatement("INSERT INTO public.film(id, imdb_id, title, year, genres, rating_value, rating_count, budget, gross, tagline, was_released) " +
+                                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
         for (Film film : films) {
             int index = 1;
             statement.setString(index++, film.getId().toString());
             statement.setString(index++, film.getImdbId());
             statement.setString(index++, film.getTitle());
             statement.setInt(index++, film.getYear());
+            statement.setString(index++, mapFilmGenresToString(film.getGenres()));
             statement.setFloat(index++, film.getRating().getValue());
             statement.setLong(index++, film.getRating().getCount());
             statement.setObject(index++, film.getBudget());
@@ -1191,11 +1208,18 @@ public class FilmRepositoryTest {
         statement.executeBatch();
     }
 
+    private static String mapFilmGenresToString(Genres genres) {
+        if (isNull(genres)) {
+            return null;
+        }
+        return genres.stream().collect(Collectors.joining(","));
+    }
+
     @SneakyThrows
     public static Film selectFilmById(UUID id) {
         @Cleanup Connection connection = DATA_SOURCE.getConnection();
         @Cleanup PreparedStatement statement =
-                connection.prepareStatement("SELECT id, imdb_id, title, YEAR, rating_value, rating_count, budget, gross, tagline, was_released " +
+                connection.prepareStatement("SELECT id, imdb_id, title, year, genres, rating_value, rating_count, budget, gross, tagline, was_released " +
                                             "FROM PUBLIC.film " +
                                             "WHERE id = ?");
         statement.setString(1, id.toString());
@@ -1206,6 +1230,7 @@ public class FilmRepositoryTest {
                        .imdbId(resultSet.getString("imdb_id"))
                        .title(resultSet.getString("title"))
                        .year(resultSet.getInt("year"))
+                       .genres(mapStringToGenres(resultSet.getString("genres")))
                        .rating(Rating.builder()
                                      .value(resultSet.getFloat("rating_value"))
                                      .count(resultSet.getLong("rating_count"))
@@ -1219,12 +1244,20 @@ public class FilmRepositoryTest {
         return null;
     }
 
+    private static Genres mapStringToGenres(String str) {
+        if (isNull(str)) {
+            return null;
+        }
+        return new Genres(str.split(","));
+    }
+
     public static final class MarvelFilms {
         public static Film incredibleHulk() {
             return Film.builder()
                        .imdbId("tt0800080")
                        .title("The Incredible Hulk")
                        .year(2008)
+                       .genres(new Genres("Action", "Adventure"))
                        .rating(Rating.builder()
                                      .value(6.7f)
                                      .count(444_129)
@@ -1241,6 +1274,7 @@ public class FilmRepositoryTest {
                        .imdbId("tt0371746")
                        .title("Iron Man")
                        .year(2008)
+                       .genres(new Genres("Action", "Adventure"))
                        .rating(Rating.builder()
                                      .value(7.9f)
                                      .count(960_545)
@@ -1257,6 +1291,7 @@ public class FilmRepositoryTest {
                        .imdbId("tt1228705")
                        .title("Iron Man 2")
                        .year(2010)
+                       .genres(new Genres("Action", "Adventure"))
                        .rating(Rating.builder()
                                      .value(7)
                                      .count(739_724)
@@ -1273,6 +1308,7 @@ public class FilmRepositoryTest {
                        .imdbId("tt1300854")
                        .title("Iron Man Three")
                        .year(2013)
+                       .genres(new Genres("Action", "Adventure"))
                        .rating(Rating.builder()
                                      .value(7.1f)
                                      .count(772_782)

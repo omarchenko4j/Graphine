@@ -11,6 +11,7 @@ import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.model.repository.method.name.QueryableMethodName;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment;
 import io.graphine.processor.metadata.model.repository.method.parameter.ParameterMetadata;
+import io.graphine.processor.metadata.registry.AttributeMapperMetadataRegistry;
 import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 import io.graphine.processor.query.model.NativeQuery;
 
@@ -26,9 +27,10 @@ import static io.graphine.processor.util.VariableNameUniqueizer.uniqueize;
 public final class RepositoryUpdateMethodImplementationGenerator
         extends RepositoryModifyingMethodImplementationGenerator {
     public RepositoryUpdateMethodImplementationGenerator(EntityMetadataRegistry entityMetadataRegistry,
+                                                         AttributeMapperMetadataRegistry attributeMapperMetadataRegistry,
                                                          StatementMappingRenderer statementMappingRenderer,
                                                          ResultSetMappingRenderer resultSetMappingRenderer) {
-        super(entityMetadataRegistry, statementMappingRenderer, resultSetMappingRenderer);
+        super(entityMetadataRegistry, attributeMapperMetadataRegistry, statementMappingRenderer, resultSetMappingRenderer);
     }
 
     @Override

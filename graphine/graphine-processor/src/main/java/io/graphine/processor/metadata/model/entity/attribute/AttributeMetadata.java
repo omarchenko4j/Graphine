@@ -14,14 +14,20 @@ import static java.util.Objects.nonNull;
  */
 public class AttributeMetadata extends NativeElement<VariableElement> {
     protected final String column;
+    protected final String mapper;
 
-    public AttributeMetadata(VariableElement element, String column) {
+    public AttributeMetadata(VariableElement element, String column, String mapper) {
         super(element);
         this.column = column;
+        this.mapper = mapper;
     }
 
     public String getColumn() {
         return column;
+    }
+
+    public String getMapper() {
+        return mapper;
     }
 
     @Override

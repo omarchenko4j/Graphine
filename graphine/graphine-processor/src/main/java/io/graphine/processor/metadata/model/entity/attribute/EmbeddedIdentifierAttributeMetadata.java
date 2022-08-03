@@ -11,8 +11,9 @@ public class EmbeddedIdentifierAttributeMetadata extends IdentifierAttributeMeta
     private final EmbeddedAttributeMetadata embeddedAttribute;
 
     public EmbeddedIdentifierAttributeMetadata(VariableElement element,
-                                               EmbeddedAttributeMetadata embeddedAttribute) {
-        super(element, null);
+                                               EmbeddedAttributeMetadata embeddedAttribute,
+                                               String mapper) {
+        super(element, null, mapper);
         this.embeddedAttribute = embeddedAttribute;
     }
 
@@ -22,7 +23,7 @@ public class EmbeddedIdentifierAttributeMetadata extends IdentifierAttributeMeta
 
     @Override
     public String toString() {
-        return name;
+        return name + " (key)";
     }
 
     public static boolean isEmbeddedIdentifier(VariableElement fieldElement) {

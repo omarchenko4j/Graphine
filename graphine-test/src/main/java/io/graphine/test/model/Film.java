@@ -26,6 +26,8 @@ public class Film {
     private String imdbId;
     private String title;
     private int year;
+    @Attribute(mapper = Genres.Mapper.class)
+    private Genres genres;
     @AttributeOverride(name = "value", attribute = @Attribute(column = "rating_value"))
     @AttributeOverride(name = "count", attribute = @Attribute(column = "rating_count"))
     private Rating rating;

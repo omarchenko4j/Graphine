@@ -9,6 +9,7 @@ import io.graphine.processor.metadata.model.entity.attribute.EmbeddedIdentifierA
 import io.graphine.processor.metadata.model.entity.attribute.IdentifierAttributeMetadata;
 import io.graphine.processor.support.naming.pipeline.ColumnNamingPipeline;
 
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import java.util.Arrays;
 import java.util.Map;
@@ -17,9 +18,11 @@ import java.util.stream.Collectors;
 import static io.graphine.processor.metadata.model.entity.attribute.EmbeddedAttributeMetadata.isEmbedded;
 import static io.graphine.processor.metadata.model.entity.attribute.EmbeddedIdentifierAttributeMetadata.isEmbeddedIdentifier;
 import static io.graphine.processor.metadata.model.entity.attribute.IdentifierAttributeMetadata.isIdentifier;
+import static io.graphine.processor.util.GraphineAnnotationUtils.getAttributeAnnotationMapperAttributeValue;
 import static io.graphine.processor.util.StringUtils.isEmpty;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
+import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 
 /**
@@ -33,6 +36,7 @@ public final class AttributeMetadataFactory {
     }
 
     public AttributeMetadata createAttribute(VariableElement fieldElement) {
+        // Order of declaration is important!
         if (isEmbeddedIdentifier(fieldElement)) {
             return createEmbeddedIdentifierAttribute(fieldElement);
         }
@@ -42,16 +46,20 @@ public final class AttributeMetadataFactory {
         if (isEmbedded(fieldElement)) {
             return createEmbeddedAttribute(fieldElement);
         }
-        return new AttributeMetadata(fieldElement, getColumn(fieldElement));
+        return createSimpleAttribute(fieldElement);
     }
 
     private EmbeddedIdentifierAttributeMetadata createEmbeddedIdentifierAttribute(VariableElement fieldElement) {
         EmbeddedAttributeMetadata embeddedAttribute = createEmbeddedAttribute(fieldElement);
-        return new EmbeddedIdentifierAttributeMetadata(fieldElement, embeddedAttribute);
+        return new EmbeddedIdentifierAttributeMetadata(fieldElement,
+                                                       embeddedAttribute,
+                                                       getMapper(fieldElement));
     }
 
     private IdentifierAttributeMetadata createIdentifierAttribute(VariableElement fieldElement) {
-        return new IdentifierAttributeMetadata(fieldElement, getColumn(fieldElement));
+        return new IdentifierAttributeMetadata(fieldElement,
+                                               getColumn(fieldElement),
+                                               getMapper(fieldElement));
     }
 
     private EmbeddedAttributeMetadata createEmbeddedAttribute(VariableElement fieldElement) {
@@ -73,7 +81,15 @@ public final class AttributeMetadataFactory {
                                                             attributeOverride.attribute().column());
             }
         }
-        return new EmbeddedAttributeMetadata(fieldElement, attributeNameToColumnNameMap);
+        return new EmbeddedAttributeMetadata(fieldElement,
+                                             attributeNameToColumnNameMap,
+                                             getMapper(fieldElement));
+    }
+
+    private AttributeMetadata createSimpleAttribute(VariableElement fieldElement) {
+        return new AttributeMetadata(fieldElement,
+                                     getColumn(fieldElement),
+                                     getMapper(fieldElement));
     }
 
     private String getColumn(VariableElement fieldElement) {
@@ -88,5 +104,13 @@ public final class AttributeMetadataFactory {
             column = columnNamingPipeline.transform(attributeName);
         }
         return column;
+    }
+
+    private String getMapper(VariableElement fieldElement) {
+        TypeElement attributeMapperElement = getAttributeAnnotationMapperAttributeValue(fieldElement);
+        if (isNull(attributeMapperElement)) {
+            return null;
+        }
+        return attributeMapperElement.getQualifiedName().toString();
     }
 }

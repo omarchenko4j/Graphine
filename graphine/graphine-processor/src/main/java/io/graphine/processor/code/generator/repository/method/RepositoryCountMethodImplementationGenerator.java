@@ -5,6 +5,7 @@ import io.graphine.processor.code.renderer.mapping.ResultSetMappingRenderer;
 import io.graphine.processor.code.renderer.mapping.StatementMappingRenderer;
 import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
+import io.graphine.processor.metadata.registry.AttributeMapperMetadataRegistry;
 import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 import io.graphine.processor.query.model.NativeQuery;
 
@@ -18,9 +19,10 @@ import javax.lang.model.type.TypeMirror;
  */
 public final class RepositoryCountMethodImplementationGenerator extends RepositoryMethodImplementationGenerator {
     public RepositoryCountMethodImplementationGenerator(EntityMetadataRegistry entityMetadataRegistry,
+                                                        AttributeMapperMetadataRegistry attributeMapperMetadataRegistry,
                                                         StatementMappingRenderer statementMappingRenderer,
                                                         ResultSetMappingRenderer resultSetMappingRenderer) {
-        super(entityMetadataRegistry, statementMappingRenderer, resultSetMappingRenderer);
+        super(entityMetadataRegistry, attributeMapperMetadataRegistry, statementMappingRenderer, resultSetMappingRenderer);
     }
 
     @Override

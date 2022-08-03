@@ -5,16 +5,20 @@ import io.graphine.processor.code.renderer.index.NumericParameterIndexProvider;
 import io.graphine.processor.code.renderer.index.ParameterIndexProvider;
 import io.graphine.processor.code.renderer.mapping.StatementMappingRenderer;
 import io.graphine.processor.metadata.model.entity.EmbeddableEntityMetadata;
+import io.graphine.processor.metadata.model.entity.attribute.AttributeMapperMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.EmbeddedAttributeMetadata;
 import io.graphine.processor.metadata.model.entity.attribute.EmbeddedIdentifierAttributeMetadata;
+import io.graphine.processor.metadata.registry.AttributeMapperMetadataRegistry;
 import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 
 import java.util.List;
 
+import static io.graphine.processor.code.generator.repository.method.RepositoryMethodImplementationGenerator.STATEMENT_VARIABLE_NAME;
 import static io.graphine.processor.support.EnvironmentContext.typeUtils;
 import static io.graphine.processor.util.AccessorUtils.getter;
 import static io.graphine.processor.util.StringUtils.EMPTY;
+import static io.graphine.processor.util.StringUtils.isNotEmpty;
 import static io.graphine.processor.util.VariableNameUniqueizer.uniqueize;
 
 /**
@@ -22,11 +26,14 @@ import static io.graphine.processor.util.VariableNameUniqueizer.uniqueize;
  */
 public final class AttributeToStatementMappingRenderer {
     private final EntityMetadataRegistry entityMetadataRegistry;
+    private final AttributeMapperMetadataRegistry attributeMapperMetadataRegistry;
     private final StatementMappingRenderer statementMappingRenderer;
 
     public AttributeToStatementMappingRenderer(EntityMetadataRegistry entityMetadataRegistry,
+                                               AttributeMapperMetadataRegistry attributeMapperMetadataRegistry,
                                                StatementMappingRenderer statementMappingRenderer) {
         this.entityMetadataRegistry = entityMetadataRegistry;
+        this.attributeMapperMetadataRegistry = attributeMapperMetadataRegistry;
         this.statementMappingRenderer = statementMappingRenderer;
     }
 
@@ -34,7 +41,22 @@ public final class AttributeToStatementMappingRenderer {
                                      AttributeMetadata attribute,
                                      ParameterIndexProvider parameterIndexProvider) {
         CodeBlock.Builder snippetBuilder = CodeBlock.builder();
-        if (attribute instanceof EmbeddedIdentifierAttributeMetadata) {
+
+        String attributeMapperName = attribute.getMapper();
+        if (isNotEmpty(attributeMapperName)) {
+            AttributeMapperMetadata attributeMapper =
+                    attributeMapperMetadataRegistry.getAttributeMapper(attributeMapperName);
+            String parameterIndex = parameterIndexProvider.getParameterIndex();
+            snippetBuilder
+                    .addStatement("$T.$L($L, $L, $L.$L())",
+                                  attributeMapper.getNativeType(),
+                                  attributeMapper.getSetterMethodName(),
+                                  STATEMENT_VARIABLE_NAME,
+                                  parameterIndex,
+                                  rootVariableName,
+                                  getter(attribute));
+        }
+        else if (attribute instanceof EmbeddedIdentifierAttributeMetadata) {
             EmbeddedIdentifierAttributeMetadata embeddedIdentifierAttribute = (EmbeddedIdentifierAttributeMetadata) attribute;
             snippetBuilder
                     .add(renderEmbeddedAttribute(rootVariableName, embeddedIdentifierAttribute.getEmbeddedAttribute(), parameterIndexProvider));

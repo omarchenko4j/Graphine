@@ -7,7 +7,7 @@ import javax.lang.model.element.TypeElement;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static io.graphine.processor.util.RepositoryAnnotationUtils.getEntityElementFromRepositoryAnnotation;
+import static io.graphine.processor.util.GraphineAnnotationUtils.getRepositoryAnnotationValueAttributeValue;
 import static javax.lang.model.util.ElementFilter.methodsIn;
 
 /**
@@ -21,7 +21,7 @@ public final class RepositoryMetadataFactory {
     }
 
     public RepositoryMetadata createRepository(TypeElement repositoryElement) {
-        TypeElement entityElement = getEntityElementFromRepositoryAnnotation(repositoryElement);
+        TypeElement entityElement = getRepositoryAnnotationValueAttributeValue(repositoryElement);
         String entityQualifiedName = entityElement.getQualifiedName().toString();
 
         List<MethodMetadata> methods = methodsIn(repositoryElement.getEnclosedElements())

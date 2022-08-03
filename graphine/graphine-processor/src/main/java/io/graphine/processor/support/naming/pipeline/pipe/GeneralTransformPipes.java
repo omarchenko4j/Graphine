@@ -4,6 +4,8 @@ import static io.graphine.processor.util.StringUtils.join;
 import static io.graphine.processor.util.StringUtils.uncapitalize;
 
 /**
+ * WARNING: Order of declaration is important!
+ *
  * @author Oleg Marchenko
  */
 public enum GeneralTransformPipes implements TransformPipe {

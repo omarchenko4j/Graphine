@@ -5,6 +5,7 @@ import io.graphine.processor.code.renderer.mapping.ResultSetMappingRenderer;
 import io.graphine.processor.code.renderer.mapping.StatementMappingRenderer;
 import io.graphine.processor.metadata.model.entity.EntityMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
+import io.graphine.processor.metadata.registry.AttributeMapperMetadataRegistry;
 import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 import io.graphine.processor.query.model.NativeQuery;
 
@@ -21,9 +22,10 @@ public abstract class RepositoryModifyingMethodImplementationGenerator extends R
     private static final String AUTO_COMMIT_VARIABLE_NAME = uniqueize("autoCommit");
 
     protected RepositoryModifyingMethodImplementationGenerator(EntityMetadataRegistry entityMetadataRegistry,
+                                                               AttributeMapperMetadataRegistry attributeMapperMetadataRegistry,
                                                                StatementMappingRenderer statementMappingRenderer,
                                                                ResultSetMappingRenderer resultSetMappingRenderer) {
-        super(entityMetadataRegistry, statementMappingRenderer, resultSetMappingRenderer);
+        super(entityMetadataRegistry, attributeMapperMetadataRegistry, statementMappingRenderer, resultSetMappingRenderer);
     }
 
     @Override

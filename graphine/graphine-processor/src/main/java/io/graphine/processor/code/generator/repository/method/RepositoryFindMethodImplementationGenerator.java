@@ -13,6 +13,7 @@ import io.graphine.processor.metadata.model.entity.attribute.AttributeMetadata;
 import io.graphine.processor.metadata.model.repository.method.MethodMetadata;
 import io.graphine.processor.metadata.model.repository.method.name.QueryableMethodName;
 import io.graphine.processor.metadata.model.repository.method.name.fragment.QualifierFragment;
+import io.graphine.processor.metadata.registry.AttributeMapperMetadataRegistry;
 import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 import io.graphine.processor.query.model.NativeQuery;
 
@@ -34,9 +35,10 @@ public final class RepositoryFindMethodImplementationGenerator extends Repositor
     private static final String COLLECTION_VARIABLE_NAME = uniqueize("elements");
 
     public RepositoryFindMethodImplementationGenerator(EntityMetadataRegistry entityMetadataRegistry,
+                                                       AttributeMapperMetadataRegistry attributeMapperMetadataRegistry,
                                                        StatementMappingRenderer statementMappingRenderer,
                                                        ResultSetMappingRenderer resultSetMappingRenderer) {
-        super(entityMetadataRegistry, statementMappingRenderer, resultSetMappingRenderer);
+        super(entityMetadataRegistry, attributeMapperMetadataRegistry, statementMappingRenderer, resultSetMappingRenderer);
     }
 
     @Override
