@@ -34,6 +34,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+import static io.graphine.processor.GraphineOptions.READ_ONLY_HINT_ENABLED;
 import static io.graphine.processor.code.generator.infrastructure.GeneralExceptionGenerator.GraphineException;
 import static io.graphine.processor.code.generator.infrastructure.WildcardRepeaterGenerator.WildcardRepeater;
 import static io.graphine.processor.code.renderer.index.IncrementalParameterIndexProvider.INDEX_VARIABLE_NAME;
@@ -86,29 +87,40 @@ public abstract class RepositoryMethodImplementationGenerator {
     }
 
     protected CodeBlock renderConnection(MethodMetadata method, NativeQuery query, EntityMetadata entity) {
-        return CodeBlock.builder()
-                        .beginControlFlow("try ($T $L = dataSource.getConnection())",
-                                          Connection.class, CONNECTION_VARIABLE_NAME)
-                        .addStatement("$T $L = $L.isReadOnly()",
-                                      boolean.class, READ_ONLY_VARIABLE_NAME, CONNECTION_VARIABLE_NAME)
-                        .beginControlFlow("if (!$L)", READ_ONLY_VARIABLE_NAME)
-                        .addStatement("$L.setReadOnly(true)", CONNECTION_VARIABLE_NAME)
-                        .endControlFlow()
-                        .beginControlFlow("try")
-                        .add(renderQuery(method, query))
-                        .add(renderStatement(method, query, entity))
-                        .endControlFlow()
-                        .beginControlFlow("finally")
-                        .addStatement("$L.setReadOnly($L)",
-                                      CONNECTION_VARIABLE_NAME, READ_ONLY_VARIABLE_NAME)
-                        .endControlFlow()
-                        .endControlFlow()
-                        .beginControlFlow("catch ($T $L)",
-                                          SQLException.class, EXCEPTION_VARIABLE_NAME)
-                        .addStatement("throw new $T($L)",
-                                      GraphineException, EXCEPTION_VARIABLE_NAME)
-                        .endControlFlow()
-                        .build();
+        boolean readOnlyHintEnabled = READ_ONLY_HINT_ENABLED.value(Boolean::parseBoolean);
+
+        CodeBlock.Builder snippetBuilder = CodeBlock.builder();
+        snippetBuilder
+                .beginControlFlow("try ($T $L = dataSource.getConnection())",
+                                  Connection.class, CONNECTION_VARIABLE_NAME);
+        if (readOnlyHintEnabled) {
+            snippetBuilder
+                    .addStatement("$T $L = $L.isReadOnly()",
+                                  boolean.class, READ_ONLY_VARIABLE_NAME, CONNECTION_VARIABLE_NAME)
+                    .beginControlFlow("if (!$L)", READ_ONLY_VARIABLE_NAME)
+                    .addStatement("$L.setReadOnly(true)", CONNECTION_VARIABLE_NAME)
+                    .endControlFlow()
+                    .beginControlFlow("try");
+        }
+        snippetBuilder
+                .add(renderQuery(method, query))
+                .add(renderStatement(method, query, entity));
+        if (readOnlyHintEnabled) {
+            snippetBuilder
+                    .endControlFlow()
+                    .beginControlFlow("finally")
+                    .addStatement("$L.setReadOnly($L)",
+                                  CONNECTION_VARIABLE_NAME, READ_ONLY_VARIABLE_NAME)
+                    .endControlFlow();
+        }
+        snippetBuilder
+                .endControlFlow()
+                .beginControlFlow("catch ($T $L)",
+                                  SQLException.class, EXCEPTION_VARIABLE_NAME)
+                .addStatement("throw new $T($L)",
+                              GraphineException, EXCEPTION_VARIABLE_NAME)
+                .endControlFlow();
+        return snippetBuilder.build();
     }
 
     protected CodeBlock renderQuery(MethodMetadata method, NativeQuery query) {

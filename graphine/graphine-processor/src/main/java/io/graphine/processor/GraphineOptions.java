@@ -18,7 +18,8 @@ public enum GraphineOptions {
     DEFAULT_SCHEME("graphine.default_schema", EMPTY),
     TABLE_NAMING_PIPELINE("graphine.table_naming_pipeline", DEFAULT_TABLE_NAMING_PIPELINE),
     COLUMN_NAMING_PIPELINE("graphine.column_naming_pipeline", DEFAULT_COLUMN_NAMING_PIPELINE),
-    ATTRIBUTE_DETECTION_STRATEGY("graphine.attribute_detection_strategy", DEFAULT_ATTRIBUTE_DETECTION_STRATEGY);
+    ATTRIBUTE_DETECTION_STRATEGY("graphine.attribute_detection_strategy", DEFAULT_ATTRIBUTE_DETECTION_STRATEGY),
+    READ_ONLY_HINT_ENABLED("graphine.read_only_hint.enabled", "false");
 
     private final String name;
     private final String defaultValue;
