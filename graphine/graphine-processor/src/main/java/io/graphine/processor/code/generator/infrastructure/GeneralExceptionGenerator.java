@@ -4,11 +4,10 @@ import com.squareup.javapoet.*;
 
 import javax.annotation.processing.Generated;
 import javax.lang.model.element.Modifier;
-import javax.tools.Diagnostic;
 import java.io.IOException;
 
 import static io.graphine.processor.support.EnvironmentContext.filer;
-import static io.graphine.processor.support.EnvironmentContext.messager;
+import static io.graphine.processor.support.EnvironmentContext.logger;
 
 /**
  * TODO: quick sketch - refactoring candidate
@@ -29,7 +28,7 @@ public class GeneralExceptionGenerator {
             javaFile.writeTo(filer);
         }
         catch (IOException e) {
-            messager.printMessage(Diagnostic.Kind.ERROR, e.getMessage());
+            logger.error(e.getMessage());
         }
         // TODO: move to a separate helper method
         javaFile = JavaFile.builder(NonUniqueResultException.packageName(), generateNonUniqueResultException())
@@ -40,7 +39,7 @@ public class GeneralExceptionGenerator {
             javaFile.writeTo(filer);
         }
         catch (IOException e) {
-            messager.printMessage(Diagnostic.Kind.ERROR, e.getMessage());
+            logger.error(e.getMessage());
         }
     }
 

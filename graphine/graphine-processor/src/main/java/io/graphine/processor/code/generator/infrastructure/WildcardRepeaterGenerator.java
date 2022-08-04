@@ -4,12 +4,11 @@ import com.squareup.javapoet.*;
 
 import javax.annotation.processing.Generated;
 import javax.lang.model.element.Modifier;
-import javax.tools.Diagnostic;
 import java.io.IOException;
 import java.util.StringJoiner;
 
 import static io.graphine.processor.support.EnvironmentContext.filer;
-import static io.graphine.processor.support.EnvironmentContext.messager;
+import static io.graphine.processor.support.EnvironmentContext.logger;
 
 /**
  * @author Oleg Marchenko
@@ -71,7 +70,7 @@ public class WildcardRepeaterGenerator {
             javaFile.writeTo(filer);
         }
         catch (IOException e) {
-            messager.printMessage(Diagnostic.Kind.ERROR, e.getMessage());
+            logger.error(e.getMessage());
         }
     }
 }

@@ -45,9 +45,8 @@ import java.util.List;
 import java.util.Set;
 
 import static io.graphine.processor.support.EnvironmentContext.filer;
-import static io.graphine.processor.support.EnvironmentContext.messager;
+import static io.graphine.processor.support.EnvironmentContext.logger;
 import static javax.lang.model.SourceVersion.RELEASE_11;
-import static javax.tools.Diagnostic.Kind;
 
 /**
  * @author Oleg Marchenko
@@ -99,17 +98,16 @@ public class GraphineProcessor extends AbstractProcessor {
 
         // TODO: Hide logging behind flag option (like graphine.debug=true/false)
         attributeMapperMetadataRegistry.getAttributeMappers()
-                                       .forEach(attributeMapper -> messager.printMessage(Kind.NOTE, "Found attribute mapper: " + attributeMapper));
+                                       .forEach(attributeMapper -> logger.info("Found attribute mapper: " + attributeMapper));
         entityMetadataRegistry.getEntities()
-                              .forEach(entity -> messager.printMessage(Kind.NOTE, "Found entity: " + entity));
+                              .forEach(entity -> logger.info("Found entity: " + entity));
         repositoryMetadataRegistry.getRepositories()
-                                  .forEach(repository -> messager.printMessage(Kind.NOTE, "Found repository: " + repository));
+                                  .forEach(repository -> logger.info("Found repository: " + repository));
         nativeQueryRegistryStorage.getRegistries()
                                   .stream()
                                   .map(RepositoryNativeQueryRegistry::getQueries)
                                   .flatMap(Collection::stream)
-                                  .forEach(query -> messager.printMessage(Kind.NOTE,
-                                                                          "Generated query: " + query.getValue()));
+                                  .forEach(query -> logger.info("Generated query: " + query.getValue()));
 
         // Step 5. Generating infrastructure code
         generateInfrastructureCode();
@@ -228,7 +226,7 @@ public class GraphineProcessor extends AbstractProcessor {
                 javaFile.writeTo(filer);
             }
             catch (IOException e) {
-                messager.printMessage(Kind.ERROR, e.getMessage(), repository.getNativeElement());
+                logger.error(e.getMessage(), repository.getNativeElement());
             }
         }
     }

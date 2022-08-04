@@ -19,10 +19,9 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import static io.graphine.processor.support.EnvironmentContext.messager;
+import static io.graphine.processor.support.EnvironmentContext.logger;
 import static io.graphine.processor.support.EnvironmentContext.typeUtils;
 import static java.util.Objects.nonNull;
-import static javax.tools.Diagnostic.Kind;
 
 /**
  * @author Oleg Marchenko
@@ -41,7 +40,7 @@ public abstract class RepositoryModifyingMethodMetadataValidator extends Reposit
         TypeMirror returnType = methodElement.getReturnType();
         if (returnType.getKind() != TypeKind.VOID) {
             valid = false;
-            messager.printMessage(Kind.ERROR, "Method must return void", methodElement);
+            logger.error("Method must return void", methodElement);
         }
 
         return valid;
@@ -56,11 +55,11 @@ public abstract class RepositoryModifyingMethodMetadataValidator extends Reposit
         QualifierFragment qualifier = queryableName.getQualifier();
         if (qualifier.hasDistinctSpecifier()) {
             valid = false;
-            messager.printMessage(Kind.ERROR, "Method name must not include 'Distinct' keyword", method.getNativeElement());
+            logger.error("Method name must not include 'Distinct' keyword", method.getNativeElement());
         }
         if (qualifier.hasFirstSpecifier()) {
             valid = false;
-            messager.printMessage(Kind.ERROR, "Method name must not include 'First' keyword", method.getNativeElement());
+            logger.error("Method name must not include 'First' keyword", method.getNativeElement());
         }
 
         if (!validateMethodParameter(method, entity)) {
@@ -70,13 +69,13 @@ public abstract class RepositoryModifyingMethodMetadataValidator extends Reposit
         ConditionFragment condition = queryableName.getCondition();
         if (nonNull(condition)) {
             valid = false;
-            messager.printMessage(Kind.ERROR, "Method name must not include conditions", method.getNativeElement());
+            logger.error("Method name must not include conditions", method.getNativeElement());
         }
 
         SortingFragment sorting = queryableName.getSorting();
         if (nonNull(sorting)) {
             valid = false;
-            messager.printMessage(Kind.ERROR, "Method name must not include sorting", method.getNativeElement());
+            logger.error("Method name must not include sorting", method.getNativeElement());
         }
 
         return valid;
@@ -88,7 +87,7 @@ public abstract class RepositoryModifyingMethodMetadataValidator extends Reposit
         List<ParameterMetadata> methodParameters = method.getParameters();
         if (methodParameters.size() != 1) {
             valid = false;
-            messager.printMessage(Kind.ERROR, "Method must consume one parameter", method.getNativeElement());
+            logger.error("Method must consume one parameter", method.getNativeElement());
         }
         else {
             TypeMirror entityType = entity.getNativeType();
@@ -103,9 +102,7 @@ public abstract class RepositoryModifyingMethodMetadataValidator extends Reposit
                 case SINGULAR:
                     if (!typeUtils.isSameType(parameterType, entityType)) {
                         valid = false;
-                        messager.printMessage(Kind.ERROR,
-                                              "Method must consume the entity class as a parameter",
-                                              methodParameter.getNativeElement());
+                        logger.error("Method must consume the entity class as a parameter", methodParameter.getNativeElement());
                     }
                     break;
                 case PLURAL:
@@ -115,9 +112,7 @@ public abstract class RepositoryModifyingMethodMetadataValidator extends Reposit
                             parameterType = arrayType.getComponentType();
                             if (!typeUtils.isSameType(parameterType, entityType)) {
                                 valid = false;
-                                messager.printMessage(Kind.ERROR,
-                                                      "Method must consume entity class as array type",
-                                                      methodParameter.getNativeElement());
+                                logger.error("Method must consume entity class as array type", methodParameter.getNativeElement());
                             }
                             break;
                         case DECLARED:
@@ -130,23 +125,20 @@ public abstract class RepositoryModifyingMethodMetadataValidator extends Reposit
                                 parameterType = declaredType.getTypeArguments().get(0);
                                 if (!typeUtils.isSameType(parameterType, entityType)) {
                                     valid = false;
-                                    messager.printMessage(Kind.ERROR,
-                                                          "Method must consume entity class as argument type in collection",
-                                                          methodParameter.getNativeElement());
+                                    logger.error("Method must consume entity class as argument type in collection",
+                                                 methodParameter.getNativeElement());
                                 }
                             }
                             else {
                                 valid = false;
-                                messager.printMessage(Kind.ERROR,
-                                                      "Method must consume an array or collection of entity classes as a parameter",
-                                                      methodParameter.getNativeElement());
+                                logger.error("Method must consume an array or collection of entity classes as a parameter",
+                                             methodParameter.getNativeElement());
                             }
                             break;
                         default:
                             valid = false;
-                            messager.printMessage(Kind.ERROR,
-                                                  "Method must consume an array or collection of entity classes as a parameter",
-                                                  methodParameter.getNativeElement());
+                            logger.error("Method must consume an array or collection of entity classes as a parameter",
+                                         methodParameter.getNativeElement());
                             break;
                     }
                     break;

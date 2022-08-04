@@ -26,11 +26,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import static io.graphine.processor.support.EnvironmentContext.messager;
+import static io.graphine.processor.support.EnvironmentContext.logger;
 import static io.graphine.processor.support.EnvironmentContext.typeUtils;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
-import static javax.tools.Diagnostic.Kind;
 
 /**
  * @author Oleg Marchenko
@@ -56,7 +55,7 @@ public final class RepositoryFindMethodMetadataValidator extends RepositoryMetho
             case SINGULAR:
                 if (returnType.getKind() != TypeKind.DECLARED) {
                     valid = false;
-                    messager.printMessage(Kind.ERROR, "Method must return the entity class", methodElement);
+                    logger.error("Method must return the entity class", methodElement);
                 }
                 else {
                     DeclaredType declaredType = (DeclaredType) returnType;
@@ -66,7 +65,7 @@ public final class RepositoryFindMethodMetadataValidator extends RepositoryMetho
                     }
                     if (!typeUtils.isSameType(returnType, entityType)) {
                         valid = false;
-                        messager.printMessage(Kind.ERROR, "Method must return the entity class", methodElement);
+                        logger.error("Method must return the entity class", methodElement);
                     }
                 }
                 break;
@@ -77,9 +76,7 @@ public final class RepositoryFindMethodMetadataValidator extends RepositoryMetho
                         returnType = arrayType.getComponentType();
                         if (!typeUtils.isSameType(returnType, entityType)) {
                             valid = false;
-                            messager.printMessage(Kind.ERROR,
-                                                  "Method must return an array or collection of entity classes",
-                                                  methodElement);
+                            logger.error("Method must return an array or collection of entity classes", methodElement);
                         }
                         break;
                     case DECLARED:
@@ -93,23 +90,17 @@ public final class RepositoryFindMethodMetadataValidator extends RepositoryMetho
                             returnType = declaredType.getTypeArguments().get(0);
                             if (!typeUtils.isSameType(returnType, entityType)) {
                                 valid = false;
-                                messager.printMessage(Kind.ERROR,
-                                                      "Method must return an array or collection of entity classes",
-                                                      methodElement);
+                                logger.error("Method must return an array or collection of entity classes", methodElement);
                             }
                         }
                         else {
                             valid = false;
-                            messager.printMessage(Kind.ERROR,
-                                                  "Method must return an array or collection of entity classes",
-                                                  methodElement);
+                            logger.error("Method must return an array or collection of entity classes", methodElement);
                         }
                         break;
                     default:
                         valid = false;
-                        messager.printMessage(Kind.ERROR,
-                                              "Method must return an array or collection of entity classes",
-                                              methodElement);
+                        logger.error("Method must return an array or collection of entity classes", methodElement);
                         break;
                 }
                 break;
@@ -128,7 +119,7 @@ public final class RepositoryFindMethodMetadataValidator extends RepositoryMetho
         if (qualifier.isSingularForm()) {
             if (qualifier.hasDistinctSpecifier()) {
                 valid = false;
-                messager.printMessage(Kind.ERROR, "Method name must not include 'Distinct' keyword", method.getNativeElement());
+                logger.error("Method name must not include 'Distinct' keyword", method.getNativeElement());
             }
         }
 
@@ -136,17 +127,14 @@ public final class RepositoryFindMethodMetadataValidator extends RepositoryMetho
         if (isNull(condition)) {
             if (qualifier.isSingularForm() && !qualifier.hasFirstSpecifier()) {
                 valid = false;
-                messager.printMessage(Kind.ERROR,
-                                      "Method name must have condition parameters after 'By' keyword",
-                                      method.getNativeElement());
+                logger.error("Method name must have condition parameters after 'By' keyword", method.getNativeElement());
             }
             else {
                 List<ParameterMetadata> methodParameters = method.getParameters();
                 if (!methodParameters.isEmpty()) {
                     valid = false;
-                    messager.printMessage(Kind.ERROR,
-                                          "Method without condition parameters should not contain method parameters",
-                                          method.getNativeElement());
+                    logger.error("Method without condition parameters should not contain method parameters",
+                                 method.getNativeElement());
                 }
             }
         }
@@ -160,7 +148,7 @@ public final class RepositoryFindMethodMetadataValidator extends RepositoryMetho
         if (nonNull(sorting)) {
             if (qualifier.isSingularForm() && !qualifier.hasFirstSpecifier()) {
                 valid = false;
-                messager.printMessage(Kind.ERROR, "Method name must not include sorting", method.getNativeElement());
+                logger.error("Method name must not include sorting", method.getNativeElement());
             }
             if (!validateSortingParameters(method, entity)) {
                 valid = false;
@@ -168,7 +156,7 @@ public final class RepositoryFindMethodMetadataValidator extends RepositoryMetho
         }
         else {
             if (qualifier.hasFirstSpecifier()) {
-                messager.printMessage(Kind.WARNING, "Use explicit sorting in the method name", method.getNativeElement());
+                logger.warn("Use explicit sorting in the method name", method.getNativeElement());
             }
         }
 
@@ -190,9 +178,8 @@ public final class RepositoryFindMethodMetadataValidator extends RepositoryMetho
             AttributeMetadata attribute = entity.getAttribute(attributeName);
             if (isNull(attribute)) {
                 valid = false;
-                messager.printMessage(Kind.ERROR,
-                                      "Sorting parameter '" + attributeName + "' not found as entity attribute",
-                                      method.getNativeElement());
+                logger.error("Sorting parameter '" + attributeName + "' not found as entity attribute",
+                             method.getNativeElement());
                 continue;
             }
 
@@ -205,9 +192,8 @@ public final class RepositoryFindMethodMetadataValidator extends RepositoryMetho
                     AttributeMetadata innerAttribute = embeddableEntity.getAttribute(attributeName);
                     if (isNull(innerAttribute)) {
                         valid = false;
-                        messager.printMessage(Kind.ERROR,
-                                              "Sorting parameter (" + attributeName + ") not found in embeddable entity as attribute",
-                                              method.getNativeElement());
+                        logger.error("Sorting parameter (" + attributeName + ") not found in embeddable entity as attribute",
+                                     method.getNativeElement());
                         break;
                     }
 
@@ -215,9 +201,8 @@ public final class RepositoryFindMethodMetadataValidator extends RepositoryMetho
                 }
                 else {
                     valid = false;
-                    messager.printMessage(Kind.ERROR,
-                                          "Sorting parameter (" + attribute.getName() + ") is not an embeddable entity type",
-                                          method.getNativeElement());
+                    logger.error("Sorting parameter (" + attribute.getName() + ") is not an embeddable entity type",
+                                 method.getNativeElement());
                     break;
                 }
             }

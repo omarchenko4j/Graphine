@@ -4,7 +4,6 @@ import com.squareup.javapoet.*;
 
 import javax.annotation.processing.Generated;
 import javax.lang.model.element.Modifier;
-import javax.tools.Diagnostic;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -13,7 +12,7 @@ import java.time.*;
 import java.util.UUID;
 
 import static io.graphine.processor.support.EnvironmentContext.filer;
-import static io.graphine.processor.support.EnvironmentContext.messager;
+import static io.graphine.processor.support.EnvironmentContext.logger;
 
 /**
  * TODO: quick sketch - refactoring candidate
@@ -930,7 +929,7 @@ public class AttributeMappingGenerator {
             javaFile.writeTo(filer);
         }
         catch (IOException e) {
-            messager.printMessage(Diagnostic.Kind.ERROR, e.getMessage());
+            logger.error(e.getMessage());
         }
     }
 }

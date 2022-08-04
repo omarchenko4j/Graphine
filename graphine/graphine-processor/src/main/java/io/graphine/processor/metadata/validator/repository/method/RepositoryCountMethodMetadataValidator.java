@@ -16,10 +16,9 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import java.util.List;
 
-import static io.graphine.processor.support.EnvironmentContext.messager;
+import static io.graphine.processor.support.EnvironmentContext.logger;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
-import static javax.tools.Diagnostic.Kind;
 
 /**
  * @author Oleg Marchenko
@@ -39,7 +38,7 @@ public final class RepositoryCountMethodMetadataValidator extends RepositoryMeth
         if (returnType.getKind().isPrimitive()) {
             if (returnType.getKind() != TypeKind.INT && returnType.getKind() != TypeKind.LONG) {
                 valid = false;
-                messager.printMessage(Kind.ERROR, "Method must return a numeric type (int or long)", methodElement);
+                logger.error("Method must return a numeric type (int or long)", methodElement);
             }
         }
         else if (returnType.getKind() == TypeKind.DECLARED) {
@@ -47,17 +46,15 @@ public final class RepositoryCountMethodMetadataValidator extends RepositoryMeth
             String qualifiedName = ((TypeElement) declaredType.asElement()).getQualifiedName().toString();
             if (!qualifiedName.equals(Integer.class.getName()) && !qualifiedName.equals(Long.class.getName())) {
                 valid = false;
-                messager.printMessage(Kind.ERROR, "Method must return a numeric type (int or long)", methodElement);
+                logger.error("Method must return a numeric type (int or long)", methodElement);
             }
             else {
-                messager.printMessage(Kind.MANDATORY_WARNING,
-                                      "Method can return a primitive numeric type (int or long)",
-                                      methodElement);
+                logger.mandatoryWarn("Method can return a primitive numeric type (int or long)", methodElement);
             }
         }
         else {
             valid = false;
-            messager.printMessage(Kind.ERROR, "Method must return a numeric type (int or long)", methodElement);
+            logger.error("Method must return a numeric type (int or long)", methodElement);
         }
 
         return valid;
@@ -71,21 +68,15 @@ public final class RepositoryCountMethodMetadataValidator extends RepositoryMeth
 
         QualifierFragment qualifier = queryableName.getQualifier();
         if (qualifier.isSingularForm()) {
-            messager.printMessage(Kind.WARNING,
-                                  "Use a semantic prefix (countAll) in the method name",
-                                  method.getNativeElement());
+            logger.warn("Use a semantic prefix (countAll) in the method name", method.getNativeElement());
         }
         if (qualifier.hasDistinctSpecifier()) {
             valid = false;
-            messager.printMessage(Kind.ERROR,
-                                  "Method name must not include 'Distinct' keyword",
-                                  method.getNativeElement());
+            logger.error("Method name must not include 'Distinct' keyword", method.getNativeElement());
         }
         if (qualifier.hasFirstSpecifier()) {
             valid = false;
-            messager.printMessage(Kind.ERROR,
-                                  "Method name must not include 'First' keyword",
-                                  method.getNativeElement());
+            logger.error("Method name must not include 'First' keyword", method.getNativeElement());
         }
 
         ConditionFragment condition = queryableName.getCondition();
@@ -93,9 +84,8 @@ public final class RepositoryCountMethodMetadataValidator extends RepositoryMeth
             List<ParameterMetadata> methodParameters = method.getParameters();
             if (!methodParameters.isEmpty()) {
                 valid = false;
-                messager.printMessage(Kind.ERROR,
-                                      "Method without condition parameters should not contain method parameters",
-                                      method.getNativeElement());
+                logger.error("Method without condition parameters should not contain method parameters",
+                             method.getNativeElement());
             }
         }
         else {
@@ -107,7 +97,7 @@ public final class RepositoryCountMethodMetadataValidator extends RepositoryMeth
         SortingFragment sorting = queryableName.getSorting();
         if (nonNull(sorting)) {
             valid = false;
-            messager.printMessage(Kind.ERROR, "Method name must not include sorting", method.getNativeElement());
+            logger.error("Method name must not include sorting", method.getNativeElement());
         }
 
         return valid;

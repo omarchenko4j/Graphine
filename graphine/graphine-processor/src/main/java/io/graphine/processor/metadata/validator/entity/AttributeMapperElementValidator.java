@@ -17,7 +17,6 @@ import static javax.lang.model.element.ElementKind.CLASS;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 import static javax.lang.model.util.ElementFilter.methodsIn;
-import static javax.tools.Diagnostic.Kind;
 
 /**
  * @author Oleg Marchenko
@@ -28,11 +27,11 @@ public final class AttributeMapperElementValidator {
 
         if (attributeMapperElement.getKind() != CLASS) {
             valid = false;
-            messager.printMessage(Kind.ERROR, "Attribute mapper must be a class", attributeMapperElement);
+            logger.error("Attribute mapper must be a class", attributeMapperElement);
         }
         if (!attributeMapperElement.getModifiers().contains(PUBLIC)) {
             valid = false;
-            messager.printMessage(Kind.ERROR, "Attribute mapper class must be public", attributeMapperElement);
+            logger.error("Attribute mapper class must be public", attributeMapperElement);
         }
 
         TypeElement attributeTypeElement =
@@ -41,11 +40,8 @@ public final class AttributeMapperElementValidator {
             String annotationName = AttributeMapper.class.getName();
             AnnotationMirror annotation = findAnnotation(attributeTypeElement, annotationName).get();
             AnnotationValue annotationValue = findAnnotationValue(annotation, "value").get();
-            messager.printMessage(Kind.ERROR,
-                                  "Parameterized attribute type not supported",
-                                  attributeMapperElement,
-                                  annotation,
-                                  annotationValue);
+            logger.error("Parameterized attribute type not supported",
+                         attributeMapperElement, annotation, annotationValue);
             return false;
         }
 
@@ -54,50 +50,42 @@ public final class AttributeMapperElementValidator {
         ExecutableElement getterMethod = findGetterMethodBySignature(methods);
         if (isNull(getterMethod)) {
             valid = false;
-            messager.printMessage(Kind.ERROR,
-                                  String.format("Attribute mapper class must have a method with signature: " +
-                                                        "%s get...(ResultSet resultSet, int columnIndex) throws SQLException",
-                                                attributeTypeElement.getSimpleName()),
-                                  attributeMapperElement);
+            logger.error(String.format("Attribute mapper class must have a method with signature: " +
+                                               "%s get...(ResultSet resultSet, int columnIndex) throws SQLException",
+                                       attributeTypeElement.getSimpleName()),
+                         attributeMapperElement);
         }
         else {
             if (!typeUtils.isSameType(getterMethod.getReturnType(), attributeTypeElement.asType())) {
                 valid = false;
-                messager.printMessage(Kind.ERROR,
-                                      "Method must return '" + attributeTypeElement.getSimpleName() + "' type",
-                                      getterMethod);
+                logger.error("Method must return '" + attributeTypeElement.getSimpleName() + "' type", getterMethod);
             }
 
             Set<Modifier> methodModifiers = getterMethod.getModifiers();
             if (!methodModifiers.contains(PUBLIC)) {
                 valid = false;
-                messager.printMessage(Kind.ERROR, "Method must be public", getterMethod);
+                logger.error("Method must be public", getterMethod);
             }
             if (!methodModifiers.contains(STATIC)) {
                 valid = false;
-                messager.printMessage(Kind.ERROR, "Method must be static", getterMethod);
+                logger.error("Method must be static", getterMethod);
             }
 
             List<? extends TypeMirror> methodThrownTypes = getterMethod.getThrownTypes();
             if (methodThrownTypes.isEmpty()) {
-                messager.printMessage(Kind.MANDATORY_WARNING,
-                                      "Do not handle SQL exceptions manually. Throw them outside: throws SQLException",
-                                      getterMethod);
+                logger.mandatoryWarn("Do not handle SQL exceptions manually. Throw them outside: throws SQLException",
+                                     getterMethod);
             }
             else if (methodThrownTypes.size() > 1) {
                 valid = false;
-                messager.printMessage(Kind.ERROR,
-                                      "Throwing only SQL exceptions is supported. Use: throws SQLException",
-                                      getterMethod);
+                logger.error("Throwing only SQL exceptions is supported. Use: throws SQLException", getterMethod);
             }
             else {
                 TypeMirror thrownType = methodThrownTypes.get(0);
                 TypeElement sqlExceptionElement = elementUtils.getTypeElement("java.sql.SQLException");
                 if (!typeUtils.isSameType(thrownType, sqlExceptionElement.asType())) {
                     valid = false;
-                    messager.printMessage(Kind.ERROR,
-                                          "Throwing only SQL exceptions is supported. Use: throws SQLException",
-                                          getterMethod);
+                    logger.error("Throwing only SQL exceptions is supported. Use: throws SQLException", getterMethod);
                 }
             }
         }
@@ -105,43 +93,37 @@ public final class AttributeMapperElementValidator {
         ExecutableElement setterMethod = findSetterMethodBySignature(methods, attributeTypeElement);
         if (isNull(setterMethod)) {
             valid = false;
-            messager.printMessage(Kind.ERROR,
-                                  String.format("Attribute mapper class must have a method with signature: " +
-                                                        "void set...(PreparedStatement statement, int columnIndex, %s value) throws SQLException",
-                                                attributeTypeElement.getSimpleName()),
-                                  attributeMapperElement);
+            logger.error(String.format("Attribute mapper class must have a method with signature: " +
+                                               "void set...(PreparedStatement statement, int columnIndex, %s value) throws SQLException",
+                                       attributeTypeElement.getSimpleName()),
+                         attributeMapperElement);
         }
         else {
             Set<Modifier> methodModifiers = setterMethod.getModifiers();
             if (!methodModifiers.contains(PUBLIC)) {
                 valid = false;
-                messager.printMessage(Kind.ERROR, "Method must be public", setterMethod);
+                logger.error("Method must be public", setterMethod);
             }
             if (!methodModifiers.contains(STATIC)) {
                 valid = false;
-                messager.printMessage(Kind.ERROR, "Method must be static", setterMethod);
+                logger.error("Method must be static", setterMethod);
             }
 
             List<? extends TypeMirror> methodThrownTypes = setterMethod.getThrownTypes();
             if (methodThrownTypes.isEmpty()) {
-                messager.printMessage(Kind.MANDATORY_WARNING,
-                                      "Do not handle SQL exceptions manually. Throw them outside: throws SQLException",
-                                      setterMethod);
+                logger.mandatoryWarn("Do not handle SQL exceptions manually. Throw them outside: throws SQLException",
+                                     setterMethod);
             }
             else if (methodThrownTypes.size() > 1) {
                 valid = false;
-                messager.printMessage(Kind.ERROR,
-                                      "Throwing only SQL exceptions is supported. Use: throws SQLException",
-                                      setterMethod);
+                logger.error("Throwing only SQL exceptions is supported. Use: throws SQLException", setterMethod);
             }
             else {
                 TypeMirror thrownType = methodThrownTypes.get(0);
                 TypeElement sqlExceptionElement = elementUtils.getTypeElement("java.sql.SQLException");
                 if (!typeUtils.isSameType(thrownType, sqlExceptionElement.asType())) {
                     valid = false;
-                    messager.printMessage(Kind.ERROR,
-                                          "Throwing only SQL exceptions is supported. Use: throws SQLException",
-                                          setterMethod);
+                    logger.error("Throwing only SQL exceptions is supported. Use: throws SQLException", setterMethod);
                 }
             }
         }

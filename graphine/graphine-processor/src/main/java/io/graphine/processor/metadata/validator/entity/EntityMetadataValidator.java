@@ -12,12 +12,11 @@ import javax.lang.model.element.VariableElement;
 import java.util.Collection;
 import java.util.List;
 
-import static io.graphine.processor.support.EnvironmentContext.messager;
+import static io.graphine.processor.support.EnvironmentContext.logger;
 import static io.graphine.processor.util.AnnotationUtils.findAnnotation;
 import static io.graphine.processor.util.AnnotationUtils.findAnnotationValue;
 import static io.graphine.processor.util.StringUtils.isEmpty;
 import static java.util.Objects.isNull;
-import static javax.tools.Diagnostic.Kind;
 
 /**
  * @author Oleg Marchenko
@@ -53,9 +52,8 @@ public final class EntityMetadataValidator {
                         findAnnotation(attributeElement, Attribute.class.getName()).get();
                 AnnotationValue attributeAnnotationValue =
                         findAnnotationValue(attributeAnnotation, "mapper").get();
-                messager.printMessage(Kind.ERROR,
-                                      "Class '" + attributeMapperName + "' must be annotated with @AttributeMapper",
-                                      attributeElement, attributeAnnotation, attributeAnnotationValue);
+                logger.error("Class '" + attributeMapperName + "' must be annotated with @AttributeMapper",
+                             attributeElement, attributeAnnotation, attributeAnnotationValue);
                 return false;
             }
 

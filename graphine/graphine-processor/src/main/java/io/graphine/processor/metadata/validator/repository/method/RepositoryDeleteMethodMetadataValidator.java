@@ -8,10 +8,9 @@ import io.graphine.processor.metadata.model.repository.method.name.fragment.Qual
 import io.graphine.processor.metadata.model.repository.method.name.fragment.SortingFragment;
 import io.graphine.processor.metadata.registry.EntityMetadataRegistry;
 
-import static io.graphine.processor.support.EnvironmentContext.messager;
+import static io.graphine.processor.support.EnvironmentContext.logger;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
-import static javax.tools.Diagnostic.Kind;
 
 /**
  * @author Oleg Marchenko
@@ -30,11 +29,11 @@ public final class RepositoryDeleteMethodMetadataValidator extends RepositoryMod
         QualifierFragment qualifier = queryableName.getQualifier();
         if (qualifier.hasDistinctSpecifier()) {
             valid = false;
-            messager.printMessage(Kind.ERROR, "Method name must not include 'Distinct' keyword", method.getNativeElement());
+            logger.error("Method name must not include 'Distinct' keyword", method.getNativeElement());
         }
         if (qualifier.hasFirstSpecifier()) {
             valid = false;
-            messager.printMessage(Kind.ERROR, "Method name must not include 'First' keyword", method.getNativeElement());
+            logger.error("Method name must not include 'First' keyword", method.getNativeElement());
         }
 
         ConditionFragment condition = queryableName.getCondition();
@@ -52,7 +51,7 @@ public final class RepositoryDeleteMethodMetadataValidator extends RepositoryMod
         SortingFragment sorting = queryableName.getSorting();
         if (nonNull(sorting)) {
             valid = false;
-            messager.printMessage(Kind.ERROR, "Method name must not include sorting", method.getNativeElement());
+            logger.error("Method name must not include sorting", method.getNativeElement());
         }
 
         return valid;

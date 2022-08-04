@@ -27,11 +27,10 @@ import java.util.Set;
 
 import static io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment.AndPredicate;
 import static io.graphine.processor.metadata.model.repository.method.name.fragment.ConditionFragment.OperatorType;
-import static io.graphine.processor.support.EnvironmentContext.messager;
+import static io.graphine.processor.support.EnvironmentContext.logger;
 import static io.graphine.processor.support.EnvironmentContext.typeUtils;
 import static java.util.Objects.isNull;
 import static java.util.stream.Collectors.toList;
-import static javax.tools.Diagnostic.Kind;
 
 /**
  * @author Oleg Marchenko
@@ -81,11 +80,9 @@ public abstract class RepositoryMethodMetadataValidator {
 
         int numberOfMethodParameters = methodParameters.size();
         if (numberOfConditionParameters != numberOfMethodParameters) {
-            messager.printMessage(Kind.ERROR,
-                                  "Number of condition parameters (" + numberOfConditionParameters +
-                                          ") is not equal to the number of method parameters (" +
-                                          numberOfMethodParameters + ")",
-                                  method.getNativeElement());
+            logger.error("Number of condition parameters (" + numberOfConditionParameters +
+                                 ") is not equal to the number of method parameters (" + numberOfMethodParameters + ")",
+                         method.getNativeElement());
             return false;
         }
 
@@ -99,16 +96,14 @@ public abstract class RepositoryMethodMetadataValidator {
             AttributeMetadata attribute = entity.getAttribute(attributeName);
             if (isNull(attribute)) {
                 valid = false;
-                messager.printMessage(Kind.ERROR,
-                                      "Condition parameter (" + attributeName + ") not found as entity attribute",
-                                      method.getNativeElement());
+                logger.error("Condition parameter (" + attributeName + ") not found as entity attribute", method.getNativeElement());
                 continue;
             }
             if (attribute instanceof EmbeddedIdentifierAttributeMetadata && attributeNames.size() > 1) {
                 valid = false;
-                messager.printMessage(Kind.ERROR,
-                                      "Condition parameter (" + attributeName + ") is embedded identifier attribute which is atomic (nested attributes cannot be used)",
-                                      method.getNativeElement());
+                logger.error("Condition parameter (" + attributeName +
+                                     ") is embedded identifier attribute which is atomic (nested attributes cannot be used)",
+                             method.getNativeElement());
                 continue;
             }
 
@@ -121,9 +116,8 @@ public abstract class RepositoryMethodMetadataValidator {
                     AttributeMetadata innerAttribute = embeddableEntity.getAttribute(attributeName);
                     if (isNull(innerAttribute)) {
                         valid = false;
-                        messager.printMessage(Kind.ERROR,
-                                              "Condition parameter (" + attributeName + ") not found as entity attribute",
-                                              method.getNativeElement());
+                        logger.error("Condition parameter (" + attributeName + ") not found as entity attribute",
+                                     method.getNativeElement());
                         break;
                     }
 
@@ -131,9 +125,8 @@ public abstract class RepositoryMethodMetadataValidator {
                 }
                 else {
                     valid = false;
-                    messager.printMessage(Kind.ERROR,
-                                          "Condition parameter (" + attribute.getName() + ") is not an embeddable entity type",
-                                          method.getNativeElement());
+                    logger.error("Condition parameter (" + attribute.getName() + ") is not an embeddable entity type",
+                                 method.getNativeElement());
                     break;
                 }
             }
@@ -162,11 +155,10 @@ public abstract class RepositoryMethodMetadataValidator {
                                         parameterType = typeUtils.boxedClass(primitiveType).asType();
                                         if (!typeUtils.isSameType(parameterType, attributeType)) {
                                             valid = false;
-                                            messager.printMessage(Kind.ERROR,
-                                                                  "Method parameter (" + methodParameter.getName() +
-                                                                  ") has an incompatible array type with entity attribute type (" +
-                                                                  attributeName + ")",
-                                                                  methodParameter.getNativeElement());
+                                            logger.error("Method parameter (" + methodParameter.getName() +
+                                                                 ") has an incompatible array type with entity attribute type (" +
+                                                                 attributeName + ")",
+                                                         methodParameter.getNativeElement());
                                         }
                                     }
                                     else if (attributeType.getKind().isPrimitive()) {
@@ -174,20 +166,18 @@ public abstract class RepositoryMethodMetadataValidator {
                                         attributeType = typeUtils.boxedClass(primitiveType).asType();
                                         if (!typeUtils.isSameType(parameterType, attributeType)) {
                                             valid = false;
-                                            messager.printMessage(Kind.ERROR,
-                                                                  "Method parameter (" + methodParameter.getName() +
-                                                                  ") has an incompatible array type with entity attribute type (" +
-                                                                  attributeName + ")",
-                                                                  methodParameter.getNativeElement());
+                                            logger.error("Method parameter (" + methodParameter.getName() +
+                                                                 ") has an incompatible array type with entity attribute type (" +
+                                                                 attributeName + ")",
+                                                         methodParameter.getNativeElement());
                                         }
                                     }
                                     else {
                                         valid = false;
-                                        messager.printMessage(Kind.ERROR,
-                                                              "Method parameter (" + methodParameter.getName() +
-                                                              ") has an incompatible array type with entity attribute type (" +
-                                                              attributeName + ")",
-                                                              methodParameter.getNativeElement());
+                                        logger.error("Method parameter (" + methodParameter.getName() +
+                                                             ") has an incompatible array type with entity attribute type (" +
+                                                             attributeName + ")",
+                                                     methodParameter.getNativeElement());
                                     }
                                 }
                                 break;
@@ -205,37 +195,33 @@ public abstract class RepositoryMethodMetadataValidator {
                                             attributeType = typeUtils.boxedClass(primitiveType).asType();
                                             if (!typeUtils.isSameType(parameterType, attributeType)) {
                                                 valid = false;
-                                                messager.printMessage(Kind.ERROR,
-                                                                      "Method parameter (" + methodParameter.getName() +
-                                                                      ") has an incompatible argument type in collection with entity attribute type (" +
-                                                                      attributeName + ")",
-                                                                      methodParameter.getNativeElement());
+                                                logger.error("Method parameter (" + methodParameter.getName() +
+                                                                     ") has an incompatible argument type in collection with entity attribute type (" +
+                                                                     attributeName + ")",
+                                                             methodParameter.getNativeElement());
                                             }
                                         }
                                         else {
                                             valid = false;
-                                            messager.printMessage(Kind.ERROR,
-                                                                  "Method parameter (" + methodParameter.getName() +
-                                                                  ") has an incompatible argument type in collection with entity attribute type (" +
-                                                                  attributeName + ")",
-                                                                  methodParameter.getNativeElement());
+                                            logger.error("Method parameter (" + methodParameter.getName() +
+                                                                 ") has an incompatible argument type in collection with entity attribute type (" +
+                                                                 attributeName + ")",
+                                                         methodParameter.getNativeElement());
                                         }
                                     }
                                 }
                                 else {
                                     valid = false;
-                                    messager.printMessage(Kind.ERROR,
-                                                          "Condition parameter with the predicate (" + operator.getKeyword() +
-                                                          ") must match the array or collection type in the method parameter",
-                                                          methodParameter.getNativeElement());
+                                    logger.error("Condition parameter with the predicate (" + operator.getKeyword() +
+                                                         ") must match the array or collection type in the method parameter",
+                                                 methodParameter.getNativeElement());
                                 }
                                 break;
                             default:
                                 valid = false;
-                                messager.printMessage(Kind.ERROR,
-                                                      "Condition parameter with the predicate (" + operator.getKeyword() +
-                                                      ") must match the array or collection type in the method parameter",
-                                                      methodParameter.getNativeElement());
+                                logger.error("Condition parameter with the predicate (" + operator.getKeyword() +
+                                                     ") must match the array or collection type in the method parameter",
+                                             methodParameter.getNativeElement());
                                 break;
                         }
                         break;
@@ -249,19 +235,17 @@ public abstract class RepositoryMethodMetadataValidator {
                             DeclaredType declaredType = (DeclaredType) attributeType;
                             String qualifiedName = ((TypeElement) declaredType.asElement()).getQualifiedName().toString();
                             if (!qualifiedName.equals(String.class.getName())) {
-                                messager.printMessage(Kind.MANDATORY_WARNING,
-                                                      "Operator '" + operator.getKeyword() +
-                                                      "' cannot be used with not string entity attribute (" +
-                                                      attributeType + " " + attributeName + ")",
-                                                      method.getNativeElement());
+                                logger.mandatoryWarn("Operator '" + operator.getKeyword() +
+                                                             "' cannot be used with not string entity attribute (" +
+                                                             attributeType + " " + attributeName + ")",
+                                                     method.getNativeElement());
                             }
                         }
                         else {
-                            messager.printMessage(Kind.MANDATORY_WARNING,
-                                                  "Operator '" + operator.getKeyword() +
-                                                  "' cannot be used with not string entity attribute (" +
-                                                  attributeType + " " + attributeName + ")",
-                                                  method.getNativeElement());
+                            logger.mandatoryWarn("Operator '" + operator.getKeyword() +
+                                                         "' cannot be used with not string entity attribute (" +
+                                                         attributeType + " " + attributeName + ")",
+                                                 method.getNativeElement());
                         }
                         break;
                     case BEFORE:
@@ -276,19 +260,17 @@ public abstract class RepositoryMethodMetadataValidator {
                                 !qualifiedName.equals(LocalDate.class.getName()) &&
                                 !qualifiedName.equals(LocalTime.class.getName()) &&
                                 !qualifiedName.equals(LocalDateTime.class.getName())) {
-                                messager.printMessage(Kind.MANDATORY_WARNING,
-                                                      "Operator '" + operator.getKeyword() +
-                                                      "' cannot be used with not temporary entity attribute (" +
-                                                      attributeType + " " + attributeName + ")",
-                                                      method.getNativeElement());
+                                logger.mandatoryWarn("Operator '" + operator.getKeyword() +
+                                                             "' cannot be used with not temporary entity attribute (" +
+                                                             attributeType + " " + attributeName + ")",
+                                                     method.getNativeElement());
                             }
                         }
                         else {
-                            messager.printMessage(Kind.MANDATORY_WARNING,
-                                                  "Operator '" + operator.getKeyword() +
-                                                  "' cannot be used with not temporary entity attribute (" +
-                                                  attributeType + " " + attributeName + ")",
-                                                  method.getNativeElement());
+                            logger.mandatoryWarn("Operator '" + operator.getKeyword() +
+                                                         "' cannot be used with not temporary entity attribute (" +
+                                                         attributeType + " " + attributeName + ")",
+                                                 method.getNativeElement());
                         }
                         break;
                     default:
@@ -298,11 +280,10 @@ public abstract class RepositoryMethodMetadataValidator {
                                 parameterType = typeUtils.boxedClass(primitiveType).asType();
                                 if (!typeUtils.isSameType(parameterType, attributeType)) {
                                     valid = false;
-                                    messager.printMessage(Kind.ERROR,
-                                                          "Method parameter (" + methodParameter.getName() +
-                                                          ") has an incompatible type with entity attribute type (" +
-                                                          attributeName + ")",
-                                                          methodParameter.getNativeElement());
+                                    logger.error("Method parameter (" + methodParameter.getName() +
+                                                         ") has an incompatible type with entity attribute type (" +
+                                                         attributeName + ")",
+                                                 methodParameter.getNativeElement());
                                 }
                             }
                             else if (attributeType.getKind().isPrimitive()) {
@@ -310,27 +291,24 @@ public abstract class RepositoryMethodMetadataValidator {
                                 attributeType = typeUtils.boxedClass(primitiveType).asType();
                                 if (!typeUtils.isSameType(parameterType, attributeType)) {
                                     valid = false;
-                                    messager.printMessage(Kind.ERROR,
-                                                          "Method parameter (" + methodParameter.getName() +
-                                                          ") has an incompatible type with entity attribute type (" +
-                                                          attributeName + ")",
-                                                          methodParameter.getNativeElement());
+                                    logger.error("Method parameter (" + methodParameter.getName() +
+                                                         ") has an incompatible type with entity attribute type (" +
+                                                         attributeName + ")",
+                                                 methodParameter.getNativeElement());
                                 }
                                 else {
-                                    messager.printMessage(Kind.MANDATORY_WARNING,
-                                                          "Method parameter (" + methodParameter.getName() +
-                                                          ") can be primitive because entity attribute (" +
-                                                          attributeName + ") is primitive",
-                                                          methodParameter.getNativeElement());
+                                    logger.mandatoryWarn("Method parameter (" + methodParameter.getName() +
+                                                                 ") can be primitive because entity attribute (" +
+                                                                 attributeName + ") is primitive",
+                                                         methodParameter.getNativeElement());
                                 }
                             }
                             else {
                                 valid = false;
-                                messager.printMessage(Kind.ERROR,
-                                                      "Method parameter (" + methodParameter.getName() +
-                                                      ") has an incompatible type with entity attribute type (" +
-                                                      attributeName + ")",
-                                                      methodParameter.getNativeElement());
+                                logger.error("Method parameter (" + methodParameter.getName() +
+                                                     ") has an incompatible type with entity attribute type (" +
+                                                     attributeName + ")",
+                                             methodParameter.getNativeElement());
                             }
                         }
                         break;
@@ -346,19 +324,17 @@ public abstract class RepositoryMethodMetadataValidator {
                         DeclaredType declaredType = (DeclaredType) attributeType;
                         String qualifiedName = ((TypeElement) declaredType.asElement()).getQualifiedName().toString();
                         if (!qualifiedName.equals(String.class.getName())) {
-                            messager.printMessage(Kind.MANDATORY_WARNING,
-                                                  "Operator '" + operator.getKeyword() +
-                                                  "' cannot be used with not string entity attribute (" +
-                                                  attributeType + " " + attributeName + ")",
-                                                  method.getNativeElement());
+                            logger.mandatoryWarn("Operator '" + operator.getKeyword() +
+                                                         "' cannot be used with not string entity attribute (" +
+                                                         attributeType + " " + attributeName + ")",
+                                                 method.getNativeElement());
                         }
                     }
                     else {
-                        messager.printMessage(Kind.MANDATORY_WARNING,
-                                              "Operator '" + operator.getKeyword() +
-                                              "' cannot be used with not string entity attribute (" +
-                                              attributeType + " " + attributeName + ")",
-                                              method.getNativeElement());
+                        logger.mandatoryWarn("Operator '" + operator.getKeyword() +
+                                                     "' cannot be used with not string entity attribute (" +
+                                                     attributeType + " " + attributeName + ")",
+                                             method.getNativeElement());
                     }
                     break;
                 case TRUE:
@@ -368,30 +344,27 @@ public abstract class RepositoryMethodMetadataValidator {
                             DeclaredType declaredType = (DeclaredType) attributeType;
                             String qualifiedName = ((TypeElement) declaredType.asElement()).getQualifiedName().toString();
                             if (!qualifiedName.equals(Boolean.class.getName())) {
-                                messager.printMessage(Kind.MANDATORY_WARNING,
-                                                      "Operator '" + operator.getKeyword() +
-                                                      "' cannot be used with not boolean entity attribute (" +
-                                                      attributeType + " " + attributeName + ")",
-                                                      method.getNativeElement());
+                                logger.mandatoryWarn("Operator '" + operator.getKeyword() +
+                                                             "' cannot be used with not boolean entity attribute (" +
+                                                             attributeType + " " + attributeName + ")",
+                                                     method.getNativeElement());
                             }
                         }
                         else {
-                            messager.printMessage(Kind.MANDATORY_WARNING,
-                                                  "Operator '" + operator.getKeyword() +
-                                                  "' cannot be used with not boolean entity attribute (" +
-                                                  attributeType + " " + attributeName + ")",
-                                                  method.getNativeElement());
+                            logger.mandatoryWarn("Operator '" + operator.getKeyword() +
+                                                         "' cannot be used with not boolean entity attribute (" +
+                                                         attributeType + " " + attributeName + ")",
+                                                 method.getNativeElement());
                         }
                     }
                     break;
                 case NULL:
                 case NOT_NULL:
                     if (attributeType.getKind().isPrimitive()) {
-                        messager.printMessage(Kind.MANDATORY_WARNING,
-                                              "Operator '" + operator.getKeyword() +
-                                              "' cannot be used with primitive entity attribute (" +
-                                              attributeType + " " + attributeName + ")",
-                                              method.getNativeElement());
+                        logger.mandatoryWarn("Operator '" + operator.getKeyword() +
+                                                     "' cannot be used with primitive entity attribute (" +
+                                                     attributeType + " " + attributeName + ")",
+                                             method.getNativeElement());
                     }
                     break;
             }

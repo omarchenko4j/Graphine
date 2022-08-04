@@ -11,13 +11,12 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import java.util.*;
 
-import static io.graphine.processor.support.EnvironmentContext.messager;
+import static io.graphine.processor.support.EnvironmentContext.logger;
 import static io.graphine.processor.support.EnvironmentContext.typeUtils;
 import static javax.lang.model.element.ElementKind.CLASS;
 import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.util.ElementFilter.*;
-import static javax.tools.Diagnostic.Kind;
 
 /**
  * @author Oleg Marchenko
@@ -28,17 +27,17 @@ public final class EmbeddableEntityElementValidator {
 
         if (embeddableEntityElement.getKind() != CLASS) {
             valid = false;
-            messager.printMessage(Kind.ERROR, "Embeddable entity must be a class", embeddableEntityElement);
+            logger.error("Embeddable entity must be a class", embeddableEntityElement);
         }
 
         Set<Modifier> modifiers = embeddableEntityElement.getModifiers();
         if (!modifiers.contains(PUBLIC)) {
             valid = false;
-            messager.printMessage(Kind.ERROR, "Embeddable entity class must be public", embeddableEntityElement);
+            logger.error("Embeddable entity class must be public", embeddableEntityElement);
         }
         if (modifiers.contains(ABSTRACT)) {
             valid = false;
-            messager.printMessage(Kind.ERROR, "Embeddable entity class should not be abstract", embeddableEntityElement);
+            logger.error("Embeddable entity class should not be abstract", embeddableEntityElement);
         }
 
         List<VariableElement> fields = fieldsIn(embeddableEntityElement.getEnclosedElements());
@@ -49,7 +48,7 @@ public final class EmbeddableEntityElementValidator {
                 .count();
         if (numberOfIdentifiers > 0) {
             valid = false;
-            messager.printMessage(Kind.ERROR, "Embeddable entity class must not have an identifier", embeddableEntityElement);
+            logger.error("Embeddable entity class must not have an identifier", embeddableEntityElement);
         }
 
         List<ExecutableElement> constructors = constructorsIn(embeddableEntityElement.getEnclosedElements());
@@ -61,7 +60,7 @@ public final class EmbeddableEntityElementValidator {
                 .count();
         if (numberOfDefaultConstructors == 0) {
             valid = false;
-            messager.printMessage(Kind.ERROR, "Embeddable entity class must have a default constructor", embeddableEntityElement);
+            logger.error("Embeddable entity class must have a default constructor", embeddableEntityElement);
         }
 
         List<ExecutableElement> methods = methodsIn(embeddableEntityElement.getEnclosedElements());
@@ -85,15 +84,15 @@ public final class EmbeddableEntityElementValidator {
 
             if (!hasGetter && !hasSetter) {
                 valid = false;
-                messager.printMessage(Kind.ERROR, "Attribute must have a getter and setter", field);
+                logger.error("Attribute must have a getter and setter", field);
             }
             else if (!hasGetter) {
                 valid = false;
-                messager.printMessage(Kind.ERROR, "Attribute must have a getter", field);
+                logger.error("Attribute must have a getter", field);
             }
             else if (!hasSetter) {
                 valid = false;
-                messager.printMessage(Kind.ERROR, "Attribute must have a setter", field);
+                logger.error("Attribute must have a setter", field);
             }
 
             if (hasGetter) {
@@ -105,7 +104,7 @@ public final class EmbeddableEntityElementValidator {
                                                    getter.getParameters().isEmpty());
                 if (!getterMatched) {
                     valid = false;
-                    messager.printMessage(Kind.ERROR, "Attribute must have a getter with the same return value and no parameters", field);
+                    logger.error("Attribute must have a getter with the same return value and no parameters", field);
                 }
             }
 
@@ -123,7 +122,7 @@ public final class EmbeddableEntityElementValidator {
                                });
                 if (!setterMatched) {
                     valid = false;
-                    messager.printMessage(Kind.ERROR, "Attribute must have a setter with one parameter and with the same type", field);
+                    logger.error("Attribute must have a setter with one parameter and with the same type", field);
                 }
             }
         }
