@@ -4,11 +4,9 @@ import com.squareup.javapoet.*;
 
 import javax.annotation.processing.Generated;
 import javax.lang.model.element.Modifier;
-import java.io.IOException;
 import java.util.StringJoiner;
 
-import static io.graphine.processor.support.EnvironmentContext.filer;
-import static io.graphine.processor.support.EnvironmentContext.logger;
+import static io.graphine.processor.support.EnvironmentContext.javaFiler;
 
 /**
  * @author Oleg Marchenko
@@ -61,16 +59,6 @@ public class WildcardRepeaterGenerator {
                                      .addStatement("return joiner.toString()")
                                      .build());
 
-        // TODO: move to a separate helper method
-        JavaFile javaFile = JavaFile.builder(WildcardRepeater.packageName(), classBuilder.build())
-                                    .skipJavaLangImports(true)
-                                    .indent("\t")
-                                    .build();
-        try {
-            javaFile.writeTo(filer);
-        }
-        catch (IOException e) {
-            logger.error(e.getMessage());
-        }
+        javaFiler.create(WildcardRepeater.packageName(), classBuilder.build());
     }
 }

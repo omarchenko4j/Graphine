@@ -1,13 +1,14 @@
 package io.graphine.processor.code.generator.infrastructure;
 
-import com.squareup.javapoet.*;
+import com.squareup.javapoet.AnnotationSpec;
+import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.TypeSpec;
 
 import javax.annotation.processing.Generated;
 import javax.lang.model.element.Modifier;
-import java.io.IOException;
 
-import static io.graphine.processor.support.EnvironmentContext.filer;
-import static io.graphine.processor.support.EnvironmentContext.logger;
+import static io.graphine.processor.support.EnvironmentContext.javaFiler;
 
 /**
  * TODO: quick sketch - refactoring candidate
@@ -19,28 +20,8 @@ public class GeneralExceptionGenerator {
     public static final ClassName NonUniqueResultException = ClassName.get("io.graphine.core", "NonUniqueResultException");
 
     public void generate() {
-        // TODO: move to a separate helper method
-        JavaFile javaFile = JavaFile.builder(GraphineException.packageName(), generateGraphineException())
-                                    .skipJavaLangImports(true)
-                                    .indent("\t")
-                                    .build();
-        try {
-            javaFile.writeTo(filer);
-        }
-        catch (IOException e) {
-            logger.error(e.getMessage());
-        }
-        // TODO: move to a separate helper method
-        javaFile = JavaFile.builder(NonUniqueResultException.packageName(), generateNonUniqueResultException())
-                                    .skipJavaLangImports(true)
-                                    .indent("\t")
-                                    .build();
-        try {
-            javaFile.writeTo(filer);
-        }
-        catch (IOException e) {
-            logger.error(e.getMessage());
-        }
+        javaFiler.create(GraphineException.packageName(), generateGraphineException());
+        javaFiler.create(NonUniqueResultException.packageName(), generateNonUniqueResultException());
     }
 
     private TypeSpec generateGraphineException() {

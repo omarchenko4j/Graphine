@@ -4,15 +4,13 @@ import com.squareup.javapoet.*;
 
 import javax.annotation.processing.Generated;
 import javax.lang.model.element.Modifier;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.*;
 import java.time.*;
 import java.util.UUID;
 
-import static io.graphine.processor.support.EnvironmentContext.filer;
-import static io.graphine.processor.support.EnvironmentContext.logger;
+import static io.graphine.processor.support.EnvironmentContext.javaFiler;
 
 /**
  * TODO: quick sketch - refactoring candidate
@@ -920,16 +918,6 @@ public class AttributeMappingGenerator {
                         .addStatement("statement.setObject(columnIndex, null)"); // TODO: switch to using PreparedStatement.setNull(..)
         classBuilder.addMethod(setNullMethodBuilder.build());
 
-        // TODO: move to a separate helper method
-        JavaFile javaFile = JavaFile.builder(AttributeMappers.packageName(), classBuilder.build())
-                .skipJavaLangImports(true)
-                .indent("\t")
-                .build();
-        try {
-            javaFile.writeTo(filer);
-        }
-        catch (IOException e) {
-            logger.error(e.getMessage());
-        }
+        javaFiler.create(AttributeMappers.packageName(), classBuilder.build());
     }
 }

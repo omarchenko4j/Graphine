@@ -1,6 +1,5 @@
 package io.graphine.processor;
 
-import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.TypeSpec;
 import io.graphine.processor.code.collector.OriginatingElementDependencyCollector;
 import io.graphine.processor.code.generator.infrastructure.AttributeMappingGenerator;
@@ -39,12 +38,11 @@ import io.graphine.processor.support.naming.pipeline.TableNamingPipeline;
 
 import javax.annotation.processing.*;
 import javax.lang.model.element.TypeElement;
-import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-import static io.graphine.processor.support.EnvironmentContext.filer;
+import static io.graphine.processor.support.EnvironmentContext.javaFiler;
 import static io.graphine.processor.support.EnvironmentContext.logger;
 import static javax.lang.model.SourceVersion.RELEASE_11;
 
@@ -214,18 +212,7 @@ public class GraphineProcessor extends AbstractProcessor {
                                                           statementMappingRenderer,
                                                           resultSetMappingRenderer);
             TypeSpec typeSpec = repositoryImplementationGenerator.generate(repository);
-
-            // TODO: move to a separate helper method
-            JavaFile javaFile = JavaFile.builder(repository.getPackageName(), typeSpec)
-                                        .skipJavaLangImports(true)
-                                        .indent("\t")
-                                        .build();
-            try {
-                javaFile.writeTo(filer);
-            }
-            catch (IOException e) {
-                logger.error(e.getMessage(), repository.getNativeElement());
-            }
+            javaFiler.create(repository.getPackageName(), typeSpec);
         }
     }
 }
