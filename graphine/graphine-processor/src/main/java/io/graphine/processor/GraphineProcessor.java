@@ -75,12 +75,18 @@ public class GraphineProcessor extends AbstractProcessor {
 
         // Step 0. Collecting attribute mapper metadata
         AttributeMapperMetadataRegistry attributeMapperMetadataRegistry = collectAttributeMapperMetadata(roundEnv);
+        attributeMapperMetadataRegistry.getAttributeMappers()
+                                       .forEach(attributeMapper -> logger.debug("Found attribute mapper: " + attributeMapper));
 
         // Step 1. Collecting entity metadata
         EntityMetadataRegistry entityMetadataRegistry = collectEntityMetadata(roundEnv);
+        entityMetadataRegistry.getEntities()
+                              .forEach(entity -> logger.debug("Found entity: " + entity));
 
         // Step 2. Collecting repository metadata
         RepositoryMetadataRegistry repositoryMetadataRegistry = collectRepositoryMetadata(roundEnv);
+        repositoryMetadataRegistry.getRepositories()
+                                  .forEach(repository -> logger.debug("Found repository: " + repository));
 
         // Step 3. Validating entity and repository metadata
         boolean allEntitiesAreValid =
@@ -95,19 +101,11 @@ public class GraphineProcessor extends AbstractProcessor {
         // Step 4. Generating repository native queries
         RepositoryNativeQueryRegistryStorage nativeQueryRegistryStorage =
                 generateNativeQueries(repositoryMetadataRegistry.getRepositories(), entityMetadataRegistry);
-
-        // TODO: Hide logging behind flag option (like graphine.debug=true/false)
-        attributeMapperMetadataRegistry.getAttributeMappers()
-                                       .forEach(attributeMapper -> logger.info("Found attribute mapper: " + attributeMapper));
-        entityMetadataRegistry.getEntities()
-                              .forEach(entity -> logger.info("Found entity: " + entity));
-        repositoryMetadataRegistry.getRepositories()
-                                  .forEach(repository -> logger.info("Found repository: " + repository));
         nativeQueryRegistryStorage.getRegistries()
                                   .stream()
                                   .map(RepositoryNativeQueryRegistry::getQueries)
                                   .flatMap(Collection::stream)
-                                  .forEach(query -> logger.info("Generated query: " + query.getValue()));
+                                  .forEach(query -> logger.debug("Generated query: " + query.getValue()));
 
         // Step 5. Generating infrastructure code
         generateInfrastructureCode();

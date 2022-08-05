@@ -10,6 +10,7 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import java.util.Map;
 
+import static io.graphine.processor.GraphineOptions.DEBUG;
 import static javax.tools.Diagnostic.Kind;
 
 /**
@@ -37,8 +38,11 @@ public final class EnvironmentContext {
             this.messager = messager;
         }
 
-        public void info(String message) {
-            messager.printMessage(Kind.NOTE, message);
+        public void debug(String message) {
+            boolean debug = DEBUG.value(Boolean::parseBoolean);
+            if (debug) {
+                messager.printMessage(Kind.NOTE, message);
+            }
         }
 
         public void warn(String message, Element element) {

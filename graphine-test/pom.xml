@@ -87,6 +87,7 @@
           </annotationProcessorPaths>
           <compilerArgs>
             <arg>-Agraphine.default_schema=public</arg>
+            <arg>-Agraphine.debug=true</arg>
           </compilerArgs>
         </configuration>
       </plugin>
