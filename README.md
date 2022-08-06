@@ -6,8 +6,8 @@
 
 Graphine is a *Java annotation processor* that provides
 an [ORM (Object/Relational Mapping)](https://en.wikipedia.org/wiki/Object%E2%80%93relational_mapping)
-implementation by generating native human-readable JDBC (Java Database Connectivity) code. It does not support *lazy loading*, *caching*,
-*dirty checking* and other advanced *JPA features*.
+implementation by generating native human-readable [JDBC (Java Database Connectivity)](https://en.wikipedia.org/wiki/Java_Database_Connectivity) code. 
+It does not support *lazy loading*, *caching*, *dirty checking* and other advanced [JPA (Java Persistence API)](https://en.wikipedia.org/wiki/Jakarta_Persistence) features.
 
 Graphine focuses on some high-level concepts
 from [DDD (Domain-Driven Design)](https://en.wikipedia.org/wiki/Domain-driven_design#Building_blocks)
@@ -15,11 +15,12 @@ such as **Aggregate** (cluster of **Entities** and **Value Objects**) and **Repo
 
 ## Features
 
-- Simplified annotation of entities and repositories;
-- Compile-time error reporting;
-- Native human-readable code generation;
-- **NO** reflection;
-- **NO** runtime dependencies.
+- Simplified annotation of entities and repositories
+- Compile-time error reporting
+- Native human-readable code generation
+- **NO** reflection
+- **NO** runtime dependencies
+- **NO** magic
 
 ## Requirements
 
@@ -35,7 +36,7 @@ Graphine requires **Java 11** or later.
 
 ```xml
 <properties>
-  <graphine.version>0.4.1</graphine.version> <!-- Latest version -->
+  <graphine.version>0.5.0</graphine.version> <!-- Latest version -->
 </properties>
 
 <dependency>
@@ -100,10 +101,9 @@ The standard behavior is that one entity maps to one database table.
 `@Entity` annotation has two attributes to specify *schema* and *table* names in database.
 If the *table name* is not specified then the *entity class name* will be used to determine the database table name.
 
-The following transformation pipeline is used by default:
-`SNAKE_CASE` | `LOWER_CASE`
+The following transformation pipeline is used by default: `SNAKE_CASE` | `LOWER_CASE`
 
-For example:
+**For example:**
 
 | Entity class name | Table name |
 |:------------------|:-----------|
@@ -114,17 +114,18 @@ This behavior can be changed using compiler arguments.
 
 ```xml
 <compilerArgs>
-  <arg>-Agraphine.table_naming_pipeline=SNAKE_CASE|UPPER_CASE</arg>
+  <arg>-Agraphine.table_naming_pipeline=SNAKE_CASE|UPPER_CASE</arg> <!-- Result: ORDER_ITEM -->
 </compilerArgs>
 ```
 
 Supported transformation options:
 
-| Transformation option | Description                                         |
-|:----------------------|:----------------------------------------------------|
-| SNAKE_CASE            | Transforms entity class name to *Snake_Case* format |
-| LOWER_CASE            | Transforms entity class name to *lower case* format |
-| UPPER_CASE            | Transforms entity class name to *UPPER CASE* format |
+| Transformation option | Description                                           | Example    |
+|:----------------------|:------------------------------------------------------|:-----------|
+| SNAKE_CASE            | Transforms entity class name to *snake case* format   | Order_Item |
+| LOWER_CASE            | Transforms entity class name to *lower case* format   | orderitem  |
+| UPPER_CASE            | Transforms entity class name to *upper case* format   | ORDERITEM  |
+| UNCAPITALIZE          | Transforms entity class name to *uncapitalize* format | orderItem  |
 
 > Use `|` separator for pipeline transformation.
 
@@ -148,7 +149,12 @@ By default, all fields of an entity class are persistent.
 
 > *Terminology note:* The fields of an entity class are generally referred to as *attributes*.
 
-This behavior can be changed using compiler arguments.
+##### Entity attributes to table columns mapping
+
+The standard behavior is that *all entity attributes* are mapped to *database table columns*.
+
+This behavior can be changed by using a compiler argument: `graphine.attribute_detection_strategy`.
+Example:
 
 ```xml
 <compilerArgs>
@@ -158,6 +164,33 @@ This behavior can be changed using compiler arguments.
   <!-- Only annotated fields with @Attribute annotation are detected as attributes -->
   <arg>-Agraphine.attribute_detection_strategy=ANNOTATED_FIELDS</arg>
 </compilerArgs>
+```
+
+By default, the entity attribute name is mapped to table column name.
+But this behavior can be overridden using the `@Attribute` annotation.
+
+**For example:**
+
+```java
+@Getter // Lombok annotation.
+@Setter // Lombok annotation.
+@Entity(table = "users")
+public class User {
+    @Id
+    @Attribute(column = "user_id")
+    private UUID id;
+    private String login;
+    @Attribute(column = "email_address")
+    private String email;
+}
+```
+```sql
+CREATE TABLE users(
+  user_id CHAR(36) NOT NULL,
+  login VARCHAR(64) NOT NULL,
+  email_address VARCHAR(64) NOT NULL,
+  PRIMARY KEY (user_id)
+);
 ```
 
 Supported Java types as entity attributes:
@@ -172,6 +205,60 @@ Supported Java types as entity attributes:
 - Custom Java classes annotated with `@Embeddable` annotation;
 
 #### Embeddable entity (aka *Value Object*)
+
+The mapping of embeddable entity attributes to table columns is the same as for entities.
+But an embeddable entity can be reused in different entities.
+`@AttributeOverride` annotation is used to override attribute mapping across entities.
+
+**For example:**
+
+```java
+@Getter // Lombok annotation.
+@Setter // Lombok annotation.
+@Embeddable
+public class Amount {
+    private BigDecimal value;
+    private Currency currency;
+}
+
+@Getter // Lombok annotation.
+@Setter // Lombok annotation.
+@Entity
+public class Transaction {
+    @Id
+    private UUID id;
+    @AttributeOverride(name = "value", attribute = @Attribute(column = "amount"))
+    @AttributeOverride(name = "currency", attribute = @Attribute(column = "currency"))
+    private Amount amount;
+}
+
+@Getter // Lombok annotation.
+@Setter // Lombok annotation.
+@Entity
+public class Purchase {
+    @Id
+    private UUID id;
+    @AttributeOverride(name = "value", attribute = @Attribute(column = "price"))
+    @AttributeOverride(name = "currency", attribute = @Attribute(column = "currency"))
+    private Amount price;
+}
+```
+
+```sql
+CREATE TABLE transaction(
+  id CHAR(36) NOT NULL,
+  amount DECIMAL(10, 2) NOT NULL,
+  currency CHAR(3) NOT NULL,
+  PRIMARY KEY (id)
+);
+
+CREATE TABLE purchase(
+  id CHAR(36) NOT NULL,
+  price DECIMAL(10, 2) NOT NULL,
+  currency CHAR(3) NOT NULL,
+  PRIMARY KEY (id)
+);
+```
 
 Embeddable entity requirements:
 1. Embeddable entity must be a *Java class*;
@@ -219,6 +306,7 @@ Here is a small snippet that shows *Graphine in action*.
  */
 @Getter // Lombok annotation.
 @Setter // Lombok annotation.
+@ToString // Lombok annotation.
 @Entity(table = "users")
 public class User {
     @Id
